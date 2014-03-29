@@ -1,38 +1,41 @@
 module Octopus.Primitive where
 
-
---import Data.List
---import Data.Ratio
-import Data.Symbol
-import Data.Sequence (Seq)
+import Import
 import qualified Data.Sequence as Seq
-import Data.Map (Map)
 import qualified Data.Map as Map
---import Data.IORef
---import Data.Array.IO
---import System.IO
-
-import Data.Foldable
+import Data.Foldable hiding (concat)
 import Data.Traversable hiding (mapM)
-import Control.Applicative
-import Control.Monad
-
 
 import Octopus.Data
 import Octopus.Basis
+
 
 resolveSymbol :: Symbol -> Val -> Maybe Val
 resolveSymbol sy (Ob ob) = Map.lookup sy ob
 resolveSymbol _ _ = Nothing
 
-extendEnvironment :: Val -> Val -> Val -> Maybe Val
-extendEnvironment x v env = case env of
-    Ob env -> Ob . flip Map.union env <$> go x v
-    _ -> Ob <$> go x v
+{-| Create a new environment by matching the second value
+    to atoms in the first, even if those atoms are nested
+    under sequences or objects. Symbols match any value and
+    perform binding.
+-}
+match :: Val -> Val -> Maybe Val
+match var val = mkObj <$> go var val
     where
-    go :: Val -> Val -> Maybe (Map Symbol Val)
-    go (Sy x) v = pure $ Map.fromList [(x, v)]
+    go :: Val -> Val -> Maybe [(Symbol, Val)]
+    go (Sy x) v = Just [(x, v)]
     go (Sq ps) (Sq xs) | Seq.length ps == Seq.length xs = do
         --FIXME disallow double-binding
-        Map.unions <$> mapM (uncurry go) (zip (toList ps) (toList xs))
+        concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
     go (Sq ps) _ = Nothing
+
+{-| @extend a b@ extends and overwrites bindings in @b@ with bindings in @a@. -}
+extend :: Val -> Val -> Val
+extend (Ob env') (Ob env) = Ob $ Map.union env' env
+extend _ (Ob env) = (Ob env)
+extend (Ob env') _ = Ob env'
+extend _ _ = mkObj []
+
+
+
+

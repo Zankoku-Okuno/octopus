@@ -4,7 +4,9 @@
     as the machine could get at them.
 -}
 module Octopus.Basis (
-      mkSeq
+      mkSym
+    , mkSeq
+    , mkObj
     , fromEnv
     -- * Basic Protocols
     -- ** Combination
@@ -22,27 +24,22 @@ module Octopus.Basis (
     , ensureThunk
     ) where
 
-
-import Data.List
-import Data.Ratio
-import Data.Symbol
-import Data.Sequence (Seq)
+import Import
 import qualified Data.Sequence as Seq
-import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.IORef
-import Data.Array.IO
-import System.IO
-
 import Data.Foldable
 import Data.Traversable hiding (mapM)
-import Control.Applicative
-import Control.Monad
 
 import Octopus.Data
 
+mkSym :: String -> Val
+mkSym = Sy . intern
+
 mkSeq :: [Val] -> Val
 mkSeq = Sq . Seq.fromList
+
+mkObj :: [(Symbol, Val)] -> Val
+mkObj = Ob . Map.fromList
 
 fromEnv :: Val -> Map Symbol Val
 fromEnv (Ob ob) = ob

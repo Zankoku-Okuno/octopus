@@ -21,16 +21,23 @@ library
                        Octopus.Primitive,
                        Octopus.Basis
   build-depends:       base ==4.6.*,
+                       bytestring ==0.10.*,
+                       text ==0.11.*,
                        containers ==0.5.*,
-                       array ==0.5.*,
+                       array ==0.4.*,
                        symbol ==0.2.1,
-                       mtl ==2.1.*
+                       mtl ==2.1.*,
+                       hexpr
 
 executable octopus
   main-is:             main.hs
   -- other-modules:       
   build-depends:       base ==4.6.*,
+                       bytestring ==0.10.*,
+                       text ==0.11.*,
                        containers ==0.5.*,
-                       array ==0.5.*,
+                       array ==0.4.*,
                        symbol ==0.2.1,
-                       mtl ==2.1.*
+                       mtl ==2.1.*,
+                       parsec ==3.1.*,
+                       hexpr
