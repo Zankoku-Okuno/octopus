@@ -27,7 +27,19 @@ data Val = Nm Rational -- ^ Rational number
          --TODO bytestring/buffer/bytes/other name?
          --TODO concurrency
     deriving (Eq)
-data Primitive = Vau | Eval | MkEnv
+data Primitive = Vau | Eval | Match
+			   --TODO Nm data primitives
+			   --TODO By data primitives
+			   --TODO Tx data primitives
+			   --TODO Fp data primitives
+			   --TODO Sy data primitives
+			   --TODO Tg data primitives
+			   --TODO Sq data primitives
+			   --TODO Ob data primitives
+			   | Extends | Delete | Keys | Get
+			   --TODO Ce data primitives
+			   --TODO Ar data primitives
+			   --TODO Pt/Ks data primitives
     deriving (Eq, Show)
 
 

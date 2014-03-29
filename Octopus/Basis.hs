@@ -70,8 +70,8 @@ combineX :: Symbol
 combineX = intern "__cdr__"
 
 
-{-| Construct a closure: an object with @__ast__@,
-    @__env__@ and @__arg__@ slots.
+{-| Construct a closure: an object with @__var__@,
+    @__ast__@ and @__env__@ slots.
 -}
 mkClosure :: Val -- ^ Body (@__ast__@)
           -> Val -- ^ Static environment (@__env__@)
@@ -88,7 +88,7 @@ closureEnv :: Symbol
 closureEnv = intern "__env__"
 {-| Parameter slot name in a closure (aka. application) -}
 closureArg :: Symbol
-closureArg = intern "__arg__"
+closureArg = intern "__var__"
 
 {-| Extract a (body, environment, parameter) triple from
     a closure-responsive object.

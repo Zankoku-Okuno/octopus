@@ -31,11 +31,22 @@ match var val = mkObj <$> go var val
 
 {-| @extend a b@ extends and overwrites bindings in @b@ with bindings in @a@. -}
 extend :: Val -> Val -> Val
-extend (Ob env') (Ob env) = Ob $ Map.union env' env
-extend _ (Ob env) = (Ob env)
-extend (Ob env') _ = Ob env'
+extend (Ob ob') (Ob ob) = Ob $ Map.union ob' ob
+extend _ (Ob ob) = (Ob ob)
+extend (Ob ob') _ = Ob ob'
 extend _ _ = mkObj []
 
+delete :: Val -> Val -> Val
+delete (Ob ob) (Sy sy) = Ob $ Map.delete sy ob
+delete x _ = x
+
+keys :: Val -> Val
+keys (Ob ob) = mkSeq $ Sy <$> Map.keys ob
+keys _ = mkSeq []
+
+get :: Val -> Val -> Maybe Val
+get (Ob ob) (Sy sy) = Map.lookup sy ob
+get _ _ = Nothing
 
 
 

@@ -23,7 +23,7 @@ parseOctopus sourceName input = P.runParser octopusFile () sourceName input
 expr :: Parser Val
 expr = atom P.<|> composite
     where
-    atom = P.choice [symbol, numberLit, textLit, heredoc] <?> "atom"
+    atom = P.choice [symbol, numberLit, textLit, heredoc, accessor] <?> "atom"
     composite = P.choice [combine, sq, ob]
 
 ------ Atoms ------
@@ -49,6 +49,11 @@ heredoc = do
 
 --TODO maybe bytes literals
 
+accessor :: Parser Val
+accessor = do
+    key <- char ':' *> name
+    return $ mkCombination (mkSym "__get__") (mkSym key)
+
 
 ------ Composites ------
 combine :: Parser Val
@@ -61,7 +66,7 @@ combine = do
 sq :: Parser Val
 sq = do
     postPadded $ char '['
-    elems <- expr `P.sepBy` padded comma
+    elems <- bareCombination `P.sepBy` padded comma
     padded $ char ']'
     return $ mkSeq elems
 

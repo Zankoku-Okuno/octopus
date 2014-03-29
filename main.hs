@@ -13,12 +13,20 @@ main = do
     --testParse "{four: 4, five: neg 5}"
     --testParse "(vau x (force x))"
     --testParse "\"hello world\995\""
-    print =<< eval startData noevalData
-    print =<< eval startData callData
-    print =<< eval startData getenvProg
-    print =<< eval startData quoteProg
-    print =<< eval startData fiveProg
+    test "((vau x x) four)"
+    test "((vau x (force x)) four)"
+    test "((vau [e, ast] e) dne)"
+    test "((vau [e, ast] ast) dne)"
+    test "((vau [e, ast] (force [extends [{five: 5}, e], ast])) five)"
+    test "(vau [_, ob] (keys ob) {foo: 3, bar: four})"
+    test "(vau [_, ob] (delete ob x) {x: 2, y: 3})"
+    test "((vau [e, ob] (:x ob)) {x: four})"
+    --TODO figure out lambda so I can do "((lambda x (:x x)) {x: four})" and get the number 4 back
+
 
 testParse input = case parseOctopus "" input of
     Right val -> print val
+    Left err -> print err
+test input = case parseOctopus "repl" input of
+    Right val -> print =<< eval startData val
     Left err -> print err
