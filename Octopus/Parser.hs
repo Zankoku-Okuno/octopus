@@ -5,7 +5,7 @@ import Import
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Text as T
 import Text.Parsec ( Parsec, SourceName, ParseError
-                   , try, (<?>), parserZero
+                   , try, (<?>), unexpected, parserZero
                    , char, anyChar, eof)
 import qualified Text.Parsec as P
 import Language.Parse
@@ -20,15 +20,28 @@ parseOctopus sourceName input = P.runParser octopusFile () sourceName input
     where
     octopusFile = expr --STUB
 
+define :: Parser (String, Val)
+define = do
+    var <- try (name <* char ':' <* whitespace)
+    body <- expr
+    return (var, body)
+
 expr :: Parser Val
-expr = atom P.<|> composite
+expr = composite P.<|> atom
     where
     atom = P.choice [symbol, numberLit, textLit, heredoc, accessor] <?> "atom"
-    composite = P.choice [combine, sq, ob]
+    composite = P.choice [block, combine, sq, ob]
+
+statement :: Parser (Either (String, Val) Val)
+statement = (Left <$> define) P.<|> (Right <$> expr)
+
 
 ------ Atoms ------
 symbol :: Parser Val
-symbol = Sy . intern <$> name
+symbol = do
+    n <- name
+    when (n == "do") (unexpected "reserved word (do)") --FIXME report error position before token, not after
+    return $ mkSym n
 
 numberLit :: Parser Val
 numberLit = Nm <$> anyNumber
@@ -45,7 +58,7 @@ heredoc = do
     string "#<<"
     --grab until end of line, strip whitespace, save as `end`
     --anyChar `manyThru` end
-    parserZero
+    parserZero --TODO
 
 --TODO maybe bytes literals
 
@@ -56,12 +69,28 @@ accessor = do
 
 
 ------ Composites ------
+block :: Parser Val
+block = do
+        try $ string "do" >> whitespace
+        states <- P.many1 $ postPadded statement
+        char ';'
+        return $ loop states
+    where
+    loop [Left s] = mkCombination (mkDefn s) (mkObj [])
+    loop [Right e] = e
+    loop (Left s:rest) = mkCombination (mkDefn s) (loop rest)
+    loop (Right e:rest) = mkCombination (mkExpr e) (loop rest)
+    mkDefn (x, val) = mkCombination (mkCombination (mkSym "__let__") (mkSym x)) val
+    mkExpr e = mkCombination (mkCombination (mkSym "__let__") (mkObj [])) e
+
 combine :: Parser Val
 combine = do
     postPadded $ char '('
     e <- bareCombination
     padded $ char ')'
     return e
+
+--TODO quotation, quasiquotation
 
 sq :: Parser Val
 sq = do
@@ -108,7 +137,7 @@ name = many2
     (blacklistChar (`elem` reservedFirstChar))
     (blacklistChar (`elem` reservedChar))
     where
-    reservedChar = "#\\\"\'()[]{}:,." --TODO quasiquote sugar (`,~) and comma requires a space afterwards
+    reservedChar = "#\\\"\'()[]{}:;.," --TODO quasiquote sugar (`,~) and comma requires a space afterwards
     reservedFirstChar = reservedChar ++ "-0123456789"
 
 comma :: Parser ()

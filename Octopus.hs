@@ -29,32 +29,40 @@ mkVau e arg body = mkCombination (Pr Vau) (mkSeq [mkSeq [Sy $ intern e, Sy $ int
 startData = mkObj [
       (intern "four", Nm (4%1)) --FIXME DELME
     , (intern "vau", vauDef)
+    , (intern "__match__", Pr Match)
     , (intern "force", Pr Eval)
-    , (intern "extends", Pr Extends)
+    , (intern "__extends__", Pr Extends)
     , (intern "delete", delDef)
     , (intern "keys", Pr Keys)
     , (intern "__get__", getDef)
+    , (intern "__let__", letDef)
+    , (intern "__lambda__", lambdaDef)
     ]
     where
-    --(__vau__ [[_, var], (__vau__ [[e, body],
-    --    { __var__: var
-    --    , __ast__: body
-    --    , __env__: e
-    --    }])])
+    --(__vau__ [[{}, x],
+    --    __vau__ [[static, body],
+    --        __vau__ [arg,
+    --            force [
+    --                __extends__ [
+    --                    __match__ [x, arg],
+    --                    static],
+    --                body]]]])
     vauDef = mkObj
-        [ (closureArg, mkSeq [mkSym "_", mkSym "var"]) --FIXME use empty object instead of underscore
-        , (closureBody, mkVau "e" "body"
-            (mkObj
-                [ (closureArg, mkSym "var")
-                , (closureBody, mkSym "body")
-                , (closureEnv, mkSym "e")
-                ]))
+        [ (closureArg, mkSeq [mkObj [], mkSym "x"])
+        , (closureBody,
+            mkCombination (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "body"],
+                mkCombination (Pr Vau) (mkSeq [mkSym "arg",
+                    mkCombination (Pr Eval) (mkSeq [
+                        mkCombination (Pr Extends) (mkSeq [
+                            mkCombination (Pr Match) (mkSeq [mkSym "x", mkSym "arg"]),
+                            mkSym "static"]),
+                        mkSym "body"])])]))
         , (closureEnv, mkObj [])
         ]
     --(__vau__ [[_,x], __vau__ [ob, __delete__ [__force__ ob, x]]])
     delDef = mkObj
         [ (closureArg, mkSym "ob")
-        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSeq [mkSym "_", mkSym "x"], --FIXME use empty object instead of underscore
+        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSeq [mkObj [], mkSym "x"],
             mkCombination (Pr Delete) (mkSeq [mkCombination (Pr Eval) (mkSym "ob"), mkSym "x"])]))
         , (closureEnv, mkObj [])
         ]
@@ -67,11 +75,39 @@ startData = mkObj [
     --    __env__: topLevel
     --}
     getDef = mkObj
-        [ (closureArg, mkSeq [mkSym "_", mkSym "x"]) --FIXME use empty object instead of underscore
+        [ (closureArg, mkSeq [mkObj [], mkSym "x"])
         , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSym "ob",
             mkCombination (Pr Eval) (mkSeq [mkCombination (Pr Eval) (mkSym "ob"), mkSym "x"])]))
         , (closureEnv, mkObj [])
         ]
+    --{ __var__: [{}, x]
+    --, __ast__: (__vau__ [val, __vau__ [[e, body], force [__extends__ [__match__ [x, force val], e], body]]])
+    --, __env__: {}
+    --}
+    letDef = mkObj
+        [ (closureArg, mkSeq [mkObj [], mkSym "x"])
+        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSym "val",
+            mkCombination (Pr Vau) (mkSeq [mkSeq [mkSym "e", mkSym "body"],
+                mkCombination (Pr Eval) (mkSeq
+                    [ mkCombination (Pr Extends) (mkSeq 
+                        [ mkCombination (Pr Match) (mkSeq [mkSym "x", mkCombination (Pr Eval) (mkSym "val")])
+                        , mkSym "e"])
+                    , mkSym "body"])])]))
+        , (closureEnv, mkObj [])
+        ]
+    lambdaDef = mkObj
+        [ (closureArg, mkSeq [mkObj [], mkSym "var"])
+        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "ast"],
+            mkCombination (Pr Vau) (mkSeq [mkSym "arg",
+                mkCombination (Pr Eval) (mkSeq
+                    [ mkCombination (Pr Extends) (mkSeq
+                        [ mkCombination (Pr Match) (mkSeq [mkSym "var", mkCombination (Pr Eval) (mkSym "arg")])
+                        , mkSym "static"])
+                    , mkSym "ast"])])]))
+        , (closureEnv, mkObj [])
+        ]
+
+
 
 
 eval :: Val -> Val -> IO Val
@@ -100,9 +136,10 @@ reduce sq@(Sq xs) = case toList xs of
     (x:xs) -> push (Es [] xs) >> reduce x
 reduce ob@(Ob m) = case ensureCombination ob of
     Just (f, x) -> push (Op x) >> reduce f
-    Nothing -> case Map.toList m of
-        [] -> done (Ob Map.empty)
-        ((k,v):xs) -> push (Eo k [] xs) >> reduce v
+    Nothing -> let (uneval, eval) = Oct.splitFields m
+               in case eval of
+                [] -> done (mkObj uneval)
+                ((k,v):xs) -> push (Eo k uneval xs) >> reduce v
 
 combine :: Val -> Val -> Machine Val
 combine (Pr Vau) x = case x of
@@ -117,10 +154,10 @@ combine (Pr Vau) x = case x of
     _ -> error "raise invalid args to primitive vau"
 combine f@(Pr _) x = push (Ap f) >> reduce x
 combine f x = case ensureClosure f of --all of these are operatives
-    Just (ast, env, arg) -> do
+    Just (ast, env, var) -> do
         caller <- gets environ
-        let x' = (Sq $ Seq.fromList [caller, x])
-        case Oct.match arg x' of
+        let x' = mkSeq [caller, x]
+        case Oct.match var x' of
             Nothing -> error "raise match failure"
             Just env' -> swapEnv (env' `Oct.extend` env) >> reduce ast
     _ -> error $ "raise not a combiner:\n" ++ show f
@@ -129,6 +166,13 @@ apply :: Val -> Val -> Machine Val
 apply (Pr Eval) x = case ensureThunk x of
     Just (env, ast) -> swapEnv env >> reduce ast
     _ -> error $ "raise invalid args to primitive eval: " ++ show x
+apply (Pr Match) x = case x of
+    Sq xs -> case toList xs of
+        [pat,arg] -> case Oct.match pat arg of
+            Just env -> done env
+            Nothing -> error "raise match failure"
+        xs -> error "raise wrong number of args to primitive match"
+    _ -> error "raise invalid args to primitive extends"
 apply (Pr Extends) x = case x of
     Sq xs -> case toList xs of
         [] -> done $ mkObj []

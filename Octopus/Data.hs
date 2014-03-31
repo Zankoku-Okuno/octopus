@@ -83,8 +83,8 @@ swapEnv env' = do
     env <- gets environ
     (NormK ks):kss <- gets control
     case ks of
-        (Re _):ks -> modify $ \s -> s {environ = env', control = (NormK ((Re env):ks)):kss}
-        _ -> modify $ \s -> s {environ = env', control = (NormK ((Re env):ks)):kss}
+    	(Re _):_ -> modify $ \s -> s { environ = env' } --allows tail recursion by not restoring environments that will immediately be thrown away by a second restoration
+        ks -> modify $ \s -> s { environ = env', control = (NormK ((Re env):ks)):kss }
 
 
 
@@ -98,10 +98,15 @@ instance Show Val where
     show (Sy sy) = show sy
     show (Tg i) = "<tag: " ++ show i ++ ">"
     show (Sq xs) = "[" ++ intercalate ", " (show <$> toList xs) ++ "]"
-    show (Ob m) = "{" ++ intercalate ", " (showPair <$> Map.toList m) ++ "}"
+    show (Ob m) = case getCombo m of
+    		Nothing -> "{" ++ intercalate ", " (showPair <$> Map.toList m) ++ "}"
+    		Just (f, x) -> "(" ++ show f ++ " " ++ show x ++ ")"
         where
         showPair (k,v) = show k ++ ": " ++ show v
+        getCombo ob = case (Map.lookup (intern "__car__") ob, Map.lookup (intern "__cdr__") ob) of
+        	(Just f, Just x) -> if length (Map.keys ob) == 2 then Just (f, x) else Nothing
+        	_ -> Nothing
     show (Ce x) = "<reference cell>" --TODO show contents
     show (Ar xs) = "<mutable array>" --TODO show contents
-    show (Pr f) = "<primitive: " ++ show f ++ ">"
+    show (Pr f) = "<" ++ show f ++ ">"
     --show (Ab tag x) = "<box " ++ show tag ++ ": " ++ show x ++ ">"

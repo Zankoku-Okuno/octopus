@@ -3,12 +3,24 @@ module Octopus.Primitive where
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
-import Data.Foldable hiding (concat)
+import Data.Foldable (toList)
 import Data.Traversable hiding (mapM)
 
 import Octopus.Data
 import Octopus.Basis
 
+{-| The point of closures is to protect from premature evaluation. Since closures 
+    are just an object responding to a protocol, we need to protect some fields
+    from evaluation. This function takes an object's internals and splits the
+    mapping inot the protected and evaulated parst, respectively.
+-}
+splitFields :: Map Symbol Val -> ([(Symbol, Val)], [(Symbol, Val)])
+splitFields = go ([], []) . Map.toList
+    where
+    go (protect, eval) [] = (protect, eval)
+    go (protect, eval) (x:xs) | fst x `elem` protectedFields = go (x:protect, eval) xs
+                              | otherwise = go (protect, x:eval) xs
+    protectedFields = [closureArg, closureBody, closureEnv]
 
 resolveSymbol :: Symbol -> Val -> Maybe Val
 resolveSymbol sy (Ob ob) = Map.lookup sy ob
@@ -28,6 +40,8 @@ match var val = mkObj <$> go var val
         --FIXME disallow double-binding
         concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
     go (Sq ps) _ = Nothing
+    go (Ob ps) _ | length (Map.keys ps) == 0 = Just []
+    go pat val = error $ "unimplemented pattern-matching:\n" ++ show pat ++ "\n" ++ show val
 
 {-| @extend a b@ extends and overwrites bindings in @b@ with bindings in @a@. -}
 extend :: Val -> Val -> Val
