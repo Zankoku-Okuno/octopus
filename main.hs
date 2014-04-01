@@ -7,23 +7,16 @@ import Octopus.Parser
 
 main :: IO ()
 main = do
-    --testParse "30/4"
-    --testParse "symbol"
-    --testParse "[ 1 , #\n2, 3  ]#"
-    --testParse "{four: 4, five: neg 5}"
-    --testParse "(vau x (force x))"
-    --testParse "\"hello world\995\""
-    test "((vau x x) four)"
-    test "((vau x (force x)) four)"
+    test "do four: 4 ((vau x x) four);"
+    test "do four: 4 ((vau x (__eval__ x)) four);"
     test "((vau [e, ast] e) dne)"
     test "((vau [e, ast] ast) dne)"
     test "(__extends__ [{a: 3}, {a: 2}, {a: 1}])"
-    test "((vau [e, ast] (force [__extends__ [{five: 5}, e], ast])) five)"
-    test "(vau [{}, ob] (keys ob) {foo: 3, bar: four})"
-    test "(vau [{}, ob] (delete ob x) {x: 2, y: 3})"
-    test "((vau [e, ob] (:x ob)) {x: four})"
-    test "((vau [e, ob] (force [e, :x ob])) {x: four})"
-    test $ "(" ++ lambda ++ " ob (:x ob) {x: four})"
+    test "((vau [e, ast] (__eval__ [__extends__ [{five: 5}, e], ast])) five)"
+    test "do four: 4 (vau [{}, ob] (keys ob) {foo: 3, bar: four});"
+    test "do four: 4 ((vau [e, ob] (:x ob)) {x: four});"
+    test "do four: 4 ((vau [e, ob] (__eval__ [e, :x ob])) {x: four});"
+    test $ "do four: 4 (" ++ lambda ++ " ob (:x ob) {x: four});"
     test $ "(" ++ lambda ++ " eight eight 8)"
     test $ "("++letin++" eight 8 eight)"
     
@@ -47,9 +40,17 @@ main = do
     test "[__lambda__ x x 3, __lambda__ y y 4]" --[3, 4]
 
     test "do \955: __lambda__\n   x: 1 \n   (\955 x x 3)\n   y: 2\n   [x, y];" --[1, 2]
+    test "(__del__ [{x: 1, y: 2}, 'y])"
+    test "do \955: __lambda__\n\
+         \   delete: (\955 ob (vau [{}, field] (__del__ [ob, field])))\n\
+         \   (delete {x: 1, y: 2} x);"
+    test "do x: do \955: __lambda__\n\
+         \         (\955 y y 3);\n\
+         \      x;"
 
-lambda = "(vau [{}, var] (vau [static, ast] (vau arg (force [__extends__ [__match__ [var, force arg], static], ast ]))))"
-letin  = "(vau [{}, x] (vau val (vau [e, body] (force [__extends__ [__match__ [x, force val], e], body]))))"
+
+lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
+letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"
 
 
 

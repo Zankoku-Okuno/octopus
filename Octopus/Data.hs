@@ -3,8 +3,6 @@ module Octopus.Data where
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
-import Data.Foldable
-import Data.Traversable
 import Control.Monad.State
 
 
@@ -63,21 +61,21 @@ data Control = NormK [Context]
 push :: Context -> Machine ()
 push k = do
     (NormK ks):kss <- gets control
-    modify $ \s -> s {control = (NormK (k:ks)):kss}
+    modify $ \s -> s { control = (NormK (k:ks)):kss }
     --FIXME remember that when I push a handler or a winding protect, I also need to push an environment restore
 pop :: Machine ()
 pop = do
     stack <- gets control
     case stack of
-        (NormK []):kss -> modify $ \s -> s {control = kss}
-        (NormK (Re env:ks)):kss -> modify $ \s -> s {environ = env, control = (NormK ks):kss}
-        (NormK (_:ks)):kss -> modify $ \s -> s {control = (NormK ks):kss}
+        (NormK []):kss -> modify $ \s -> s { control = kss }
+        (NormK (Re env:ks)):kss -> modify $ \s -> s { environ = env, control = (NormK ks):kss }
+        (NormK (_:ks)):kss -> modify $ \s -> s { control = (NormK ks):kss }
 replace :: Context -> Machine ()
 replace k = do
     stack <- gets control
     case stack of
-        (NormK []):kss -> modify $ \s -> s {control = (NormK [k]):kss}
-        (NormK (_:ks)):kss -> modify $ \s -> s {control = (NormK (k:ks)):kss}
+        (NormK []):kss -> modify $ \s -> s { control = (NormK [k]):kss }
+        (NormK (_:ks)):kss -> modify $ \s -> s { control = (NormK (k:ks)):kss }
 swapEnv :: Val -> Machine ()
 swapEnv env' = do
     env <- gets environ

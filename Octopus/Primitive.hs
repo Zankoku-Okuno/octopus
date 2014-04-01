@@ -3,10 +3,9 @@ module Octopus.Primitive where
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
-import Data.Foldable (toList)
-import Data.Traversable hiding (mapM)
 
 import Octopus.Data
+import Octopus.Shortcut
 import Octopus.Basis
 
 {-| The point of closures is to protect from premature evaluation. Since closures 
@@ -20,7 +19,7 @@ splitFields = go ([], []) . Map.toList
     go (protect, eval) [] = (protect, eval)
     go (protect, eval) (x:xs) | fst x `elem` protectedFields = go (x:protect, eval) xs
                               | otherwise = go (protect, x:eval) xs
-    protectedFields = [closureArg, closureBody, closureEnv]
+    protectedFields = [closureVar, closureBody, closureEnv]
 
 resolveSymbol :: Symbol -> Val -> Maybe Val
 resolveSymbol sy (Ob ob) = Map.lookup sy ob

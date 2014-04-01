@@ -2,6 +2,7 @@ module Import (
 	  module X
 	, Seq, Map, ByteString, Text
 	, encodeUtf8, decodeUtf8
+	, toList
 	) where
 
 import Data.Maybe as X
@@ -19,3 +20,4 @@ import System.IO as X
 
 import Control.Applicative as X
 import Control.Monad as X
+import Data.Foldable (toList)

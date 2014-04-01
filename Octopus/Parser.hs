@@ -1,3 +1,38 @@
+{-| Parse Octopus source code. The Octopus grammar is:
+
+@
+file ::= (\<expr\> | \<defn\>)*
+defn ::= _field_ \<expr\>
+expr ::= \<atom\> | \<list\> | \<object\>
+      | \<combination\> | \<block\> | \<quotation\>
+      |  '(' \<expr\> ')'
+
+atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _accessor_
+list ::= '[' (\<expr\>+ (',' \<expr\>+)*)? ']'
+object ::= '{' (_field_ \<expr\>+ (',' _field_ \<expr\>+)*)? '}'
+combination ::= '(' \<expr\> \<expr\>+ ')'
+block ::= 'do' (\<expr\> | \<defn\>)+ ';'
+quotation ::= (''' | '`' | ',' | '~') \<expr\>
+
+symbol ::= \/\<name\>\/ - reserved
+    reserved = {'do'}
+field ::= \/\<name\>:\/
+accessor ::= \/:\<name\>\/
+number ::= \/[+-]?(0[xX]\<hexnum\>|0[oO]\<octnum\>|0[bB]\<binnum\>|\<decnum\>)\/
+    decnum ::= \/\\d+(\\.\\d+\<exponent\>?|\\\/\\d+)?\/
+    hexnum ::= \/\\x+(\\.\\x+([hH][+-]?\\x+)?|\\\/\\x+)?\/
+    octnum ::= \/[0-7]+(\\.[0-7]+\<exponent\>?|\\\/[0-7]+)?\/
+    binnum ::= \/[01]+(\\.[01]+\<exponent\>?|\\\/[01]+)?\/
+    exponent ::= \/[eE][+-]?\\d+|[hH][+-]?\\x+\/
+string ::= \/\"([^\\\\\"]|\\\\[abefntv\'\"\\\\&]|\\\\\<numescape\>|\\\\\\s*\\n\\s*\\\\)*\"\/
+    numescape ::= \/[oO][0-7]{3}|[xX][0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U0[0-9a-fA-F]{5}|U10[0-9a-fA-F]{4}\/
+heredoc ::= \/\#\<\<\\s*(?\'END\'\\w+)\\s*\\n.*?\\g{END}\/
+name ::= \/[^\#\\\\\"\'`~()[]{}:;.,][^\#\\\\\"\'`~()[]{}:;.,]*\/
+
+linecomment ::= \/#(?!\>\>)\\.*?\\n\/
+blockcomment ::= \/\#\\{([^\#}]+|\<blockcomment\>|\#[^{]|\\}[^\#])*\\}\#\/
+@
+-}
 module Octopus.Parser where
 
 import Import
@@ -11,6 +46,7 @@ import qualified Text.Parsec as P
 import Language.Parse
 
 import Octopus.Data
+import Octopus.Shortcut
 import Octopus.Basis
 
 type Parser = Parsec String ()
@@ -30,7 +66,7 @@ expr :: Parser Val
 expr = composite P.<|> atom
     where
     atom = P.choice [symbol, numberLit, textLit, heredoc, accessor] <?> "atom"
-    composite = P.choice [block, combine, sq, ob]
+    composite = P.choice [block, combine, sq, ob, quote]
 
 statement :: Parser (Either (String, Val) Val)
 statement = (Left <$> define) P.<|> (Right <$> expr)
@@ -46,6 +82,8 @@ symbol = do
 numberLit :: Parser Val
 numberLit = Nm <$> anyNumber
 
+--TODO maybe bytes literals
+
 textLit :: Parser Val
 textLit = do
     content <- catMaybes <$> between2 (char '\"') (P.many maybeLiteralChar)
@@ -60,37 +98,19 @@ heredoc = do
     --anyChar `manyThru` end
     parserZero --TODO
 
---TODO maybe bytes literals
-
 accessor :: Parser Val
 accessor = do
     key <- char ':' *> name
-    return $ mkCombination (mkSym "__get__") (mkSym key)
+    return $ mkCall (mkSym "__get__") (mkSym key)
 
 
 ------ Composites ------
-block :: Parser Val
-block = do
-        try $ string "do" >> whitespace
-        states <- P.many1 $ postPadded statement
-        char ';'
-        return $ loop states
-    where
-    loop [Left s] = mkCombination (mkDefn s) (mkObj [])
-    loop [Right e] = e
-    loop (Left s:rest) = mkCombination (mkDefn s) (loop rest)
-    loop (Right e:rest) = mkCombination (mkExpr e) (loop rest)
-    mkDefn (x, val) = mkCombination (mkCombination (mkSym "__let__") (mkSym x)) val
-    mkExpr e = mkCombination (mkCombination (mkSym "__let__") (mkObj [])) e
-
 combine :: Parser Val
 combine = do
     postPadded $ char '('
     e <- bareCombination
     padded $ char ')'
     return e
-
---TODO quotation, quasiquotation
 
 sq :: Parser Val
 sq = do
@@ -112,6 +132,28 @@ ob = do
         val <- bareCombination
         return (key, val)
 
+block :: Parser Val
+block = do
+        try $ string "do" >> whitespace
+        states <- P.many1 $ postPadded statement
+        char ';'
+        return $ loop states
+    where
+    loop [Left s] = mkCall (mkDefn s) (mkObj [])
+    loop [Right e] = e
+    loop (Left s:rest) = mkCall (mkDefn s) (loop rest)
+    loop (Right e:rest) = mkCall (mkExpr e) (loop rest)
+    mkDefn (x, val) = mkCall (mkCall (mkSym "__let__") (mkSym x)) val
+    mkExpr e = mkCall (mkCall (mkSym "__let__") (mkObj [])) e
+
+quote :: Parser Val
+quote = do
+    char '\''
+    e <- expr
+    return $ mkCall (mkSym "__quote__") e
+
+--TODO quasiquotation
+
 
 ------ Space ------
 whitespace :: Parser ()
@@ -119,7 +161,7 @@ whitespace = (<?> "space") . P.skipMany1 $ P.choice [spaces1, lineComment, block
 
 lineComment :: Parser ()
 lineComment = void $ do
-    try $ char '#' >> P.notFollowedBy (string ">>")
+    try $ char '#' >> P.notFollowedBy (string "<<")
     anyChar `manyThru` (void (char '\n') P.<|> eof)
 
 blockComment :: Parser ()
@@ -137,7 +179,7 @@ name = many2
     (blacklistChar (`elem` reservedFirstChar))
     (blacklistChar (`elem` reservedChar))
     where
-    reservedChar = "#\\\"\'()[]{}:;.," --TODO quasiquote sugar (`,~) and comma requires a space afterwards
+    reservedChar = "#\\\"\'`~()[]{}:;.," --TODO quasiquote sugar (`,~) and comma requires a space afterwards
     reservedFirstChar = reservedChar ++ "-0123456789"
 
 comma :: Parser ()
@@ -147,8 +189,8 @@ bareCombination :: Parser Val
 bareCombination = loop <$> P.many1 (postPadded expr)
     where
     loop [e] = e
-    loop [f, x] = mkCombination f x
-    loop es = mkCombination (loop $ init es) (last es)
+    loop [f, x] = mkCall f x
+    loop es = mkCall (loop $ init es) (last es)
 
 
 

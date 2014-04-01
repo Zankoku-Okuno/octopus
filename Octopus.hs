@@ -3,107 +3,102 @@ module Octopus where
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
-import Data.Foldable (toList)
-import Data.Traversable
 
 import Control.Monad.State
 
 import Octopus.Data
 import qualified Octopus.Primitive as Oct
+import Octopus.Shortcut
 import Octopus.Basis
 
---TODO
---figure out how to sequence stuff
---  the trick is to pass an environment from one argument to another
---Syntax:
---  object = braces $ many (symbol <*> expr)
---  sequence = brackets $ many1 expr `sepBy` comma
---  combine = foldr mkCombiner <$> parens (many expr) --more-or-less
---  block = ? $ expr `endBy` newline
 
 
 
-
-
-mkVau e arg body = mkCombination (Pr Vau) (mkSeq [mkSeq [Sy $ intern e, Sy $ intern arg], body])
+mkVau e arg body = mkCall (Pr Vau) (mkSeq [mkSeq [Sy $ intern e, Sy $ intern arg], body])
 startData = mkObj [
-      (intern "four", Nm (4%1)) --FIXME DELME
-    , (intern "vau", vauDef)
+      (intern "__vau__", Pr Vau)
     , (intern "__match__", Pr Match)
-    , (intern "force", Pr Eval)
+    , (intern "__eval__", Pr Eval)
     , (intern "__extends__", Pr Extends)
-    , (intern "delete", delDef)
+    , (intern "__del__", Pr Delete)
     , (intern "keys", Pr Keys)
+    , (intern "vau", vauDef)
     , (intern "__get__", getDef)
     , (intern "__let__", letDef)
     , (intern "__lambda__", lambdaDef)
+    , (intern "__quote__", quoteDef)
     ]
     where
     --(__vau__ [[{}, x],
     --    __vau__ [[static, body],
     --        __vau__ [arg,
-    --            force [
+    --            __eval__ [
     --                __extends__ [
     --                    __match__ [x, arg],
     --                    static],
     --                body]]]])
     vauDef = mkObj
-        [ (closureArg, mkSeq [mkObj [], mkSym "x"])
+        [ (closureVar, mkSeq [mkObj [], mkSym "x"])
         , (closureBody,
-            mkCombination (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "body"],
-                mkCombination (Pr Vau) (mkSeq [mkSym "arg",
-                    mkCombination (Pr Eval) (mkSeq [
-                        mkCombination (Pr Extends) (mkSeq [
-                            mkCombination (Pr Match) (mkSeq [mkSym "x", mkSym "arg"]),
+            mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "body"],
+                mkCall (Pr Vau) (mkSeq [mkSym "arg",
+                    mkCall (Pr Eval) (mkSeq [
+                        mkCall (Pr Extends) (mkSeq [
+                            mkCall (Pr Match) (mkSeq [mkSym "x", mkSym "arg"]),
                             mkSym "static"]),
                         mkSym "body"])])]))
         , (closureEnv, mkObj [])
         ]
-    --(__vau__ [[_,x], __vau__ [ob, __delete__ [__force__ ob, x]]])
+    --(__vau__ [[_,x], __vau__ [ob, __delete__ [__eval__ ob, x]]])
     delDef = mkObj
-        [ (closureArg, mkSym "ob")
-        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSeq [mkObj [], mkSym "x"],
-            mkCombination (Pr Delete) (mkSeq [mkCombination (Pr Eval) (mkSym "ob"), mkSym "x"])]))
+        [ (closureVar, mkSym "ob")
+        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSeq [mkObj [], mkSym "x"],
+            mkCall (Pr Delete) (mkSeq [mkCall (Pr Eval) (mkSym "ob"), mkSym "x"])]))
         , (closureEnv, mkObj [])
         ]
-    --(__vau__ [[_, x], __vau__ [ob, __force__ [__force__ ob, x]]])
+    --(__vau__ [[_, x], __vau__ [ob, __eval__ [__eval__ ob, x]]])
     --evals to
     --{
     --    __var__: [_, x],
     --    __ast__: __vau__ [ob,
-    --                  __force__ [__force__ ob, x]],
+    --                  __eval__ [__eval__ ob, x]],
     --    __env__: topLevel
     --}
     getDef = mkObj
-        [ (closureArg, mkSeq [mkObj [], mkSym "x"])
-        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSym "ob",
-            mkCombination (Pr Eval) (mkSeq [mkCombination (Pr Eval) (mkSym "ob"), mkSym "x"])]))
+        [ (closureVar, mkSeq [mkObj [], mkSym "x"])
+        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSym "ob",
+            mkCall (Pr Eval) (mkSeq [mkCall (Pr Eval) (mkSym "ob"), mkSym "x"])]))
         , (closureEnv, mkObj [])
         ]
     --{ __var__: [{}, x]
-    --, __ast__: (__vau__ [val, __vau__ [[e, body], force [__extends__ [__match__ [x, force val], e], body]]])
+    --, __ast__: (__vau__ [val, __vau__ [[e, body], __eval__ [__extends__ [__match__ [x, __eval__ val], e], body]]])
     --, __env__: {}
     --}
     letDef = mkObj
-        [ (closureArg, mkSeq [mkObj [], mkSym "x"])
-        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSym "val",
-            mkCombination (Pr Vau) (mkSeq [mkSeq [mkSym "e", mkSym "body"],
-                mkCombination (Pr Eval) (mkSeq
-                    [ mkCombination (Pr Extends) (mkSeq 
-                        [ mkCombination (Pr Match) (mkSeq [mkSym "x", mkCombination (Pr Eval) (mkSym "val")])
+        [ (closureVar, mkSeq [mkObj [], mkSym "x"])
+        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSym "val",
+            mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "e", mkSym "body"],
+                mkCall (Pr Eval) (mkSeq
+                    [ mkCall (Pr Extends) (mkSeq 
+                        [ mkCall (Pr Match) (mkSeq [mkSym "x", mkCall (Pr Eval) (mkSym "val")])
                         , mkSym "e"])
                     , mkSym "body"])])]))
         , (closureEnv, mkObj [])
         ]
     lambdaDef = mkObj
-        [ (closureArg, mkSeq [mkObj [], mkSym "var"])
-        , (closureBody, mkCombination (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "ast"],
-            mkCombination (Pr Vau) (mkSeq [mkSym "arg",
-                mkCombination (Pr Eval) (mkSeq
-                    [ mkCombination (Pr Extends) (mkSeq
-                        [ mkCombination (Pr Match) (mkSeq [mkSym "var", mkCombination (Pr Eval) (mkSym "arg")])
+        [ (closureVar, mkSeq [mkObj [], mkSym "var"])
+        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "ast"],
+            mkCall (Pr Vau) (mkSeq [mkSym "arg",
+                mkCall (Pr Eval) (mkSeq
+                    [ mkCall (Pr Extends) (mkSeq
+                        [ mkCall (Pr Match) (mkSeq [mkSym "var", mkCall (Pr Eval) (mkSym "arg")])
                         , mkSym "static"])
                     , mkSym "ast"])])]))
+        , (closureEnv, mkObj [])
+        ]
+    quoteDef = mkObj
+        [ (closureVar, mkSeq [mkObj [], mkSym "ast"])
+        , (closureBody, mkSym "ast")
         , (closureEnv, mkObj [])
         ]
 
@@ -147,7 +142,7 @@ combine (Pr Vau) x = case x of
         [arg, ast] -> do
             env <- gets environ
             done $ Ob $ Map.fromList [ (closureBody, ast)
-                                     , (closureArg, arg)
+                                     , (closureVar, arg)
                                      , (closureEnv, env)
                                      ]
         _ -> error "raise wrong number of args to primitive vau"
@@ -198,14 +193,14 @@ done x = do
     k <- gets control
     case k of
         [] -> return x
-        (NormK []):_ -> pop >> done x
-        (NormK (Re _:_)):_ -> pop >> done x
-        (NormK (Es xs []:_)):_ -> pop >> done (Sq . Seq.fromList $ reverse (x:xs))
-        (NormK (Es xs (x':xs'):_)):_ -> replace (Es (x:xs) xs') >> reduce x'
-        (NormK (Eo k xs []:_)):_ -> pop >> done (Ob . Map.fromList $ (k,x):xs)
+        (NormK []):_                        -> pop >> done x
+        (NormK (Re _:_)):_                  -> pop >> done x
+        (NormK (Es xs []:_)):_              -> pop >> done (Sq . Seq.fromList $ reverse (x:xs))
+        (NormK (Es xs (x':xs'):_)):_        -> replace (Es (x:xs) xs') >> reduce x'
+        (NormK (Eo k xs []:_)):_            -> pop >> done (Ob . Map.fromList $ (k,x):xs)
         (NormK (Eo k xs ((k',x'):xs'):_)):_ -> replace (Eo k' ((k,x):xs) xs') >> reduce x'
-        (NormK (Op arg:ks)):kss -> pop >> combine x arg
-        (NormK (Ap f:ks)):kss -> pop >> apply f x
+        (NormK (Op arg:ks)):kss             -> pop >> combine x arg
+        (NormK (Ap f:ks)):kss               -> pop >> apply f x
 
 
 

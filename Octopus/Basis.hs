@@ -4,20 +4,16 @@
     as the machine could get at them.
 -}
 module Octopus.Basis (
-      mkSym
-    , mkSeq
-    , mkObj
-    , fromEnv
     -- * Basic Protocols
     -- ** Combination
-    , mkCombination
-    , combineF
-    , combineX
+      mkCall
+    , callOpr
+    , callArg
     , ensureCombination
     -- ** Closure
+    , closureVar
     , closureBody
     , closureEnv
-    , closureArg
     , ensureClosure
     -- ** Suspension
     , mkThunk
@@ -27,47 +23,33 @@ module Octopus.Basis (
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
-import Data.Foldable
-import Data.Traversable hiding (mapM)
 
 import Octopus.Data
-
-mkSym :: String -> Val
-mkSym = Sy . intern
-
-mkSeq :: [Val] -> Val
-mkSeq = Sq . Seq.fromList
-
-mkObj :: [(Symbol, Val)] -> Val
-mkObj = Ob . Map.fromList
-
-fromEnv :: Val -> Map Symbol Val
-fromEnv (Ob ob) = ob
-fromEnv _ = Map.empty
+import Octopus.Shortcut
 
 
 {-| Construct a combination: an object with a
     @__car__@ slot and a @__cdr__@ slot.
 -}
-mkCombination :: Val -- ^ Combiner (@__car__@)
+mkCall :: Val -- ^ Combiner (@__car__@)
            -> Val -- ^ Argument (@__cdr__@)
            -> Val
-mkCombination f x = Ob $ Map.fromList [(combineF, f), (combineX, x)]
+mkCall f x = mkObj [(callOpr, f), (callArg, x)]
 
 {-| Extract a (combiner, argument) pair from a
     combination-responsive object.
 -}
 ensureCombination :: Val -> Maybe (Val, Val)
-ensureCombination (Ob ob) = (,) <$> Map.lookup combineF ob
-                                <*> Map.lookup combineX ob
+ensureCombination (Ob ob) = (,) <$> Map.lookup callOpr ob
+                                <*> Map.lookup callArg ob
 ensureCombination _ = Nothing
 
 {-| Combiner slot name in a combination (aka. application) -}
-combineF :: Symbol
-combineF = intern "__car__"
+callOpr :: Symbol
+callOpr = intern "__car__"
 {-| Argument slot name in a combination (aka. application) -}
-combineX :: Symbol
-combineX = intern "__cdr__"
+callArg :: Symbol
+callArg = intern "__cdr__"
 
 
 {-| Construct a closure: an object with @__var__@,
@@ -78,17 +60,17 @@ mkClosure :: Val -- ^ Body (@__ast__@)
           -> Val -- ^ Parameter (@__arg__@)
           -> Val
 mkClosure ast env arg = Ob $ Map.fromList
-    [ (closureBody, ast), (closureEnv, env), (closureArg, arg) ]
+    [ (closureBody, ast), (closureEnv, env), (closureVar, arg) ]
 
+{-| Parameter slot name in a closure (aka. application) -}
+closureVar :: Symbol
+closureVar = intern "__var__"
 {-| Body slot name in a closure (aka. application) -}
 closureBody :: Symbol
 closureBody = intern "__ast__"
 {-| Static environment slot name in a closure (aka. application) -}
 closureEnv :: Symbol
 closureEnv = intern "__env__"
-{-| Parameter slot name in a closure (aka. application) -}
-closureArg :: Symbol
-closureArg = intern "__var__"
 
 {-| Extract a (body, environment, parameter) triple from
     a closure-responsive object.
@@ -96,7 +78,7 @@ closureArg = intern "__var__"
 ensureClosure :: Val -> Maybe (Val, Val, Val)
 ensureClosure (Ob ob) = (,,) <$> Map.lookup closureBody ob
                              <*> Map.lookup closureEnv ob
-                             <*> Map.lookup closureArg ob
+                             <*> Map.lookup closureVar ob
 ensureClosure _ = Nothing
 
 
