@@ -28,20 +28,16 @@ Parser
 	heredocs
 	decorators in do blocks?
 	assertion syntax?
-	import form:
-		currently, we only bind to a name in definitions
-		it would be more useful to do destructuring binding, for example:
-		do {somefunction: blah, x: x}: (import "somefile.oct")
-		   (blah x)
-		do [tag, constructor, deconstructor]: mkAbstype
 	export form in do block and file
 		currently, they export their whole environment
 		a way to give out a limited set would be very useful
 
 Interpreter
+	objects are self-evaluating, except those that have not yet been eval'd
 	Import primitive:
 		read/parse/eval file, returns result of evaluation (which of course is the env at the end of the file)
 		don't forget to memoize these so import is idempotent
+		also, some imports might not be from a file, or may be relative to the install environ
 	Data primitives
 		numbers
 		bytes

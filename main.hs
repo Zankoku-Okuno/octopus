@@ -60,6 +60,7 @@ main = do
          \   (defx 5 x);"
     test "do defx5: (__let__ x 5)\n\
          \   (defx5 x);"
+    test "do [a, b, c]: [`there, `Bob, `hi] [c, a, b];"
 
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
 letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"

@@ -67,9 +67,9 @@ parseOctopusFile sourceName input = P.runParser octopusFile () sourceName input
     getenv = (mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "e", mkObj []], mkSym "e"]))
 
 
-define :: Parser (String, Val)
+define :: Parser (Val, Val)
 define = do
-    var <- try (name <* char ':' <* whitespace)
+    var <- try (expr <* char ':' <* whitespace)
     body <- expr
     return (var, body)
 
@@ -79,7 +79,7 @@ expr = composite P.<|> atom
     atom = P.choice [symbol, numberLit, textLit, heredoc, accessor] <?> "atom"
     composite = P.choice [block, combine, sq, ob, quote]
 
-statement :: Parser (Either (String, Val) Val)
+statement :: Parser (Either (Val, Val) Val)
 statement = (Left <$> define) P.<|> (Right <$> expr)
 
 
@@ -161,8 +161,6 @@ quote = do
     e <- expr
     return $ mkCall (mkSym "__quote__") e
 
---TODO quasiquotation
-
 
 ------ Space ------
 whitespace :: Parser ()
@@ -188,7 +186,7 @@ name = many2
     (blacklistChar (`elem` reservedFirstChar))
     (blacklistChar (`elem` reservedChar))
     where
-    reservedChar = "#\\\"`()[]{}:;.," --TODO quasiquote sugar (`,~) and comma requires a space afterwards
+    reservedChar = "#\\\"`()[]{}:;.,"
     reservedFirstChar = reservedChar ++ "-0123456789"
 
 comma :: Parser ()
@@ -201,7 +199,7 @@ bareCombination = loop <$> P.many1 (postPadded expr)
     loop [f, x] = mkCall f x
     loop es = mkCall (loop $ init es) (last es)
 
-mkDefn (x, val) = mkCall (mkCall (mkSym "__let__") (mkSym x)) val
+mkDefn (x, val) = mkCall (mkCall (mkSym "__let__") x) val
 mkExpr e = mkCall (mkCall (mkSym "__let__") (mkObj [])) e
 
 
