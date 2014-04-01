@@ -29,78 +29,47 @@ startData = mkObj [
     , (intern "__quote__", quoteDef)
     ]
     where
-    --(__vau__ [[{}, x],
-    --    __vau__ [[static, body],
-    --        __vau__ [arg,
-    --            __eval__ [
-    --                __extends__ [
-    --                    __match__ [x, arg],
-    --                    static],
-    --                body]]]])
-    vauDef = mkObj
-        [ (closureVar, mkSeq [mkObj [], mkSym "x"])
-        , (closureBody,
-            mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "body"],
-                mkCall (Pr Vau) (mkSeq [mkSym "arg",
-                    mkCall (Pr Eval) (mkSeq [
-                        mkCall (Pr Extends) (mkSeq [
-                            mkCall (Pr Match) (mkSeq [mkSym "x", mkSym "arg"]),
-                            mkSym "static"]),
-                        mkSym "body"])])]))
-        , (closureEnv, mkObj [])
-        ]
-    --(__vau__ [[_,x], __vau__ [ob, __delete__ [__eval__ ob, x]]])
-    delDef = mkObj
-        [ (closureVar, mkSym "ob")
-        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSeq [mkObj [], mkSym "x"],
+    vauDef = Cl
+        (mkSeq [mkObj [], mkSym "x"])
+        (mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "body"],
+            mkCall (Pr Vau) (mkSeq [mkSym "arg",
+                mkCall (Pr Eval) (mkSeq [
+                    mkCall (Pr Extends) (mkSeq [
+                        mkCall (Pr Match) (mkSeq [mkSym "x", mkSym "arg"]),
+                        mkSym "static"]),
+                    mkSym "body"])])]))
+        (mkObj [])
+    delDef = Cl 
+        (mkSym "ob")
+        (mkCall (Pr Vau) (mkSeq [mkSeq [mkObj [], mkSym "x"],
             mkCall (Pr Delete) (mkSeq [mkCall (Pr Eval) (mkSym "ob"), mkSym "x"])]))
-        , (closureEnv, mkObj [])
-        ]
-    --(__vau__ [[_, x], __vau__ [ob, __eval__ [__eval__ ob, x]]])
-    --evals to
-    --{
-    --    __var__: [_, x],
-    --    __ast__: __vau__ [ob,
-    --                  __eval__ [__eval__ ob, x]],
-    --    __env__: topLevel
-    --}
-    getDef = mkObj
-        [ (closureVar, mkSeq [mkObj [], mkSym "x"])
-        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSym "ob",
+        (mkObj [])
+    getDef = Cl
+        (mkSeq [mkObj [], mkSym "x"])
+        (mkCall (Pr Vau) (mkSeq [mkSym "ob",
             mkCall (Pr Eval) (mkSeq [mkCall (Pr Eval) (mkSym "ob"), mkSym "x"])]))
-        , (closureEnv, mkObj [])
-        ]
-    --{ __var__: [{}, x]
-    --, __ast__: (__vau__ [val, __vau__ [[e, body], __eval__ [__extends__ [__match__ [x, __eval__ val], e], body]]])
-    --, __env__: {}
-    --}
-    letDef = mkObj
-        [ (closureVar, mkSeq [mkObj [], mkSym "x"])
-        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSym "val",
+        (mkObj [])
+    letDef = Cl
+        (mkSeq [mkObj [], mkSym "x"])
+        (mkCall (Pr Vau) (mkSeq [mkSym "val",
             mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "e", mkSym "body"],
                 mkCall (Pr Eval) (mkSeq
                     [ mkCall (Pr Extends) (mkSeq 
                         [ mkCall (Pr Match) (mkSeq [mkSym "x", mkCall (Pr Eval) (mkSym "val")])
                         , mkSym "e"])
                     , mkSym "body"])])]))
-        , (closureEnv, mkObj [])
-        ]
-    lambdaDef = mkObj
-        [ (closureVar, mkSeq [mkObj [], mkSym "var"])
-        , (closureBody, mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "ast"],
+        (mkObj [])
+    lambdaDef = Cl
+        (mkSeq [mkObj [], mkSym "var"])
+        (mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "static", mkSym "ast"],
             mkCall (Pr Vau) (mkSeq [mkSym "arg",
                 mkCall (Pr Eval) (mkSeq
                     [ mkCall (Pr Extends) (mkSeq
                         [ mkCall (Pr Match) (mkSeq [mkSym "var", mkCall (Pr Eval) (mkSym "arg")])
                         , mkSym "static"])
                     , mkSym "ast"])])]))
-        , (closureEnv, mkObj [])
-        ]
-    quoteDef = mkObj
-        [ (closureVar, mkSeq [mkObj [], mkSym "ast"])
-        , (closureBody, mkSym "ast")
-        , (closureEnv, mkObj [])
-        ]
+        (mkObj [])
+    quoteDef = Cl (mkSeq [mkObj [], mkSym "ast"]) (mkSym "ast") (mkObj [])
 
 
 
@@ -120,6 +89,7 @@ reduce x@(Nm _) = done x
 reduce x@(Ce _) = done x
 reduce x@(Ar _) = done x
 reduce x@(Fp _) = done x
+reduce x@(Cl _ _ _) = done x
 reduce x@(Pr _) = done x
 reduce (Sy x) = gets environ >>= \env -> case Oct.resolveSymbol x env of
     Just val -> done val
@@ -131,25 +101,21 @@ reduce sq@(Sq xs) = case toList xs of
     (x:xs) -> push (Es [] xs) >> reduce x
 reduce ob@(Ob m) = case ensureCombination ob of
     Just (f, x) -> push (Op x) >> reduce f
-    Nothing -> let (uneval, eval) = Oct.splitFields m
-               in case eval of
-                [] -> done (mkObj uneval)
-                ((k,v):xs) -> push (Eo k uneval xs) >> reduce v
+    Nothing -> case Map.toList m of
+                [] -> done (mkObj [])
+                ((k,v):xs) -> push (Eo k [] xs) >> reduce v
 
 combine :: Val -> Val -> Machine Val
 combine (Pr Vau) x = case x of
     Sq xs -> case toList xs of
-        [arg, ast] -> do
+        [var, ast] -> do
             env <- gets environ
-            done $ Ob $ Map.fromList [ (closureBody, ast)
-                                     , (closureVar, arg)
-                                     , (closureEnv, env)
-                                     ]
+            done $ Cl var ast env
         _ -> error "raise wrong number of args to primitive vau"
     _ -> error "raise invalid args to primitive vau"
 combine f@(Pr _) x = push (Ap f) >> reduce x
 combine f x = case ensureClosure f of --all of these are operatives
-    Just (ast, env, var) -> do
+    Just (var, ast, env) -> do
         caller <- gets environ
         let x' = mkSeq [caller, x]
         case Oct.match var x' of

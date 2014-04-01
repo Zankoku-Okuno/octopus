@@ -1,6 +1,5 @@
 module Octopus.Primitive (
-      splitFields
-    , resolveSymbol
+      resolveSymbol
 
     , match
 
@@ -34,19 +33,6 @@ import Octopus.Shortcut
 import Octopus.Basis
 
 ------ Internals ------
-{-| The point of closures is to protect from premature evaluation. Since closures 
-    are just an object responding to a protocol, we need to protect some fields
-    from evaluation. This function takes an object's internals and splits the
-    mapping inot the protected and evaulated parst, respectively.
--}
-splitFields :: Map Symbol Val -> ([(Symbol, Val)], [(Symbol, Val)])
-splitFields = go ([], []) . Map.toList
-    where
-    go (protect, eval) [] = (protect, eval)
-    go (protect, eval) (x:xs) | fst x `elem` protectedFields = go (x:protect, eval) xs
-                              | otherwise = go (protect, x:eval) xs
-    protectedFields = [closureVar, closureBody, closureEnv]
-
 {-| Lookup symbol in a value, if the binding exists. -}
 resolveSymbol :: Symbol -> Val -> Maybe Val
 resolveSymbol sy (Ob ob) = Map.lookup sy ob

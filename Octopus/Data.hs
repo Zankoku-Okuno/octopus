@@ -16,6 +16,7 @@ data Val = Nm Rational -- ^ Rational number
          | Tg Int -- ^ Unique tag
          | Sq (Seq Val) -- ^ Sequence, aka. list
          | Ob (Map Symbol Val) -- ^ Symbol-value map, aka. object
+         | Cl Val Val Val -- ^ Operative closure
          | Ce (IORef Val) -- ^ Reference cell
          | Ar (IOArray Int Val) -- ^ Mutable array
          | Pr Primitive -- ^ Primitive operations
@@ -104,6 +105,7 @@ instance Show Val where
         getCombo ob = case (Map.lookup (intern "__car__") ob, Map.lookup (intern "__cdr__") ob) of
         	(Just f, Just x) -> if length (Map.keys ob) == 2 then Just (f, x) else Nothing
         	_ -> Nothing
+    show (Cl var ast env) = "<closure: var: " ++ show var ++ ", ast: " ++ show ast ++ ", env: " ++ show env ++ ">"
     show (Ce x) = "<reference cell>" --TODO show contents
     show (Ar xs) = "<mutable array>" --TODO show contents
     show (Pr f) = "<" ++ show f ++ ">"

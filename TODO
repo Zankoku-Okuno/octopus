@@ -6,12 +6,16 @@ General
 		definition
 	first-class patterns
 	abstract types
-		special wrapper/unwrapper primitives so you can't subvert the abstraction through introspection
-		we'll need a typeof operator, which returns a tag. Abstract and non-abstract type tags are all in the same boat
+		a primitive to construct a triple of (tag, constructor, deconstructor)
+		we'll need a typeof operator, which returns a tag.
+		might be nice to give names to types
 	better pretty-print
 		show as octopus parses, not as haskell does
 		apply judicious indentation
+		the angle brackets are ambiguous, use #<...>
 	serialize values, even the current program state
+	atom ::= ... | ':(' /<name>:/ <expr>+ ')' | /@<name>/ | @(' /<name>:/ <expr>+ ')'
+		at is prefix, colon is infix
 
 Parser
 	distfixes
@@ -24,6 +28,15 @@ Parser
 	heredocs
 	decorators in do blocks?
 	assertion syntax?
+	import form:
+		currently, we only bind to a name in definitions
+		it would be more useful to do destructuring binding, for example:
+		do {somefunction: blah, x: x}: (import "somefile.oct")
+		   (blah x)
+		do [tag, constructor, deconstructor]: mkAbstype
+	export form in do block and file
+		currently, they export their whole environment
+		a way to give out a limited set would be very useful
 
 Interpreter
 	Import primitive:
@@ -41,7 +54,6 @@ Interpreter
 		arrays
 		handlers
 		continuations
-	Extended data primitves?
 	REPL
 
 Cleanup
@@ -49,9 +61,22 @@ Cleanup
 	eliminate magic field names
 
 Tooling
+	Virtual envitonment
+	Packaging
+		may as well design it general:
+		the package metadata should describe the target language
+		that way, I can use the same protocols for Octopus, Murex and Nautilus
 	When you run the interpreter, allow for hooks.
-	Say you do `octopus "somefile.oct", then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
+		Say you do `octopus "somefile.oct", then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
+	lint/runtime warnings:
+		detect no parenthesis on a multi-expression do line (statement or expression)
+		possible misspellings (rough analysis of do blocks, especially note similar spellings)
+		unsafe filenames (target the lowest common denominator)
+		malformed type names (these should have a standard form, like /\w+(\.\s+)*/)
+		warn about rebinding double-underscore symbols
 
 Performance
+	Applicative closures
+	Extended data primitves
 	try using `Rose (Map Symbol (Maybe Val))` for objects to reduce space consumption
 		The maybe val is there so that a lookup can return (Just Nothing), which is equivalent to (Nothing)

@@ -11,9 +11,7 @@ module Octopus.Basis (
     , callArg
     , ensureCombination
     -- ** Closure
-    , closureVar
-    , closureBody
-    , closureEnv
+    , mkClosure
     , ensureClosure
     -- ** Suspension
     , mkThunk
@@ -59,26 +57,13 @@ mkClosure :: Val -- ^ Body (@__ast__@)
           -> Val -- ^ Static environment (@__env__@)
           -> Val -- ^ Parameter (@__arg__@)
           -> Val
-mkClosure ast env arg = Ob $ Map.fromList
-    [ (closureBody, ast), (closureEnv, env), (closureVar, arg) ]
-
-{-| Parameter slot name in a closure (aka. application) -}
-closureVar :: Symbol
-closureVar = intern "__var__"
-{-| Body slot name in a closure (aka. application) -}
-closureBody :: Symbol
-closureBody = intern "__ast__"
-{-| Static environment slot name in a closure (aka. application) -}
-closureEnv :: Symbol
-closureEnv = intern "__env__"
+mkClosure var ast env = Cl var ast env
 
 {-| Extract a (body, environment, parameter) triple from
     a closure-responsive object.
 -}
 ensureClosure :: Val -> Maybe (Val, Val, Val)
-ensureClosure (Ob ob) = (,,) <$> Map.lookup closureBody ob
-                             <*> Map.lookup closureEnv ob
-                             <*> Map.lookup closureVar ob
+ensureClosure (Cl var ast env) = Just (var, ast, env)
 ensureClosure _ = Nothing
 
 
