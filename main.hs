@@ -8,13 +8,13 @@ import Octopus.Parser
 
 main :: IO ()
 main = do
-    parse_e <- parseOctopusFile "foo.oct" <$> readFile "test/foo.oct"
-    case parse_e of
-        Left err -> print err
-        Right val -> do
-            print val
-            print =<< eval startData val
-    exitSuccess
+    --parse_e <- parseOctopusFile "foo.oct" <$> readFile "test/foo.oct"
+    --case parse_e of
+    --    Left err -> print err
+    --    Right val -> do
+    --        print val
+    --        print =<< eval startData val
+    --exitSuccess
 
     test "do four: 4 ((vau x x) four);"
     test "do four: 4 ((vau x (__eval__ x)) four);"
@@ -56,7 +56,10 @@ main = do
     test "do x: do \955: __lambda__\n\
          \         (\955 y y 3);\n\
          \      x;"
-
+    test "do defx: (__let__ x)\n\
+         \   (defx 5 x);"
+    test "do defx5: (__let__ x 5)\n\
+         \   (defx5 x);"
 
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
 letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"

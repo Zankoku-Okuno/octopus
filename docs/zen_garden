@@ -1,0 +1,39 @@
+Octopus' Zen Garden
+===================
+
+* Computations are data, computations are containers.
+* If you can't do it pure, you're thinking it wrong.
+* Immutable means you needn't think about changes over time.
+* First-class everything means you're in control.
+* Explicit means you're in control.
+* Start simple, stay as simple as possible.
+* Transparency requires trust.
+* Trust is not the same as blind faith.
+* Complicated is your fault.
+* Code is read much more often than it is written.
+* Clean is easy, verbose is hard.
+* Clean code is easy to fix.
+* Error handling requires transactions.
+* Start with the right algorithm and buy more hardware.
+* Clever is fun; obfuscated isn't.
+
+
+Commentary
+==========
+
+First things first, there's no special word for following these rules. No one cares if you follow the rules; people care if the code is good. These rules were designed to aid in thinking about how to create good code. No two situations are exactly the same, so they can't be perfect, but they nevertheless apply pretty widely. When in doubt, visit the Zen Garden and consider how it all works together for your problem. 
+
+Clean is easy, verbose is hard.
+-------------------------------
+
+Clean code is easy to learn, write, read, extend, and fix.
+
+Contrary to the rule, designing a clean library is harder than a verbose one. Keep in mind the simplicity rule.
+
+
+Start with the right algorithm and buy more hardware.
+-----------------------------------------------------
+
+The rest of the rules are rules of thought, but this one involves the cold, hard world of currency. Of course, time can also stand in for currency as computers continue to undergo exponential growth in performance-to-cost ratio. Just make sure your algorithm has low groth rates (time, space and communication) and time and/or money will solve the rest of the problem without your intervention.
+
+If you can't buy more hardware and you can't wait, then you just have to compromise on this one; not a big deal.

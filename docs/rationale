@@ -1,0 +1,45 @@
+Rationale
+=========
+
+I make no stupid compromises in the design of my languages. 
+
+Is anything even possible with immutability?
+--------------------------------------------
+
+With mutable data, you are always questioning who has references to what. It's a complicated question and when (not if) you get it wrong, that's what I call a data corruption bug. Data corruption is like memory corruption, except when you screw up, the program doesn't just crash, it keeps going further down the wrong route. Data corruption is not fun to debug.
+
+Luckily, immutable data is immune to data corruption, and even better, most problems only need immutable data. With Octopus (like Clojure and Haskell) you'll find your brain freed from the overhead of ownership questions, ready to do more real work. Once it clicks, default immutable data easily cuts debuging time by an order of magnitude.
+
+That said, sometimes mutation is the way to go, and Octopus does have mutable reference cells. Like C pointers, you need to do extra typing to use them: explicitly dereferencing values from their cells and using a special assignment operator. Every time you use mutation, you're alerted to the possibility of data corruption, and the need to encapsulate that mutation under a nice, immutable interface. Just that extra bit of syntax makes it easy to see and think about what's really going on.
+
+I sure wish there were a type checker...
+----------------------------------------
+
+When you can make arbitrary changes to environments at runtime, there's no such thing as a static type checker. Well, it might be possible with refinement types, but those are weird and probably still need checking at runtime. Static types are a feature, and I'd like ot have them in Octopus, but the language is just too dynamic to let it fly.
+
+That said, there's nothing stopping you from typeful programming. We have a pseudo-syntax for types that we use in the documentation, and we place a lot of emphasis on explicitly defining protocols and checking invariants as early as possible. It's not perfect, but it's something.
+
+Can't I have varargs?
+---------------------
+
+Octopus is curried, which means that every function takes exactly one argument. Every. Single. Function. There never reason to question how many arguments a function takes; the answer is one.
+
+That being said, varargs are easy: pass a list. Want arbitrary keyword arguments? Pass an object.
+
+The alternative is to have special treatment of varargs and varkwargs. The argument list is a well-known wart in Javascript. In C, varargs are easy to define, but hard to use. In Python, passing varargs and varkwargs around needs special syntax. Eliminating varargs and varkwargs means you use regular data to simulate them, which means they are as easy to use as regular data.
+
+Dude, where's my stack trace?
+-----------------------------
+
+Implementations of Octopus are required to be properly tail-recursive. Since there is no primitive iteration construct, we simulate iteration with appropriate tail-recursive function calls. With proper tail-recursion, this simulation in fact has the same performance characteristics as iteration.
+
+I have heard the argument that proper tail-recursion is bad because the stack trace can give an incomplete picture of how you got to a certain point.
+
+  * Not all the information about how you got to a certain point is included in the trace.
+  * The trace is not for telling you how you got to a point.
+  * Debuggers can help you find out how a certain point was reached.
+  * The trace only tells the machine what else it has left to do.
+
+If you code a loop in an imperative language, you don't get to see all the previous values of the iteration variable. This isn't a problem in practice. Tail recursion in functional languages is the same phenomenon. If a bug escapes the stack, as they eventually will, the debugger is the way to go.
+
+

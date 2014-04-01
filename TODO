@@ -5,18 +5,25 @@ General
 		geting started
 		definition
 	first-class patterns
-	abstract types?
-		could have special wrapper/unwrapper primitives so you can't subvert the abstraction through introspection
+	abstract types
+		special wrapper/unwrapper primitives so you can't subvert the abstraction through introspection
+		we'll need a typeof operator, which returns a tag. Abstract and non-abstract type tags are all in the same boat
 	better pretty-print
 		show as octopus parses, not as haskell does
 		apply judicious indentation
+	serialize values, even the current program state
 
 Parser
 	distfixes
 	infix dot
+	special syntax for lambda and vau (use the primitive ones, allow for stuff like (\l (x y z) body))
 	infix colon?
 		but then what about a bare accessor function? at-sign?
 	ellipsis?
+	block comments
+	heredocs
+	decorators in do blocks?
+	assertion syntax?
 
 Interpreter
 	Import primitive:
@@ -35,10 +42,15 @@ Interpreter
 		handlers
 		continuations
 	Extended data primitves?
+	REPL
 
 Cleanup
 	put Shortcuts in Octopus.Data
 	eliminate magic field names
+
+Tooling
+	When you run the interpreter, allow for hooks.
+	Say you do `octopus "somefile.oct", then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
 
 Performance
 	try using `Rose (Map Symbol (Maybe Val))` for objects to reduce space consumption
