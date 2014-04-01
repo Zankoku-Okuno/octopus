@@ -16,6 +16,7 @@ Executive summary: it's a Lisp with first-class-everything. For more detail, it 
 * Immutable values: Data structures are persistent; never corrupt your program state again.
 * First-class control: Conquer the last resistance to abstraction; define any control flow construct ever dreamt of.
 * Streamlined syntax: With only eight grammar rules, you might miss them if you blink.
+* Permissive identifiers: Unicode identifiers and user-defined disfixes open new possibilities; make Lisp read-write.
 
 Future Features
 ---------------

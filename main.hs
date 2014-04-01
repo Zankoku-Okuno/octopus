@@ -1,12 +1,21 @@
 import System.IO
 import System.Environment
 import System.Exit
+import Control.Applicative
 
 import Octopus
 import Octopus.Parser
 
 main :: IO ()
 main = do
+    parse_e <- parseOctopusFile "foo.oct" <$> readFile "test/foo.oct"
+    case parse_e of
+        Left err -> print err
+        Right val -> do
+            print val
+            print =<< eval startData val
+    exitSuccess
+
     test "do four: 4 ((vau x x) four);"
     test "do four: 4 ((vau x (__eval__ x)) four);"
     test "((vau [e, ast] e) dne)"
@@ -58,11 +67,11 @@ letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__
 --dot-infixing as normal
 --colon-infixing also desugars into a getter
 
-testParse input = case parseOctopus "" input of
+testParse input = case parseOctopusExpr "" input of
     Right val -> print val
     Left err -> print err
 test input = do
     putStr $ input ++ " ===> "
-    case parseOctopus "repl" input of
+    case parseOctopusExpr "repl" input of
         Right val -> print =<< eval startData val
         Left err -> print err

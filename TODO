@@ -12,13 +12,16 @@ General
 		apply judicious indentation
 
 Parser
-	files
 	distfixes
 	infix dot
-	infix colon
+	infix colon?
+		but then what about a bare accessor function? at-sign?
 	ellipsis?
 
 Interpreter
+	Import primitive:
+		read/parse/eval file, returns result of evaluation (which of course is the env at the end of the file)
+		don't forget to memoize these so import is idempotent
 	Data primitives
 		numbers
 		bytes

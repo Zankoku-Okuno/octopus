@@ -51,10 +51,21 @@ import Octopus.Basis
 
 type Parser = Parsec String ()
 
-parseOctopus :: SourceName -> String -> Either ParseError Val
-parseOctopus sourceName input = P.runParser octopusFile () sourceName input
+parseOctopusExpr :: SourceName -> String -> Either ParseError Val
+parseOctopusExpr sourceName input = P.runParser (padded expr <* padded eof) () sourceName input
+
+parseOctopusFile :: SourceName -> String -> Either ParseError Val
+parseOctopusFile sourceName input = P.runParser octopusFile () sourceName input
     where
-    octopusFile = expr --STUB
+    octopusFile = do
+        es <- P.many $ padded statement
+        padded eof
+        return $ loop es
+    loop [] = mkCall getenv (mkObj [])
+    loop (Left s:rest)  = mkCall (mkDefn s) (loop rest)
+    loop (Right e:rest) = mkCall (mkExpr e) (loop rest)
+    getenv = (mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "e", mkObj []], mkSym "e"]))
+
 
 define :: Parser (String, Val)
 define = do
@@ -139,12 +150,10 @@ block = do
         char ';'
         return $ loop states
     where
-    loop [Left s] = mkCall (mkDefn s) (mkObj [])
+    loop [Left d] = mkCall (mkDefn d) (mkObj [])
     loop [Right e] = e
-    loop (Left s:rest) = mkCall (mkDefn s) (loop rest)
+    loop (Left d:rest) = mkCall (mkDefn d) (loop rest)
     loop (Right e:rest) = mkCall (mkExpr e) (loop rest)
-    mkDefn (x, val) = mkCall (mkCall (mkSym "__let__") (mkSym x)) val
-    mkExpr e = mkCall (mkCall (mkSym "__let__") (mkObj [])) e
 
 quote :: Parser Val
 quote = do
@@ -192,6 +201,8 @@ bareCombination = loop <$> P.many1 (postPadded expr)
     loop [f, x] = mkCall f x
     loop es = mkCall (loop $ init es) (last es)
 
+mkDefn (x, val) = mkCall (mkCall (mkSym "__let__") (mkSym x)) val
+mkExpr e = mkCall (mkCall (mkSym "__let__") (mkObj [])) e
 
 
 
