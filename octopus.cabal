@@ -3,7 +3,7 @@
 
 name:                octopus
 version:             0.0.0.0
-synopsis:            A 100-year language inspired by Kernel, Clojure, Arc and science.
+synopsis:            A 100-year language inspired by Kernel, JSON, Clojure, Arc and science.
 -- description:         
 homepage:            https://github.com/Zankoku-Okuno/octopus/
 license:             GPL-3

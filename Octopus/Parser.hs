@@ -12,7 +12,7 @@ list ::= '[' (\<expr\>+ (',' \<expr\>+)*)? ']'
 object ::= '{' (_field_ \<expr\>+ (',' _field_ \<expr\>+)*)? '}'
 combination ::= '(' \<expr\> \<expr\>+ ')'
 block ::= 'do' (\<expr\> | \<defn\>)+ ';'
-quotation ::= (''' | '`' | ',' | '~') \<expr\>
+quotation ::= '`' \<expr\>
 
 symbol ::= \/\<name\>\/ - reserved
     reserved = {'do'}
@@ -27,7 +27,7 @@ number ::= \/[+-]?(0[xX]\<hexnum\>|0[oO]\<octnum\>|0[bB]\<binnum\>|\<decnum\>)\/
 string ::= \/\"([^\\\\\"]|\\\\[abefntv\'\"\\\\&]|\\\\\<numescape\>|\\\\\\s*\\n\\s*\\\\)*\"\/
     numescape ::= \/[oO][0-7]{3}|[xX][0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U0[0-9a-fA-F]{5}|U10[0-9a-fA-F]{4}\/
 heredoc ::= \/\#\<\<\\s*(?\'END\'\\w+)\\s*\\n.*?\\g{END}\/
-name ::= \/[^\#\\\\\"\'`~()[]{}:;.,][^\#\\\\\"\'`~()[]{}:;.,]*\/
+name ::= \/[^\#\\\\\"`()[]{}:;.,][^\#\\\\\"`()[]{}:;.,]*\/
 
 linecomment ::= \/#(?!\>\>)\\.*?\\n\/
 blockcomment ::= \/\#\\{([^\#}]+|\<blockcomment\>|\#[^{]|\\}[^\#])*\\}\#\/
@@ -148,7 +148,7 @@ block = do
 
 quote :: Parser Val
 quote = do
-    char '\''
+    char '`'
     e <- expr
     return $ mkCall (mkSym "__quote__") e
 
@@ -179,7 +179,7 @@ name = many2
     (blacklistChar (`elem` reservedFirstChar))
     (blacklistChar (`elem` reservedChar))
     where
-    reservedChar = "#\\\"\'`~()[]{}:;.," --TODO quasiquote sugar (`,~) and comma requires a space afterwards
+    reservedChar = "#\\\"`()[]{}:;.," --TODO quasiquote sugar (`,~) and comma requires a space afterwards
     reservedFirstChar = reservedChar ++ "-0123456789"
 
 comma :: Parser ()

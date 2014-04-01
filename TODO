@@ -1,0 +1,42 @@
+TODO
+
+General
+	documentation
+		geting started
+		definition
+	first-class patterns
+	abstract types?
+		could have special wrapper/unwrapper primitives so you can't subvert the abstraction through introspection
+	better pretty-print
+		show as octopus parses, not as haskell does
+		apply judicious indentation
+
+Parser
+	files
+	distfixes
+	infix dot
+	infix colon
+	ellipsis?
+
+Interpreter
+	Data primitives
+		numbers
+		bytes
+		text
+		fileps
+		symbols
+		tags
+		sequences
+		reference cells
+		arrays
+		handlers
+		continuations
+	Extended data primitves?
+
+Cleanup
+	put Shortcuts in Octopus.Data
+	eliminate magic field names
+
+Performance
+	try using `Rose (Map Symbol (Maybe Val))` for objects to reduce space consumption
+		The maybe val is there so that a lookup can return (Just Nothing), which is equivalent to (Nothing)

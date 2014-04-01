@@ -40,7 +40,7 @@ main = do
     test "[__lambda__ x x 3, __lambda__ y y 4]" --[3, 4]
 
     test "do \955: __lambda__\n   x: 1 \n   (\955 x x 3)\n   y: 2\n   [x, y];" --[1, 2]
-    test "(__del__ [{x: 1, y: 2}, 'y])"
+    test "(__del__ [{x: 1, y: 2}, `y])"
     test "do \955: __lambda__\n\
          \   delete: (\955 ob (vau [{}, field] (__del__ [ob, field])))\n\
          \   (delete {x: 1, y: 2} x);"
