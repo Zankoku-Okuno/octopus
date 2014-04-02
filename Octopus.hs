@@ -20,7 +20,7 @@ startData = mkOb [
       (intern "__vau__", Pr Vau)
     , (intern "__match__", Pr Match)
     , (intern "__eval__", Pr Eval)
-    , (intern "__ifz__", Pr Ifz)
+    , (intern "__ifz!__", Pr Ifz)
     --- Relationals ---
     , (intern "__eq__", Pr Eq)
     , (intern "__neq__", Pr Neq)
@@ -105,9 +105,6 @@ eval env code = evalStateT (reduce code) MState { environ = env --Ob Map.empty
                                                 }
 
 
-
-
-
 reduce :: Val -> Machine Val
 reduce x@(Nm _) = done x
 reduce x@(By _) = done x
@@ -155,12 +152,16 @@ apply :: Val -> Val -> Machine Val
 apply (Pr Eval) x = case ensureThunk x of
     Just (env, ast) -> swapEnv env >> reduce ast
     _ -> error $ "raise invalid args to primitive eval: " ++ show x
---, (intern "__ifz__", Pr Ifz) --TODO
+apply (Pr Ifz) x = case x of
+    Sq xs -> case toList xs of
+        [p, c, a] -> done $ Oct.ifz p c a
+        _ -> error "raise wrong number of args to primitive Ifz"
+    _ -> error "raise invalid args to primitive Ifz"
 apply (Pr Extends) x = case x of
     Sq xs -> case toList xs of
         [] -> done $ mkOb []
         xs -> done $ foldr1 Oct.extend xs
-    _ -> error "raise invalid args to primitive extends"
+    _ -> error "raise invalid args to primitive Extends"
 apply (Pr pr) x =
     case lookup pr table of
         Just f -> case f pr x of

@@ -62,9 +62,10 @@ main = do
          \   (defx5 x);"
     test "do [a, b, c]: [`there, `Bob, `hi] [c, a, b];"
 
-    test "do x: (__add__ [1, 2]) y: (__sub__ [1, 2]) z: (__mul__ [2, 3]) w: (__div__ [2, 3]) [x, y, z, w];"
-    test "do [a, b]: (__cut__ [[1, 2, 3, 4, 5], 3]) [a, b, __len__ a];"
-    test "do [a, b]: (__cut__ [\"hello\", 3]) [a, b, __len__ a];"
+    test "do x: (__add__ [1, 2])\n   y: (__sub__ [1, 2])\n   z: (__mul__ [2, 3])\n   w: (__div__ [2, 3])\n   [x, y, z, w];"
+    test "do [a, b]: (__cut__ [[1, 2, 3, 4, 5], 3])\n   [a, b, __len__ a];"
+    test "do [a, b]: (__cut__ [\"hello\", 3])\n   [a, b, __len__ a];"
+    test "do y: (__ifz!__ [0, `y, `n])\n   n: (__ifz!__ [1, `y, `n])\n   [y, n];"
 
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
 letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"
