@@ -6,15 +6,17 @@ import qualified Data.Map as Map
 
 import Octopus.Data
 
+mkInt :: Integral a => a -> Val
+mkInt = Nm . fromIntegral
 
-mkSym :: String -> Val
-mkSym = Sy . intern
+mkSy :: String -> Val
+mkSy = Sy . intern
 
-mkSeq :: [Val] -> Val
-mkSeq = Sq . Seq.fromList
+mkSq :: [Val] -> Val
+mkSq = Sq . Seq.fromList
 
-mkObj :: [(Symbol, Val)] -> Val
-mkObj = Ob . Map.fromList
+mkOb :: [(Symbol, Val)] -> Val
+mkOb = Ob . Map.fromList
 
 fromEnv :: Val -> Map Symbol Val
 fromEnv (Ob ob) = ob

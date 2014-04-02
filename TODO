@@ -1,56 +1,60 @@
 TODO
 
 General
-	documentation
-		geting started
-		definition
-	first-class patterns
-	abstract types
-		a primitive to construct a triple of (tag, constructor, deconstructor)
-		we'll need a typeof operator, which returns a tag.
-		might be nice to give names to types
 	better pretty-print
 		show as octopus parses, not as haskell does
 		apply judicious indentation
 		the angle brackets are ambiguous, use #<...>
-	serialize values, even the current program state
-	atom ::= ... | ':(' /<name>:/ <expr>+ ')' | /@<name>/ | @(' /<name>:/ <expr>+ ')'
-		at is prefix, colon is infix
+	first-class patterns?
+	serialize values, even mutable cells and the current program state
+	consider putting types into the grammar, unchecked of course
 
 Parser
+	allow names like /([^0-9-]|-[^0-9])\.*|-/
+	atom ::= ... | ':(' /<name>:/ <expr>+ ')' | /@<name>/ | @(' /<name>:/ <expr>+ ')' | /\.<expr>/ | '.(' <expr>+ ')'
+		@ is prefix, : and . are infix
 	distfixes
-	infix dot
 	special syntax for lambda and vau (use the primitive ones, allow for stuff like (\l (x y z) body))
-	infix colon?
-		but then what about a bare accessor function? at-sign?
-	ellipsis?
 	block comments
 	heredocs
 	decorators in do blocks?
+	ellipsis?
 	assertion syntax?
-	export form in do block and file
-		currently, they export their whole environment
+	export form in file
+		currently, it exports the whole environment
 		a way to give out a limited set would be very useful
+	import form objects
+		{x, y, z: foo} === {x: x, y: y, z: foo}
+	literals for closures, primitives, tags, &c (using #<...> syntax)?
 
 Interpreter
-	objects are self-evaluating, except those that have not yet been eval'd
+	Data primitives
+		eq
+		fileps
+		tags
+		reference cells
+		arrays
+		handlers?
+		conversions
 	Import primitive:
 		read/parse/eval file, returns result of evaluation (which of course is the env at the end of the file)
 		don't forget to memoize these so import is idempotent
 		also, some imports might not be from a file, or may be relative to the install environ
-	Data primitives
-		numbers
-		bytes
-		text
-		fileps
-		symbols
-		tags
-		sequences
-		reference cells
-		arrays
-		handlers
-		continuations
+	First-class control
+	objects are self-evaluating, except those that have not yet been eval'd
+	abstract types
+		a primitive to construct a triple of (tag, constructor, deconstructor)
+		we'll need a typeof operator, which returns a tag.
+		might be nice to give names to types
+	Floating point primitive type
 	REPL
+	re-raise exceptions
+
+Documentation
+	geting started
+	definition
+	Octopus for (JS, OOlang, Lisp, ...) Programmers
+	every primitive type and operation: what they do and when/how they fail
 
 Cleanup
 	put Shortcuts in Octopus.Data
@@ -62,17 +66,21 @@ Tooling
 		may as well design it general:
 		the package metadata should describe the target language
 		that way, I can use the same protocols for Octopus, Murex and Nautilus
-	When you run the interpreter, allow for hooks.
-		Say you do `octopus "somefile.oct", then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
 	lint/runtime warnings:
 		detect no parenthesis on a multi-expression do line (statement or expression)
 		possible misspellings (rough analysis of do blocks, especially note similar spellings)
 		unsafe filenames (target the lowest common denominator)
 		malformed type names (these should have a standard form, like /\w+(\.\s+)*/)
 		warn about rebinding double-underscore symbols
+	When you run the interpreter, allow for hooks.
+		Say you do `octopus "somefile.oct", then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
 
 Performance
 	Applicative closures
 	Extended data primitves
 	try using `Rose (Map Symbol (Maybe Val))` for objects to reduce space consumption
 		The maybe val is there so that a lookup can return (Just Nothing), which is equivalent to (Nothing)
+
+
+
+

@@ -14,8 +14,9 @@ Octopus' Zen Garden
 * Clean is easy, verbose is hard.
 * Clean code is easy to fix.
 * Error handling requires transactions.
-* Start with the right algorithm and buy more hardware.
+* Start with the right algorithm, then buy more hardware.
 * Clever is fun; obfuscated isn't.
+* Perfection is unobtainable.
 
 
 Commentary
@@ -31,8 +32,8 @@ Clean code is easy to learn, write, read, extend, and fix.
 Contrary to the rule, designing a clean library is harder than a verbose one. Keep in mind the simplicity rule.
 
 
-Start with the right algorithm and buy more hardware.
------------------------------------------------------
+Start with the right algorithm, then buy more hardware.
+-------------------------------------------------------
 
 The rest of the rules are rules of thought, but this one involves the cold, hard world of currency. Of course, time can also stand in for currency as computers continue to undergo exponential growth in performance-to-cost ratio. Just make sure your algorithm has low groth rates (time, space and communication) and time and/or money will solve the rest of the problem without your intervention.
 

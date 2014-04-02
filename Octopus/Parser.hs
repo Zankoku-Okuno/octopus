@@ -61,10 +61,10 @@ parseOctopusFile sourceName input = P.runParser octopusFile () sourceName input
         es <- P.many $ padded statement
         padded eof
         return $ loop es
-    loop [] = mkCall getenv (mkObj [])
+    loop [] = mkCall getenv (mkOb [])
     loop (Left s:rest)  = mkCall (mkDefn s) (loop rest)
     loop (Right e:rest) = mkCall (mkExpr e) (loop rest)
-    getenv = (mkCall (Pr Vau) (mkSeq [mkSeq [mkSym "e", mkObj []], mkSym "e"]))
+    getenv = (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkOb []], mkSy "e"]))
 
 
 define :: Parser (Val, Val)
@@ -88,7 +88,7 @@ symbol :: Parser Val
 symbol = do
     n <- name
     when (n == "do") (unexpected "reserved word (do)") --FIXME report error position before token, not after
-    return $ mkSym n
+    return $ mkSy n
 
 numberLit :: Parser Val
 numberLit = Nm <$> anyNumber
@@ -112,7 +112,7 @@ heredoc = do
 accessor :: Parser Val
 accessor = do
     key <- char ':' *> name
-    return $ mkCall (mkSym "__get__") (mkSym key)
+    return $ mkCall (mkSy "__get__") (mkSy key)
 
 
 ------ Composites ------
@@ -128,14 +128,14 @@ sq = do
     postPadded $ char '['
     elems <- bareCombination `P.sepBy` padded comma
     padded $ char ']'
-    return $ mkSeq elems
+    return $ mkSq elems
 
 ob :: Parser Val
 ob = do
     postPadded $ char '{'
     elems <- pair `P.sepBy` padded comma
     padded $ char '}'
-    return $ mkObj elems
+    return $ mkOb elems
     where
     pair = do
         key <- intern <$> padded name
@@ -150,7 +150,7 @@ block = do
         char ';'
         return $ loop states
     where
-    loop [Left d] = mkCall (mkDefn d) (mkObj [])
+    loop [Left d] = mkCall (mkDefn d) (mkOb [])
     loop [Right e] = e
     loop (Left d:rest) = mkCall (mkDefn d) (loop rest)
     loop (Right e:rest) = mkCall (mkExpr e) (loop rest)
@@ -159,7 +159,7 @@ quote :: Parser Val
 quote = do
     char '`'
     e <- expr
-    return $ mkCall (mkSym "__quote__") e
+    return $ mkCall (mkSy "__quote__") e
 
 
 ------ Space ------
@@ -199,8 +199,8 @@ bareCombination = loop <$> P.many1 (postPadded expr)
     loop [f, x] = mkCall f x
     loop es = mkCall (loop $ init es) (last es)
 
-mkDefn (x, val) = mkCall (mkCall (mkSym "__let__") x) val
-mkExpr e = mkCall (mkCall (mkSym "__let__") (mkObj [])) e
+mkDefn (x, val) = mkCall (mkCall (mkSy "__let__") x) val
+mkExpr e = mkCall (mkCall (mkSy "__let__") (mkOb [])) e
 
 
 

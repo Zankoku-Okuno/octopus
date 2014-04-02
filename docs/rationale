@@ -1,14 +1,14 @@
 Rationale
 =========
 
-I make no stupid compromises in the design of my languages. 
+I make no stupid compromises in the design of my languages. Here are some things about Octopus that might seem weird at first if you're coming from other languages. Rest assured, there is a good reason for all of these.
 
 Is anything even possible with immutability?
 --------------------------------------------
 
-With mutable data, you are always questioning who has references to what. It's a complicated question and when (not if) you get it wrong, that's what I call a data corruption bug. Data corruption is like memory corruption, except when you screw up, the program doesn't just crash, it keeps going further down the wrong route. Data corruption is not fun to debug.
+With mutable data, you are always questioning who has references to what. It's a complicated question and when (not if) you get it wrong, that's a data corruption bug. Data corruption is like memory corruption, except when you screw up, the program doesn't just crash, it keeps going further down the wrong route until maybe it's eventually detected, after its already screwed up everything else. Data corruption is not fun to debug.
 
-Luckily, immutable data is immune to data corruption, and even better, most problems only need immutable data. With Octopus (like Clojure and Haskell) you'll find your brain freed from the overhead of ownership questions, ready to do more real work. Once it clicks, default immutable data easily cuts debuging time by an order of magnitude.
+Luckily, immutable data is immune to data corruption by definition. Even better, most problems only need immutable data. With Octopus (like Clojure and Haskell) you'll find your brain freed from the overhead of ownership questions, ready to do more real work. Once it clicks, default immutable data easily cuts debuging time by an order of magnitude.
 
 That said, sometimes mutation is the way to go, and Octopus does have mutable reference cells. Like C pointers, you need to do extra typing to use them: explicitly dereferencing values from their cells and using a special assignment operator. Every time you use mutation, you're alerted to the possibility of data corruption, and the need to encapsulate that mutation under a nice, immutable interface. Just that extra bit of syntax makes it easy to see and think about what's really going on.
 
@@ -41,5 +41,13 @@ I have heard the argument that proper tail-recursion is bad because the stack tr
   * The trace only tells the machine what else it has left to do.
 
 If you code a loop in an imperative language, you don't get to see all the previous values of the iteration variable. This isn't a problem in practice. Tail recursion in functional languages is the same phenomenon. If a bug escapes the stack, as they eventually will, the debugger is the way to go.
+
+Where have the macros gone?
+---------------------------
+
+Lisp macros are unhygenic. Scheme macros are their own, separate language. Neither is terribly fun. In Lisp, I always worry that I'm accidently capturing the user's variable, and I never took the time to learn Macro-Scheme once I knew Scheme. Octopus has vau, eval, and first-class environments.
+
+You decide when and where code gets evaluated, in the very same language the code is written in. This, not macros, is the real benefit of code-as-data/data-as-code. If you want macros, even quasiquotation, it's not to hard to implement them yourself, but Aater enough time with vau, I doubt you'll bother. Vau can do everything macros can do, and more, and are hygenic by default (but can be unhygenic exaclty when and how you want).
+
 
 

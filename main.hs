@@ -22,7 +22,7 @@ main = do
     test "((vau [e, ast] ast) dne)"
     test "(__extends__ [{a: 3}, {a: 2}, {a: 1}])"
     test "((vau [e, ast] (__eval__ [__extends__ [{five: 5}, e], ast])) five)"
-    test "do four: 4 (vau [{}, ob] (keys ob) {foo: 3, bar: four});"
+    test "do four: 4 (vau [{}, ob] (__keys__ ob) {foo: 3, bar: four});"
     test "do four: 4 ((vau [e, ob] (:x ob)) {x: four});"
     test "do four: 4 ((vau [e, ob] (__eval__ [e, :x ob])) {x: four});"
     test $ "do four: 4 (" ++ lambda ++ " ob (:x ob) {x: four});"
@@ -61,6 +61,10 @@ main = do
     test "do defx5: (__let__ x 5)\n\
          \   (defx5 x);"
     test "do [a, b, c]: [`there, `Bob, `hi] [c, a, b];"
+
+    test "do x: (__add__ [1, 2]) y: (__sub__ [1, 2]) z: (__mul__ [2, 3]) w: (__div__ [2, 3]) [x, y, z, w];"
+    test "do [a, b]: (__cut__ [[1, 2, 3, 4, 5], 3]) [a, b, __len__ a];"
+    test "do [a, b]: (__cut__ [\"hello\", 3]) [a, b, __len__ a];"
 
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
 letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"

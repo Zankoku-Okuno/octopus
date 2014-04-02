@@ -5,8 +5,7 @@ module Import (
 	, toList
 	) where
 
-import Data.Maybe as X
-import Data.List as X
+import Data.Word as X
 import Data.Ratio as X
 import Data.Symbol as X
 import Data.ByteString (ByteString)
@@ -18,6 +17,9 @@ import Data.IORef as X
 import Data.Array.IO as X
 import System.IO as X
 
+import Data.Maybe as X
+import Data.List as X
+import Data.Monoid as X
 import Control.Applicative as X
 import Control.Monad as X
 import Data.Foldable (toList)

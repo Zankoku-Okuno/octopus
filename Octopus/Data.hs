@@ -13,7 +13,8 @@ data Val = Nm Rational -- ^ Rational number
          | Tx Text -- ^ Text data
          | Fp Handle -- ^ Input/output handle
          | Sy Symbol -- ^ Symbol, aka. identifier
-         | Tg Int -- ^ Unique tag
+         | Tg Word -- ^ Unique tag
+         | Ab Word Val -- ^ Abstract data
          | Sq (Seq Val) -- ^ Sequence, aka. list
          | Ob (Map Symbol Val) -- ^ Symbol-value map, aka. object
          | Cl Val Val Val -- ^ Operative closure
@@ -22,19 +23,20 @@ data Val = Nm Rational -- ^ Rational number
          | Pr Primitive -- ^ Primitive operations
          | Pt Int -- ^ Control prompt --TODO consider removing this in favor of using tags and a handler protocol
          | Ks [Control] -- ^ Control stack 
-         -- | Ab Int Val -- ^ Abstract data --TODO consider eliminating abstract data and instead relying on a tagged protocol (__tag__). could work for dispatch, and I'm not sure data abstraction is with the philosphy. You can even get inside closures.
          --TODO bytestring/buffer/bytes/other name?
          --TODO concurrency
     deriving (Eq)
-data Primitive = Vau | Eval | Match
-			   --TODO Nm data primitives
+data Primitive = Vau | Eval | Match | Ifz
+               | Eq | Neq | Lt | Lte | Gt | Gte
+               | Add | Mul | Sub | Div
+               | Numer | Denom | NumParts
 			   --TODO By data primitives
 			   --TODO Tx data primitives
 			   --TODO Fp data primitives
 			   --TODO Sy data primitives
 			   --TODO Tg data primitives
-			   --TODO Sq data primitives
-			   --TODO Ob data primitives
+			   | Wrap Word | Unwrap Word
+			   | Len | Cat | Cut
 			   | Extends | Delete | Keys | Get
 			   --TODO Ce data primitives
 			   --TODO Ar data primitives
@@ -96,6 +98,7 @@ instance Show Val where
     show (Fp _) = "<handle>" --TODO at least show some metadata
     show (Sy sy) = show sy
     show (Tg i) = "<tag: " ++ show i ++ ">"
+    show (Ab tag x) = "<box " ++ show tag ++ ": " ++ show x ++ ">"
     show (Sq xs) = "[" ++ intercalate ", " (show <$> toList xs) ++ "]"
     show (Ob m) = case getCombo m of
     		Nothing -> "{" ++ intercalate ", " (showPair <$> Map.toList m) ++ "}"
@@ -109,4 +112,3 @@ instance Show Val where
     show (Ce x) = "<reference cell>" --TODO show contents
     show (Ar xs) = "<mutable array>" --TODO show contents
     show (Pr f) = "<" ++ show f ++ ">"
-    --show (Ab tag x) = "<box " ++ show tag ++ ": " ++ show x ++ ">"

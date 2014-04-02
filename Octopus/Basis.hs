@@ -32,7 +32,7 @@ import Octopus.Shortcut
 mkCall :: Val -- ^ Combiner (@__car__@)
            -> Val -- ^ Argument (@__cdr__@)
            -> Val
-mkCall f x = mkObj [(callOpr, f), (callArg, x)]
+mkCall f x = mkOb [(callOpr, f), (callArg, x)]
 
 {-| Extract a (combiner, argument) pair from a
     combination-responsive object.
