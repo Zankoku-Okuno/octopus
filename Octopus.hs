@@ -110,17 +110,15 @@ eval env code = evalStateT (reduce code) MState { environ = env --Ob Map.empty
 
 reduce :: Val -> Machine Val
 reduce x@(Nm _) = done x
---reduce x@(Ab _ _) = done x
+reduce x@(By _) = done x
+reduce x@(Tx _) = done x
+reduce x@(Fp _) = done x
+reduce x@(Tg _) = done x
+reduce x@(Ab _ _) = done x
+reduce x@(Cl _ _ _) = done x
 reduce x@(Ce _) = done x
 reduce x@(Ar _) = done x
-reduce x@(Fp _) = done x
-reduce x@(Cl _ _ _) = done x
 reduce x@(Pr _) = done x
-reduce (Sy x) = gets environ >>= \env -> case Oct.resolveSymbol x env of
-    Just val -> done val
-    Nothing -> do
-        env <- gets environ
-        error $ "TODO unbound symbol: " ++ show x ++ "\n" ++ show env
 reduce sq@(Sq xs) = case toList xs of
     [] -> done sq
     (x:xs) -> push (Es [] xs) >> reduce x
@@ -129,6 +127,11 @@ reduce ob@(Ob m) = case ensureCombination ob of
     Nothing -> case Map.toList m of
                 [] -> done (mkOb [])
                 ((k,v):xs) -> push (Eo k [] xs) >> reduce v
+reduce (Sy x) = gets environ >>= \env -> case Oct.resolveSymbol x env of
+    Just val -> done val
+    Nothing -> do
+        env <- gets environ
+        error $ "TODO unbound symbol: " ++ show x ++ "\n" ++ show env
 
 combine :: Val -> Val -> Machine Val
 combine (Pr Vau) x = case x of
