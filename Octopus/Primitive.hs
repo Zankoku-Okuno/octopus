@@ -60,8 +60,16 @@ match var val = mkOb <$> go var val
     go (Sq ps) (Sq xs) | Seq.length ps == Seq.length xs = do
         --FIXME disallow double-binding
         concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
+                       | otherwise = error "raise pattern match failure"
     go (Sq ps) _ = Left (error "TODO")
     go (Ob ps) _ | length (Map.keys ps) == 0 = Right []
+    go (Ob ps) (Ob vs) = goObj (Map.toList ps) vs
+        where
+        goObj :: [(Symbol, Val)] -> Map Symbol Val -> Fallible [(Symbol, Val)]
+        goObj [] _ = Right []
+        goObj ((k, v):ks) vs = case Map.lookup k vs of
+            Just v' -> (++) <$> go v v' <*> goObj ks vs
+            Nothing -> error "raise pattern match failure"
     go pat val = error $ "unimplemented pattern-matching:\n" ++ show pat ++ "\n" ++ show val
 
 ifz :: Val -> Val -> Val -> Val
