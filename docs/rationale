@@ -17,7 +17,7 @@ I sure wish there were a type checker...
 
 When you can make arbitrary changes to environments at runtime, there's no such thing as a static type checker. Well, it might be possible with refinement types, but those are weird and probably still need checking at runtime. Static types are a feature, and I'd like ot have them in Octopus, but the language is just too dynamic to let it fly.
 
-That said, there's nothing stopping you from typeful programming. We have a pseudo-syntax for types that we use in the documentation, and we place a lot of emphasis on explicitly defining protocols and checking invariants as early as possible. It's not perfect, but it's something.
+That said, there's nothing stopping you from typeful programming. In fact, we place a lot of emphasis on always documenting the types of your code, and we have a pseudo-syntax for doing this clearly. Since there's no automatic checking, we recommend using contracts as early as possible. It's not perfect, but it's something.
 
 Can't I have varargs?
 ---------------------

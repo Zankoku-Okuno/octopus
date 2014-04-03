@@ -27,7 +27,9 @@ number ::= \/[+-]?(0[xX]\<hexnum\>|0[oO]\<octnum\>|0[bB]\<binnum\>|\<decnum\>)\/
 string ::= \/\"([^\\\\\"]|\\\\[abefntv\'\"\\\\&]|\\\\\<numescape\>|\\\\\\s*\\n\\s*\\\\)*\"\/
     numescape ::= \/[oO][0-7]{3}|[xX][0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U0[0-9a-fA-F]{5}|U10[0-9a-fA-F]{4}\/
 heredoc ::= \/\#\<\<\\s*(?\'END\'\\w+)\\s*\\n.*?\\g{END}\/
-name ::= \/[^\#\\\\\"`()[]{}:;.,][^\#\\\\\"`()[]{}:;.,]*\/
+name ::= \/\<namehead\>\<nametail\>|-(\<namehead\>|-)\<nametail\>|-\/
+    nametail = \/[^\#\\\\\"`()[]{}:;.,]*\/
+    namehead = \/[^\#\\\\\"`()[]{}:;.,0-9-]\/
 
 linecomment ::= \/#(?!\>\>)\\.*?\\n\/
 blockcomment ::= \/\#\\{([^\#}]+|\<blockcomment\>|\#[^{]|\\}[^\#])*\\}\#\/
@@ -48,6 +50,7 @@ import Language.Parse
 import Octopus.Data
 import Octopus.Shortcut
 import Octopus.Basis
+
 
 type Parser = Parsec String ()
 
@@ -182,10 +185,12 @@ postPadded p = p <* P.optional whitespace
 
 ------ Helpers ------
 name :: Parser String
-name = many2
-    (blacklistChar (`elem` reservedFirstChar))
-    (blacklistChar (`elem` reservedChar))
+name = P.choice [ (:) <$> namehead <*> nametail
+                , (:) <$> char '-' <*> P.option [] ((:) <$> (namehead P.<|> char '-') <*> nametail)
+                ]
     where
+    namehead = blacklistChar (`elem` reservedFirstChar)
+    nametail = P.many $ blacklistChar (`elem` reservedChar)
     reservedChar = "#\\\"`()[]{}:;.,"
     reservedFirstChar = reservedChar ++ "-0123456789"
 

@@ -17,6 +17,7 @@ Executive summary: it's a Lisp with first-class-everything. For more detail, it 
 * First-class control: Conquer the last resistance to abstraction; define any control flow construct ever dreamt of.
 * Streamlined syntax: With only eight grammar rules, you might miss them if you blink.
 * Permissive identifiers: Unicode identifiers and user-defined disfixes open new possibilities; make Lisp read/write.
+* Natural concurrency: Any concurrency model can be implemented as a library; tame the multiprocessing beast.
 
 Future Features
 ---------------
@@ -39,6 +40,7 @@ Status
 ======
 
 * 2014-03-31: With bugfixes, achieved Turing-complete.
+* 2014-04-03: Implemented an import. Well on the way to a useful language.
 
 The Story
 =========

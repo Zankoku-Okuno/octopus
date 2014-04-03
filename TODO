@@ -10,13 +10,18 @@ General
 	consider putting types into the grammar, unchecked of course
 
 Parser
-	allow names like /([^0-9-]|-[^0-9])\.*|-/
+	letrec
 	atom ::= ... | ':(' /<name>:/ <expr>+ ')' | /@<name>/ | @(' /<name>:/ <expr>+ ')' | /\.<expr>/ | '.(' <expr>+ ')'
 		@ is prefix, : and . are infix
+	indentation sensitivity
 	distfixes
+		directives are line tht start with #! (though #! on very first line is ignored)
+		massage the input by blanking these lines, but also collect and parse the directives
+	anonymous points
 	special syntax for lambda and vau (use the primitive ones, allow for stuff like (\l (x y z) body))
 	block comments
 	heredocs
+	bytes literals
 	decorators in do blocks?
 	ellipsis?
 	assertion syntax?
@@ -37,17 +42,20 @@ Interpreter
 		arrays
 		handlers
 		conversions
-	First-class control
-		most interpreter functions need to produce Fallible Val
+	Exceptions
+		new handler
+		raise
 		capture and raise cannot propagate past ImptK
+	First-class control (caputure, Ks is an applicative)
 	match literals
-	objects and lists are self-evaluating, except those that have not yet been eval'd
 	abstract types
+	objects and lists are self-evaluating, except those that have not yet been eval'd
 		a primitive to construct a triple of (tag, constructor, deconstructor)
 		we'll need a typeof operator, which returns a tag.
 		might be nice to give names to types
-	Floating point primitive type
+	force import despite caching
 	REPL
+	Floating point primitive type
 	re-raise exceptions?
 		perhaps by keeping the last unwond stack around until a handler returns normally
 		on re-raise, we simply cat the stacks
@@ -61,6 +69,7 @@ Documentation
 Cleanup
 	put Shortcuts in Octopus.Data
 	eliminate magic field names
+	make an actual lookup primitive, desugar :x into that instead of into __get__
 
 Tooling
 	grotto (virtualenv)
@@ -78,8 +87,8 @@ Tooling
 		Say you do `octopus "somefile.oct", then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
 
 Performance
-	Applicative closures
 	Extended data primitves
+	Applicative closures?
 	try using `Rose (Map Symbol (Maybe Val))` for objects to reduce space consumption
 		The maybe val is there so that a lookup can return (Just Nothing), which is equivalent to (Nothing)
 

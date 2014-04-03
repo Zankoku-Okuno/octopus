@@ -53,12 +53,12 @@ resolveSymbol _ _ = Nothing
     perform binding.
 -}
 match :: Val -> Val -> Fallible Val
+--FIXME disallow double-binding
 match var val = mkOb <$> go var val
     where
     go :: Val -> Val -> Fallible [(Symbol, Val)]
     go (Sy x) v = Right [(x, v)]
     go (Sq ps) (Sq xs) | Seq.length ps == Seq.length xs = do
-        --FIXME disallow double-binding
         concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
                        | otherwise = error "raise pattern match failure"
     go (Sq ps) _ = Left (error "TODO")
