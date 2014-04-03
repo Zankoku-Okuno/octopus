@@ -71,6 +71,10 @@ main = do
     test "do [a, b]: (__cut__ [\"hello\", 3])\n   [a, b, __len__ a];"
     test "do y: (__ifz!__ [0, `y, `n])\n   n: (__ifz!__ [1, `y, `n])\n   [y, n];"
 
+    test "do foo: (__import__ \"./test/foo.oct\") (:\955 foo x x 6);"
+    --test "do {\955: \955}: (__import__ \"./test/foo.oct\") (\955 x x 6);"
+
+
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
 letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"
 

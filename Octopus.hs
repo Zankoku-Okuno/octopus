@@ -6,11 +6,15 @@ import qualified Data.Map as Map
 
 import Control.Monad.State
 import Control.Monad.Reader
+import System.IO.Error
+import Control.Concurrent.MVar
 
 import Octopus.Data
+import Octopus.Parser (parseOctopusFile)
 import qualified Octopus.Primitive as Oct
 import Octopus.Basis
 import Octopus.Shortcut
+import Octopus.Libraries
 
 
 eval :: ImportsCache -> Val -> Val -> IO Val
@@ -73,6 +77,7 @@ apply (Pr Ifz) x = case x of
         [p, c, a] -> done $ Oct.ifz p c a
         _ -> error "raise wrong number of args to primitive Ifz"
     _ -> error "raise invalid args to primitive Ifz"
+apply (Pr Imp) x = impFile x
 apply (Pr Extends) x = case x of
     Sq xs -> case toList xs of
         [] -> done $ mkOb []
@@ -112,13 +117,13 @@ apply (Pr pr) x =
         , (Denom, unary Oct.denom)
         , (NumParts, unary Oct.numParts)
         ]
-    binary :: (Val -> Val -> Falible Val) -> Primitive -> Val -> Falible Val
+    binary :: (Val -> Val -> Fallible Val) -> Primitive -> Val -> Fallible Val
     binary op pr x = case x of
         Sq xs -> case toList xs of
             [a, b] -> op a b
             _ -> error $ "raise wrong number of args to primitive " ++ show pr
         _ -> error $ "raise invalid args to primitive " ++ show pr
-    unary :: (Val -> Falible Val) -> Primitive -> Val -> Falible Val
+    unary :: (Val -> Fallible Val) -> Primitive -> Val -> Fallible Val
     unary op pr x = op x
 apply f x = error "TODO apply"
 
@@ -135,7 +140,36 @@ done x = do
         (NormK (Eo k xs ((k',x'):xs'):_)):_ -> replace (Eo k' ((k,x):xs) xs') >> reduce x'
         (NormK (Op arg:ks)):kss             -> pop >> combine x arg
         (NormK (Ap f:ks)):kss               -> pop >> apply f x
+        (ImptK _ slot):ks                   -> liftIO (slot `putMVar` Right x) >> pop >> done x
 
 
+impFile :: Val -> Machine Val
+impFile (Tx pathstr) = do
+    let path = pathstr --FIXME normalize path
+        path' = unpack path
+    --TODO check against builtin files, or else pre-populate the cache
+    --TODO check the path against the current imports on stack to avoid circular import
+    cache_var <- ask
+    cache <- liftIO $ takeMVar cache_var
+    case Map.lookup path cache of
+        Just loaded_var -> do
+            liftIO $ cache_var `putMVar` cache
+            val_e <- liftIO $ readMVar loaded_var
+            case val_e of
+                Right val -> done val
+                Left err -> error $ "raise exception " ++ show err
+        Nothing -> do
+            loading_var <- liftIO newEmptyMVar
+            liftIO $ cache_var `putMVar` Map.insert path loading_var cache
+            contents_e <- liftIO $ tryIOError $ readFile path'
+            case contents_e of
+                Right contents -> do
+                    swapEnv startData
+                    pushK (ImptK path loading_var)
+                    case parseOctopusFile path' contents of
+                        Right val -> reduce val --TODO consider which env to start a file off with
+                        Left err -> error "raise SyntaxError" --FIXME also don't forget to fill the loading_var
+                Left err -> error "raise ImportError" --FIXME also don't forget to fill the loading_var
+impFile _ = error "TODO raise TypeError"
 
 

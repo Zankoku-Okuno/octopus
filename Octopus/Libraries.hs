@@ -11,6 +11,7 @@ startData = mkOb [
     , (intern "__match__",    Pr Match)
     , (intern "__eval__",     Pr Eval)
     , (intern "__ifz!__",     Pr Ifz)
+    , (intern "__import__",   Pr Imp)
     --- Relationals ---
     , (intern "__eq__",       Pr Eq)
     , (intern "__neq__",      Pr Neq)

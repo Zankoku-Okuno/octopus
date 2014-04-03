@@ -5,10 +5,10 @@ import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Concurrent.MVar
+import Control.Concurrent.MVar (MVar)
 
 
-type Falible = Either Val
+type Fallible = Either Val
 
 
 data Val = Nm Rational -- ^ Rational number
@@ -29,21 +29,21 @@ data Val = Nm Rational -- ^ Rational number
          --TODO bytestring/buffer/bytes/other name?
          --TODO concurrency
     deriving (Eq)
-data Primitive = Vau | Eval | Match | Ifz
+data Primitive = Vau | Eval | Match | Ifz | Imp
                | Eq | Neq | Lt | Lte | Gt | Gte
                | Add | Mul | Sub | Div
                | Numer | Denom | NumParts
-			   --TODO By data primitives
-			   --TODO Tx data primitives
-			   --TODO Fp data primitives
-			   --TODO Sy data primitives
-			   --TODO Tg data primitives
-			   | Wrap Word | Unwrap Word
-			   | Len | Cat | Cut
-			   | Extends | Delete | Keys | Get
-			   --TODO Ce data primitives
-			   --TODO Ar data primitives
-			   --TODO Pt/Ks data primitives
+               --TODO By data primitives
+               --TODO Tx data primitives
+               --TODO Fp data primitives
+               --TODO Sy data primitives
+               --TODO Tg data primitives
+               | Wrap Word | Unwrap Word
+               | Len | Cat | Cut
+               | Extends | Delete | Keys | Get
+               --TODO Ce data primitives
+               --TODO Ar data primitives
+               --TODO Pt/Ks data primitives
     deriving (Eq, Show)
 
 
@@ -64,7 +64,12 @@ data Context = Op Val -- ^ Hole must be a combiner, val is the uneval'd argument
 data Control = NormK [Context]
              | HndlK Val
           --TODO onEnter/onSuccess/onFail
-    deriving (Eq, Show)
+             | ImptK Text (MVar (Fallible Val))
+    deriving (Eq)
+instance Show Control where
+    show (NormK k) = "NormK " ++ show k
+    show (HndlK x) = "HndlK " ++ show x
+    show (ImptK path slot) = "ImptK " ++ show path
 
 
 push :: Context -> Machine ()
@@ -72,6 +77,13 @@ push k = do
     (NormK ks):kss <- gets control
     modify $ \s -> s { control = (NormK (k:ks)):kss }
     --FIXME remember that when I push a handler or a winding protect, I also need to push an environment restore
+pushK :: Control -> Machine ()
+pushK k@(NormK _) = do
+    ks <- gets control
+    modify $ \s -> s { control = k:ks }
+pushK k = do
+    ks <- gets control
+    modify $ \s -> s { control = (NormK []):k:ks }
 pop :: Machine ()
 pop = do
     stack <- gets control
@@ -79,39 +91,21 @@ pop = do
         (NormK []):kss -> modify $ \s -> s { control = kss }
         (NormK (Re env:ks)):kss -> modify $ \s -> s { environ = env, control = (NormK ks):kss }
         (NormK (_:ks)):kss -> modify $ \s -> s { control = (NormK ks):kss }
+        (ImptK _ _):ks -> modify $ \s -> s { control = ks }
 replace :: Context -> Machine ()
 replace k = do
     stack <- gets control
     case stack of
         (NormK []):kss -> modify $ \s -> s { control = (NormK [k]):kss }
         (NormK (_:ks)):kss -> modify $ \s -> s { control = (NormK (k:ks)):kss }
+        (ImptK _ _):ks -> pop >> replace k
 swapEnv :: Val -> Machine ()
 swapEnv env' = do
     env <- gets environ
     (NormK ks):kss <- gets control
     case ks of
-    	(Re _):_ -> modify $ \s -> s { environ = env' } --allows tail recursion by not restoring environments that will immediately be thrown away by a second restoration
+        (Re _):_ -> modify $ \s -> s { environ = env' } --allows tail recursion by not restoring environments that will immediately be thrown away by a second restoration
         ks -> modify $ \s -> s { environ = env', control = (NormK ((Re env):ks)):kss }
-
-impFile :: Val -> Machine (Falible Val)
-impFile (Tx pathstr) = do
-	let path = pathstr --FIXME normalize path
-	--TODO check against builtin files, or else pre-populate the cache
-	cache_var <- ask
-	cache <- liftIO $ takeMVar cache_var
-	case Map.lookup path cache of
-		Just loaded_var -> do
-			liftIO $ cache_var `putMVar` cache
-			liftIO $ readMVar loaded_var
-		Nothing -> do
-			loading_var <- liftIO newEmptyMVar
-			liftIO $ cache_var `putMVar` Map.insert path loading_var cache
-			error "TODO"
-			--push the Imp slot
-			--read file (make sure to handle errors correctly)
-			--parse file, or SyntaxError
-			--eval file
-impFile _ = error "TODO raise an exception"
 
 
 instance Show Val where
@@ -125,13 +119,13 @@ instance Show Val where
     show (Ab tag x) = "<box " ++ show tag ++ ": " ++ show x ++ ">"
     show (Sq xs) = "[" ++ intercalate ", " (show <$> toList xs) ++ "]"
     show (Ob m) = case getCombo m of
-    		Nothing -> "{" ++ intercalate ", " (showPair <$> Map.toList m) ++ "}"
-    		Just (f, x) -> "(" ++ show f ++ " " ++ show x ++ ")"
+            Nothing -> "{" ++ intercalate ", " (showPair <$> Map.toList m) ++ "}"
+            Just (f, x) -> "(" ++ show f ++ " " ++ show x ++ ")"
         where
         showPair (k,v) = show k ++ ": " ++ show v
         getCombo ob = case (Map.lookup (intern "__car__") ob, Map.lookup (intern "__cdr__") ob) of
-        	(Just f, Just x) -> if length (Map.keys ob) == 2 then Just (f, x) else Nothing
-        	_ -> Nothing
+            (Just f, Just x) -> if length (Map.keys ob) == 2 then Just (f, x) else Nothing
+            _ -> Nothing
     show (Cl var ast env) = "<closure: var: " ++ show var ++ ", ast: " ++ show ast ++ ", env: " ++ show env ++ ">"
     show (Ce x) = "<reference cell>" --TODO show contents
     show (Ar xs) = "<mutable array>" --TODO show contents

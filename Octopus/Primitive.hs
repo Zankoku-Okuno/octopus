@@ -52,10 +52,10 @@ resolveSymbol _ _ = Nothing
     under sequences or objects. Symbols match any value and
     perform binding.
 -}
-match :: Val -> Val -> Falible Val
+match :: Val -> Val -> Fallible Val
 match var val = mkOb <$> go var val
     where
-    go :: Val -> Val -> Falible [(Symbol, Val)]
+    go :: Val -> Val -> Fallible [(Symbol, Val)]
     go (Sy x) v = Right [(x, v)]
     go (Sq ps) (Sq xs) | Seq.length ps == Seq.length xs = do
         --FIXME disallow double-binding
@@ -72,41 +72,41 @@ ignore x y = y
 
 
 ------ Relational ------
-eq :: Val -> Val -> Falible Val
+eq :: Val -> Val -> Fallible Val
 eq (Nm a) (Nm b) = Right . mkInt $ if a == b then 1 else 0
 eq _ _ = error "TODO eq"
 
-neq :: Val -> Val -> Falible Val
+neq :: Val -> Val -> Fallible Val
 neq (Nm a) (Nm b) = Right . mkInt $ if a == b then 1 else 0
 neq _ _ = error "TODO neq"
 
-lt :: Val -> Val -> Falible Val
+lt :: Val -> Val -> Fallible Val
 lt (Nm a) (Nm b) = Right . mkInt $ if a < b then 1 else 0
 
-lte :: Val -> Val -> Falible Val
+lte :: Val -> Val -> Fallible Val
 lte (Nm a) (Nm b) = Right . mkInt $ if a <= b then 1 else 0
 
-gt :: Val -> Val -> Falible Val
+gt :: Val -> Val -> Fallible Val
 gt (Nm a) (Nm b) = Right . mkInt $ if a > b then 1 else 0
 
-gte :: Val -> Val -> Falible Val
+gte :: Val -> Val -> Fallible Val
 gte (Nm a) (Nm b) = Right . mkInt $ if a >= b then 1 else 0
 
 
 ------ Arithmetic ------
-add :: Val -> Val -> Falible Val
+add :: Val -> Val -> Fallible Val
 add (Nm a) (Nm b) = Right . Nm $ a + b
 add _ _ = Left (error "TODO")
 
-sub :: Val -> Val -> Falible Val
+sub :: Val -> Val -> Fallible Val
 sub (Nm a) (Nm b) = Right . Nm $ a - b
 sub _ _ = Left (error "TODO")
 
-mul :: Val -> Val -> Falible Val
+mul :: Val -> Val -> Fallible Val
 mul (Nm a) (Nm b) = Right . Nm $ a * b
 mul _ _ = Left (error "TODO")
 
-div :: Val -> Val -> Falible Val
+div :: Val -> Val -> Fallible Val
 div (Nm a) (Nm b) = Right . Nm $ a / b
 div _ _ = Left (error "TODO")
 
@@ -121,19 +121,19 @@ div _ _ = Left (error "TODO")
 
 
 ------ Rationals ------
-numer :: Val -> Falible Val
+numer :: Val -> Fallible Val
 numer (Nm n) = Right . mkInt $ numerator n
 numer _ = Left (error "TODO")
 
-denom :: Val -> Falible Val
+denom :: Val -> Fallible Val
 denom (Nm n) = Right . mkInt $ denominator n
 denom _ = Left (error "TODO")
 
-trunc :: Val -> Falible Val
+trunc :: Val -> Fallible Val
 trunc (Nm n) = Right . mkInt $ truncate n
 trunc _ = Left (error "TODO")
 
-numParts :: Val -> Falible Val
+numParts :: Val -> Fallible Val
 numParts (Nm n) = let (whole, frac) = properFraction n
                     in Right $ mkSq [mkInt whole, Nm frac]
 numParts _ = Left (error "TODO")
@@ -143,19 +143,19 @@ numParts _ = Left (error "TODO")
 
 
 ------ Sequence/Text/Bytes ------
-len :: Val -> Falible Val
+len :: Val -> Fallible Val
 len (Sq xs) = Right . mkInt $ Seq.length xs
 len (Tx xs) = Right . mkInt $ T.length xs
 len (By xs) = Right . mkInt $ BS.length xs
 len _ = Left (error "TODO")
 
-cat :: Val -> Val -> Falible Val
+cat :: Val -> Val -> Fallible Val
 cat (Sq xs) (Sq ys) = Right . Sq $ xs <> ys
 cat (Tx xs) (Tx ys) = Right . Tx $ xs <> ys
 cat (By xs) (By ys) = Right . By $ xs <> ys
 cat _ _ = Left (error "TODO")
 
-cut :: Val -> Val -> Falible Val --FIXME I guess I really need to return (Either Val Val), where the left is an exception to raise
+cut :: Val -> Val -> Fallible Val --FIXME I guess I really need to return (Either Val Val), where the left is an exception to raise
 cut x (Nm q) = 
     case x of
         Sq xs -> do
@@ -179,12 +179,12 @@ cut x (Nm q) =
 
 ------ Xons ------
 {-| @get x f@ retrieves field @f@ from @x@, if the field exists. -}
-get :: Val -> Val -> Falible Val
+get :: Val -> Val -> Fallible Val
 get (Ob ob) (Sy sy) = maybe (Left (error "TODO")) Right $ Map.lookup sy ob
 get _ _ = Left (error "TODO")
 
 {-| Get a list of the fields in a value. -}
-keys :: Val -> Falible Val
+keys :: Val -> Fallible Val
 keys (Ob ob) = Right . mkSq $ Sy <$> Map.keys ob
 keys _ = Right $ mkSq []
 
@@ -198,7 +198,7 @@ extend _ _ = mkOb []
 {-| @delete x f@ removes field @f@ from @x@, if the field exists.
     If it does not exist, then there is no change.
 -}
-delete :: Val -> Val -> Falible Val
+delete :: Val -> Val -> Fallible Val
 delete (Ob ob) (Sy sy) = Right . Ob $ Map.delete sy ob
 delete x _ = Right x
 
