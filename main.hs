@@ -2,9 +2,13 @@ import System.IO
 import System.Environment
 import System.Exit
 import Control.Applicative
+import Control.Concurrent.MVar
 
 import Octopus
 import Octopus.Parser
+import Octopus.Libraries
+
+import qualified Data.Map as Map
 
 main :: IO ()
 main = do
@@ -81,6 +85,7 @@ testParse input = case parseOctopusExpr "" input of
     Left err -> print err
 test input = do
     putStr $ input ++ " ===> "
+    cache <- newMVar Map.empty
     case parseOctopusExpr "repl" input of
-        Right val -> print =<< eval startData val
+        Right val -> print =<< eval cache startData val
         Left err -> print err

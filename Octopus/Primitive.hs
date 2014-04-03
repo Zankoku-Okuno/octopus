@@ -38,6 +38,7 @@ import Octopus.Data
 import Octopus.Shortcut
 import Octopus.Basis
 
+
 ------ Internals ------
 {-| Lookup symbol in a value, if the binding exists. -}
 resolveSymbol :: Symbol -> Val -> Maybe Val
@@ -51,64 +52,63 @@ resolveSymbol _ _ = Nothing
     under sequences or objects. Symbols match any value and
     perform binding.
 -}
-match :: Val -> Val -> Maybe Val
+match :: Val -> Val -> Falible Val
 match var val = mkOb <$> go var val
     where
-    go :: Val -> Val -> Maybe [(Symbol, Val)]
-    go (Sy x) v = Just [(x, v)]
+    go :: Val -> Val -> Falible [(Symbol, Val)]
+    go (Sy x) v = Right [(x, v)]
     go (Sq ps) (Sq xs) | Seq.length ps == Seq.length xs = do
         --FIXME disallow double-binding
         concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
-    go (Sq ps) _ = Nothing
-    go (Ob ps) _ | length (Map.keys ps) == 0 = Just []
+    go (Sq ps) _ = Left (error "TODO")
+    go (Ob ps) _ | length (Map.keys ps) == 0 = Right []
     go pat val = error $ "unimplemented pattern-matching:\n" ++ show pat ++ "\n" ++ show val
 
 ifz :: Val -> Val -> Val -> Val
 ifz (Nm x) | x == 0 = const
            | otherwise = ignore
-    where
-    ignore x y = y
+ifz _ = ignore
+ignore x y = y
 
 
 ------ Relational ------
-eq :: Val -> Val -> Maybe Val
-eq (Nm a) (Nm b) = Just . mkInt $ if a == b then 1 else 0
+eq :: Val -> Val -> Falible Val
+eq (Nm a) (Nm b) = Right . mkInt $ if a == b then 1 else 0
 eq _ _ = error "TODO eq"
 
-neq :: Val -> Val -> Maybe Val
-neq a b = Just $ case fromJust $ eq a b of
-    (Nm x) | x == 0 -> mkInt 1
-           | x == 1 -> mkInt 0
+neq :: Val -> Val -> Falible Val
+neq (Nm a) (Nm b) = Right . mkInt $ if a == b then 1 else 0
+neq _ _ = error "TODO neq"
 
-lt :: Val -> Val -> Maybe Val
-lt (Nm a) (Nm b) = Just . mkInt $ if a < b then 1 else 0
+lt :: Val -> Val -> Falible Val
+lt (Nm a) (Nm b) = Right . mkInt $ if a < b then 1 else 0
 
-lte :: Val -> Val -> Maybe Val
-lte (Nm a) (Nm b) = Just . mkInt $ if a <= b then 1 else 0
+lte :: Val -> Val -> Falible Val
+lte (Nm a) (Nm b) = Right . mkInt $ if a <= b then 1 else 0
 
-gt :: Val -> Val -> Maybe Val
-gt (Nm a) (Nm b) = Just . mkInt $ if a > b then 1 else 0
+gt :: Val -> Val -> Falible Val
+gt (Nm a) (Nm b) = Right . mkInt $ if a > b then 1 else 0
 
-gte :: Val -> Val -> Maybe Val
-gte (Nm a) (Nm b) = Just . mkInt $ if a >= b then 1 else 0
+gte :: Val -> Val -> Falible Val
+gte (Nm a) (Nm b) = Right . mkInt $ if a >= b then 1 else 0
 
 
 ------ Arithmetic ------
-add :: Val -> Val -> Maybe Val
-add (Nm a) (Nm b) = Just . Nm $ a + b
-add _ _ = Nothing
+add :: Val -> Val -> Falible Val
+add (Nm a) (Nm b) = Right . Nm $ a + b
+add _ _ = Left (error "TODO")
 
-sub :: Val -> Val -> Maybe Val
-sub (Nm a) (Nm b) = Just . Nm $ a - b
-sub _ _ = Nothing
+sub :: Val -> Val -> Falible Val
+sub (Nm a) (Nm b) = Right . Nm $ a - b
+sub _ _ = Left (error "TODO")
 
-mul :: Val -> Val -> Maybe Val
-mul (Nm a) (Nm b) = Just . Nm $ a * b
-mul _ _ = Nothing
+mul :: Val -> Val -> Falible Val
+mul (Nm a) (Nm b) = Right . Nm $ a * b
+mul _ _ = Left (error "TODO")
 
-div :: Val -> Val -> Maybe Val
-div (Nm a) (Nm b) = Just . Nm $ a / b
-div _ _ = Nothing
+div :: Val -> Val -> Falible Val
+div (Nm a) (Nm b) = Right . Nm $ a / b
+div _ _ = Left (error "TODO")
 
 --quo :: Val -> Val -> Maybe Val
 --quo = error "TODO"
@@ -121,72 +121,72 @@ div _ _ = Nothing
 
 
 ------ Rationals ------
-numer :: Val -> Maybe Val
-numer (Nm n) = Just . mkInt $ numerator n
-numer _ = Nothing
+numer :: Val -> Falible Val
+numer (Nm n) = Right . mkInt $ numerator n
+numer _ = Left (error "TODO")
 
-denom :: Val -> Maybe Val
-denom (Nm n) = Just . mkInt $ denominator n
-denom _ = Nothing
+denom :: Val -> Falible Val
+denom (Nm n) = Right . mkInt $ denominator n
+denom _ = Left (error "TODO")
 
-trunc :: Val -> Maybe Val
-trunc (Nm n) = Just . mkInt $ truncate n
-trunc _ = Nothing
+trunc :: Val -> Falible Val
+trunc (Nm n) = Right . mkInt $ truncate n
+trunc _ = Left (error "TODO")
 
-numParts :: Val -> Maybe Val
+numParts :: Val -> Falible Val
 numParts (Nm n) = let (whole, frac) = properFraction n
-                    in Just $ mkSq [mkInt whole, Nm frac]
-numParts _ = Nothing
+                    in Right $ mkSq [mkInt whole, Nm frac]
+numParts _ = Left (error "TODO")
 
 
 ------ Floats ------
 
 
 ------ Sequence/Text/Bytes ------
-len :: Val -> Maybe Val
-len (Sq xs) = Just . mkInt $ Seq.length xs
-len (Tx xs) = Just . mkInt $ T.length xs
-len (By xs) = Just . mkInt $ BS.length xs
-len _ = Nothing
+len :: Val -> Falible Val
+len (Sq xs) = Right . mkInt $ Seq.length xs
+len (Tx xs) = Right . mkInt $ T.length xs
+len (By xs) = Right . mkInt $ BS.length xs
+len _ = Left (error "TODO")
 
-cat :: Val -> Val -> Maybe Val
-cat (Sq xs) (Sq ys) = Just . Sq $ xs <> ys
-cat (Tx xs) (Tx ys) = Just . Tx $ xs <> ys
-cat (By xs) (By ys) = Just . By $ xs <> ys
-cat _ _ = Nothing
+cat :: Val -> Val -> Falible Val
+cat (Sq xs) (Sq ys) = Right . Sq $ xs <> ys
+cat (Tx xs) (Tx ys) = Right . Tx $ xs <> ys
+cat (By xs) (By ys) = Right . By $ xs <> ys
+cat _ _ = Left (error "TODO")
 
-cut :: Val -> Val -> Maybe Val --FIXME I guess I really need to return (Either Val Val), where the left is an exception to raise
+cut :: Val -> Val -> Falible Val --FIXME I guess I really need to return (Either Val Val), where the left is an exception to raise
 cut x (Nm q) = 
     case x of
         Sq xs -> do
             i <- n
-            when (i >= Seq.length xs) Nothing
+            when (i >= Seq.length xs) $ Left (error "TODO")
             let (as, bs) = Seq.splitAt i xs
-            Just $ mkSq [Sq as, Sq bs]
+            Right $ mkSq [Sq as, Sq bs]
         Tx xs -> do
             i <- n
-            when (i >= T.length xs) Nothing
+            when (i >= T.length xs) $ Left (error "TODO")
             let (as, bs) = T.splitAt i xs
-            Just $ mkSq [Tx as, Tx bs]
+            Right $ mkSq [Tx as, Tx bs]
         By xs -> do
             i <- n
-            when (i >= BS.length xs) Nothing
+            when (i >= BS.length xs) $ Left (error "TODO")
             let (as, bs) = BS.splitAt i xs
-            Just $ mkSq [By as, By bs]
+            Right $ mkSq [By as, By bs]
     where
-    n = if denominator q == 1 then Just (fromIntegral $ numerator q) else Nothing
+    n = if denominator q == 1 then Right (fromIntegral $ numerator q) else Left (error "TODO")
 
 
 ------ Xons ------
 {-| @get x f@ retrieves field @f@ from @x@, if the field exists. -}
-get :: Val -> Val -> Maybe Val
-get (Ob ob) (Sy sy) = Map.lookup sy ob
-get _ _ = Nothing
+get :: Val -> Val -> Falible Val
+get (Ob ob) (Sy sy) = maybe (Left (error "TODO")) Right $ Map.lookup sy ob
+get _ _ = Left (error "TODO")
 
 {-| Get a list of the fields in a value. -}
-keys :: Val -> Maybe Val
-keys (Ob ob) = Just . mkSq $ Sy <$> Map.keys ob
-keys _ = Just $ mkSq []
+keys :: Val -> Falible Val
+keys (Ob ob) = Right . mkSq $ Sy <$> Map.keys ob
+keys _ = Right $ mkSq []
 
 {-| @extend a b@ extends and overwrites bindings in @b@ with bindings in @a@. -}
 extend :: Val -> Val -> Val
@@ -198,9 +198,9 @@ extend _ _ = mkOb []
 {-| @delete x f@ removes field @f@ from @x@, if the field exists.
     If it does not exist, then there is no change.
 -}
-delete :: Val -> Val -> Maybe Val
-delete (Ob ob) (Sy sy) = Just . Ob $ Map.delete sy ob
-delete x _ = Just x
+delete :: Val -> Val -> Falible Val
+delete (Ob ob) (Sy sy) = Right . Ob $ Map.delete sy ob
+delete x _ = Right x
 
 
 

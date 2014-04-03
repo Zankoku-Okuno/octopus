@@ -4,9 +4,10 @@
     as the machine could get at them.
 -}
 module Octopus.Basis (
+      mkVau
     -- * Basic Protocols
     -- ** Combination
-      mkCall
+    , mkCall
     , callOpr
     , callArg
     , ensureCombination
@@ -16,6 +17,8 @@ module Octopus.Basis (
     -- ** Suspension
     , mkThunk
     , ensureThunk
+
+    , module Octopus.Shortcut
     ) where
 
 import Import
@@ -24,6 +27,10 @@ import qualified Data.Map as Map
 
 import Octopus.Data
 import Octopus.Shortcut
+
+
+mkVau :: String -> String -> Val -> Val
+mkVau e arg body = mkCall (Pr Vau) (mkSq [mkSq [Sy $ intern e, Sy $ intern arg], body])
 
 
 {-| Construct a combination: an object with a

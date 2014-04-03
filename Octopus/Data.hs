@@ -3,9 +3,12 @@ module Octopus.Data where
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
+import Control.Monad.Reader
 import Control.Monad.State
+import Control.Concurrent.MVar
 
 
+type Falible = Either Val
 
 
 data Val = Nm Rational -- ^ Rational number
@@ -45,9 +48,11 @@ data Primitive = Vau | Eval | Match | Ifz
 
 
 
-
+type FileCache = MVar (Either Val Val)
+type ImportsCache = MVar (Map Text FileCache)
 data MState = MState { environ :: Val, control :: [Control] }
-type Machine = StateT MState IO
+
+type Machine = ReaderT ImportsCache (StateT MState IO)
 
 
 data Context = Op Val -- ^ Hole must be a combiner, val is the uneval'd argument
@@ -60,6 +65,7 @@ data Control = NormK [Context]
              | HndlK Val
           --TODO onEnter/onSuccess/onFail
     deriving (Eq, Show)
+
 
 push :: Context -> Machine ()
 push k = do
@@ -87,7 +93,25 @@ swapEnv env' = do
     	(Re _):_ -> modify $ \s -> s { environ = env' } --allows tail recursion by not restoring environments that will immediately be thrown away by a second restoration
         ks -> modify $ \s -> s { environ = env', control = (NormK ((Re env):ks)):kss }
 
-
+impFile :: Val -> Machine (Falible Val)
+impFile (Tx pathstr) = do
+	let path = pathstr --FIXME normalize path
+	--TODO check against builtin files, or else pre-populate the cache
+	cache_var <- ask
+	cache <- liftIO $ takeMVar cache_var
+	case Map.lookup path cache of
+		Just loaded_var -> do
+			liftIO $ cache_var `putMVar` cache
+			liftIO $ readMVar loaded_var
+		Nothing -> do
+			loading_var <- liftIO newEmptyMVar
+			liftIO $ cache_var `putMVar` Map.insert path loading_var cache
+			error "TODO"
+			--push the Imp slot
+			--read file (make sure to handle errors correctly)
+			--parse file, or SyntaxError
+			--eval file
+impFile _ = error "TODO raise an exception"
 
 
 instance Show Val where

@@ -21,7 +21,8 @@ library
                        Octopus.Shortcut
                        Octopus.Parser,
                        Octopus.Basis,
-                       Octopus.Primitive
+                       Octopus.Primitive,
+                       Octopus.Libraries
   build-depends:       base ==4.6.*,
                        bytestring ==0.10.*,
                        text ==0.11.*,

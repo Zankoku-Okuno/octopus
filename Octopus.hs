@@ -5,104 +5,20 @@ import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
 
 import Control.Monad.State
+import Control.Monad.Reader
 
 import Octopus.Data
 import qualified Octopus.Primitive as Oct
-import Octopus.Shortcut
 import Octopus.Basis
+import Octopus.Shortcut
 
 
-
-
-mkVau e arg body = mkCall (Pr Vau) (mkSq [mkSq [Sy $ intern e, Sy $ intern arg], body])
-startData = mkOb [
-    --- Non-data ---
-      (intern "__vau__", Pr Vau)
-    , (intern "__match__", Pr Match)
-    , (intern "__eval__", Pr Eval)
-    , (intern "__ifz!__", Pr Ifz)
-    --- Relationals ---
-    , (intern "__eq__", Pr Eq)
-    , (intern "__neq__", Pr Neq)
-    , (intern "__lt__", Pr Lt)
-    , (intern "__lte__", Pr Lte)
-    , (intern "__gt__", Pr Gt)
-    , (intern "__gte__", Pr Gt)
-    --- Arithmetic ---
-    , (intern "__add__", Pr Add)
-    , (intern "__mul__", Pr Mul)
-    , (intern "__sub__", Pr Sub)
-    , (intern "__div__", Pr Div)
-    --- Numbers ---
-    , (intern "__numer__", Pr Numer)
-    , (intern "__denom__", Pr Denom)
-    , (intern "__numparts__", Pr NumParts)
-    --- Lists ---
-    , (intern "__len__", Pr Len)
-    , (intern "__cat__", Pr Cat)
-    , (intern "__cut__", Pr Cut)
-    --- Xonses ---
-    , (intern "__extends__", Pr Extends)
-    , (intern "__del__", Pr Delete)
-    , (intern "__keys__", Pr Keys)
-    --TODO __lookup__
-    --- Niceties ---
-    , (intern "vau", vauDef)
-    , (intern "__get__", getDef)
-    , (intern "__let__", letDef)
-    , (intern "__lambda__", lambdaDef)
-    , (intern "__quote__", quoteDef)
-    ]
+eval :: ImportsCache -> Val -> Val -> IO Val
+eval cache env code = evalStateT (runReaderT (reduce code) cache) startState
     where
-    vauDef = Cl
-        (mkSq [mkOb [], mkSy "x"])
-        (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "body"],
-            mkCall (Pr Vau) (mkSq [mkSy "arg",
-                mkCall (Pr Eval) (mkSq [
-                    mkCall (Pr Extends) (mkSq [
-                        mkCall (Pr Match) (mkSq [mkSy "x", mkSy "arg"]),
-                        mkSy "static"]),
-                    mkSy "body"])])]))
-        (mkOb [])
-    delDef = Cl 
-        (mkSy "ob")
-        (mkCall (Pr Vau) (mkSq [mkSq [mkOb [], mkSy "x"],
-            mkCall (Pr Delete) (mkSq [mkCall (Pr Eval) (mkSy "ob"), mkSy "x"])]))
-        (mkOb [])
-    getDef = Cl
-        (mkSq [mkOb [], mkSy "x"])
-        (mkCall (Pr Vau) (mkSq [mkSy "ob",
-            mkCall (Pr Eval) (mkSq [mkCall (Pr Eval) (mkSy "ob"), mkSy "x"])]))
-        (mkOb [])
-    letDef = Cl
-        (mkSq [mkOb [], mkSy "x"])
-        (mkCall (Pr Vau) (mkSq [mkSy "val",
-            mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkSy "body"],
-                mkCall (Pr Eval) (mkSq
-                    [ mkCall (Pr Extends) (mkSq 
-                        [ mkCall (Pr Match) (mkSq [mkSy "x", mkCall (Pr Eval) (mkSy "val")])
-                        , mkSy "e"])
-                    , mkSy "body"])])]))
-        (mkOb [])
-    lambdaDef = Cl
-        (mkSq [mkOb [], mkSy "var"])
-        (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "ast"],
-            mkCall (Pr Vau) (mkSq [mkSy "arg",
-                mkCall (Pr Eval) (mkSq
-                    [ mkCall (Pr Extends) (mkSq
-                        [ mkCall (Pr Match) (mkSq [mkSy "var", mkCall (Pr Eval) (mkSy "arg")])
-                        , mkSy "static"])
-                    , mkSy "ast"])])]))
-        (mkOb [])
-    quoteDef = Cl (mkSq [mkOb [], mkSy "ast"]) (mkSy "ast") (mkOb [])
-
-
-
-
-eval :: Val -> Val -> IO Val
-eval env code = evalStateT (reduce code) MState { environ = env --Ob Map.empty
-                                                , control = [NormK []]
-                                                }
+    startState = MState { environ = env --Ob Map.empty
+                        , control = [NormK []]
+                        }
 
 
 reduce :: Val -> Machine Val
@@ -144,8 +60,8 @@ combine f x = case ensureClosure f of --all of these are operatives
         caller <- gets environ
         let x' = mkSq [caller, x]
         case Oct.match var x' of
-            Nothing -> error "raise match failure"
-            Just env' -> swapEnv (env' `Oct.extend` env) >> reduce ast
+            Right env' -> swapEnv (env' `Oct.extend` env) >> reduce ast
+            Left err -> error "raise match failure"
     _ -> error $ "raise not a combiner:\n" ++ show f
 
 apply :: Val -> Val -> Machine Val
@@ -165,8 +81,8 @@ apply (Pr Extends) x = case x of
 apply (Pr pr) x =
     case lookup pr table of
         Just f -> case f pr x of
-            Just val -> done val
-            Nothing -> error $ "raise some error in primitive " ++ show pr
+            Right val -> done val
+            Left err -> error $ "raise some error in primitive " ++ show pr
         Nothing -> error $ "unknown primitive " ++ show pr
     where
     table = 
@@ -196,13 +112,13 @@ apply (Pr pr) x =
         , (Denom, unary Oct.denom)
         , (NumParts, unary Oct.numParts)
         ]
-    binary :: (Val -> Val -> Maybe Val) -> Primitive -> Val -> Maybe Val
+    binary :: (Val -> Val -> Falible Val) -> Primitive -> Val -> Falible Val
     binary op pr x = case x of
         Sq xs -> case toList xs of
             [a, b] -> op a b
             _ -> error $ "raise wrong number of args to primitive " ++ show pr
         _ -> error $ "raise invalid args to primitive " ++ show pr
-    unary :: (Val -> Maybe Val) -> Primitive -> Val -> Maybe Val
+    unary :: (Val -> Falible Val) -> Primitive -> Val -> Falible Val
     unary op pr x = op x
 apply f x = error "TODO apply"
 
@@ -219,10 +135,6 @@ done x = do
         (NormK (Eo k xs ((k',x'):xs'):_)):_ -> replace (Eo k' ((k,x):xs) xs') >> reduce x'
         (NormK (Op arg:ks)):kss             -> pop >> combine x arg
         (NormK (Ap f:ks)):kss               -> pop >> apply f x
-
-
-
-
 
 
 
