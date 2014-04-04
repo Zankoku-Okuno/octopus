@@ -1,0 +1,27 @@
+the any type (also called Dyn) is denoted by *
+introducing a type variable:
+	\forall <var>. <type>
+	\forall <var> :: <type>. <type>
+	<protocol> <type> \To <type>
+	multiple introduction can be done easily with extra commas as in `\forall x :: Nat, y :: Nat` and `Monad m, Stream s \To ...`
+technically, free symbols are assumed to be types, type constructors or protocols, but as long as things are obvious, this can be relaxed
+protocols-abiding types may be easily introduced
+anywhere you can use :: to mean "has type", you can use <: "subtype" or <: "supertype".
+
+functions are denoted with the infix -> or \to, which is right-associative
+the list type constructor is denoted with the [_] circumfix
+tuples (which is a fancy way of saying list of known length) are denoted with (_,_,_,_) variable-arity distfix
+variants are constructed using the _|_ infix (associativity does not matter), which binds more tightly than \to
+terms may also be used as arguments to a type constructor, such as in `Vec n -> Vec m -> Vec (n + m)`
+records are denoted as objects full of types
+	if some fields are optional, this may be denoted with a ? immediately after the feild's colon `{foo:? *}`
+refinement types are denoted with a comprehension syntax:
+	{ <var> :: <optional_type> \from <predicate>, <predicate>, <predicate>... }
+	if the optional_type is missing (and the :: with it), then * is the default
+	<- is also acceptable in place of \from
+type functions (which are applied like constructors) can be written using lambda syntax
+
+the documentation for a file should introduce new types (abstype <name>) and type synonyms (type <name> = ...)
+although the internal structure of abstypes is not meant for the user, it can be helpful to document it anyway (esp. for maintainers) 
+
+That should cover most types. I guess subtypes could also be used (<: and :>), but I think with protocols and the implicit subtyping of the language, they won't often be needed
