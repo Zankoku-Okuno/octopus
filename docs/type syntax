@@ -9,8 +9,13 @@ protocols-abiding types may be easily introduced
 anywhere you can use :: to mean "has type", you can use <: "subtype" or <: "supertype".
 
 functions are denoted with the infix -> or \to, which is right-associative
+a thunk type is written `<type>, just like quoting
+	thunks computed up to once can also be written Lazy <type>
+	thunks computed possibly more than once can be written Thunk <type>
+	thunks computed exactly once can be written Delay <type>
 the list type constructor is denoted with the [_] circumfix
 tuples (which is a fancy way of saying list of known length) are denoted with (_,_,_,_) variable-arity distfix
+	dear lord, don't use 1-tuples and 0-tuples. If you must, here's the notation: (ty,) (,)
 variants are constructed using the _|_ infix (associativity does not matter), which binds more tightly than \to
 terms may also be used as arguments to a type constructor, such as in `Vec n -> Vec m -> Vec (n + m)`
 records are denoted as objects full of types
@@ -20,6 +25,8 @@ refinement types are denoted with a comprehension syntax:
 	if the optional_type is missing (and the :: with it), then * is the default
 	<- is also acceptable in place of \from
 type functions (which are applied like constructors) can be written using lambda syntax
+
+if a type (with some common sense) doesn't sufficiently describe the purpose of something, it can be annotated in-line with #(...)
 
 the documentation for a file should introduce new types (abstype <name>) and type synonyms (type <name> = ...)
 although the internal structure of abstypes is not meant for the user, it can be helpful to document it anyway (esp. for maintainers) 

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Octopus where
 
 import Import
@@ -22,7 +23,7 @@ eval cache env code = evalStateT (runReaderT (reduce code) cache) startState
     where
     startState = MState { environ = env --Ob Map.empty
                         , control = [NormK []]
-                        , nextTag = 0 --FIXME increase this to make room for builtin tags
+                        , nextTag = startTag
                         }
 
 
@@ -51,7 +52,7 @@ reduce (Sy x) = gets environ >>= \env -> case Oct.resolveSymbol x env of
     Just val -> done val
     Nothing -> do
         env <- gets environ
-        error $ "TODO unbound symbol: " ++ show x ++ "\n" ++ show env
+        raise (getTag exnScopeError, mkSq [exnScopeError, Sy x, env])
 
 combine :: Val -> Val -> Machine Val
 combine (Pr Vau) x = case x of
@@ -59,8 +60,8 @@ combine (Pr Vau) x = case x of
         [var, ast] -> do
             env <- gets environ
             done $ Cl var ast env
-        _ -> error "raise wrong number of args to primitive vau"
-    _ -> error "raise invalid args to primitive vau"
+        _ -> raise $ mkTypeError (Pr Vau) "(Pat, *)" x
+    _ -> raise $ mkTypeError (Pr Vau) "(Pat, *)" x
 combine f@(Pr _) x = push (Ap f) >> reduce x
 combine f x = case ensureClosure f of --all of these are operatives
     Just (var, ast, env) -> do
@@ -68,83 +69,90 @@ combine f x = case ensureClosure f of --all of these are operatives
         let x' = mkSq [caller, x]
         case Oct.match var x' of
             Right env' -> swapEnv (env' `Oct.extend` env) >> reduce ast
-            Left err -> error "raise match failure"
-    _ -> error $ "raise not a combiner:\n" ++ show f
+            Left err -> raise err
+    _ -> raise $ mkTypeError (Tx "#<apply>") "* → *" f
 
 apply :: Val -> Val -> Machine Val
 apply (Pr Eval) x = case ensureThunk x of
     Just (env, ast) -> swapEnv env >> reduce ast
-    _ -> error $ "raise invalid args to primitive eval: " ++ show x
+    _ -> raise $ mkTypeError (Pr Eval) "Thunk *" x
 apply (Pr Ifz) x = case x of
     Sq xs -> case toList xs of
         [p, c, a] -> done $ Oct.ifz p c a
-        _ -> error "raise wrong number of args to primitive Ifz"
-    _ -> error "raise invalid args to primitive Ifz"
+        _ -> tyErr
+    _ -> tyErr
+    where tyErr = raise $ mkTypeError (Pr Ifz) "(*, *, *)" x
 apply (Pr Imp) x = impFile x
 apply (Pr Extends) x = case x of
     Sq xs -> case toList xs of
         [] -> done $ mkOb []
         xs -> done $ foldr1 Oct.extend xs
-    _ -> error "raise invalid args to primitive Extends"
+    _ -> raise $ mkTypeError (Pr Extends) "[*]" x
 apply (Pr MkTag) x = case x of
     Tx spelling -> done =<< mkTag spelling
-    _ -> error "raise type error"
+    _ -> raise $ mkTypeError (Pr MkTag) "Tx" x
 apply (Pr Handle) x = case x of
     Sq xs -> case toList xs of
         [tag, handler, body] -> case tag of
             Tg i _ -> pushK (HndlK i handler) >> reduce body
-            _ -> error "raise type error"
-        _ -> error "raise wrong number of args to Handle"
-    _ -> error "raise invalid args to Handle"
+            _ -> tyErr
+        _ -> tyErr
+    _ -> tyErr
+    where tyErr = raise $ mkTypeError (Pr Handle) "∀ r. (Tg, * → r, `r)" x --FIXME give the type as a monad
 apply (Pr Raise) x = case x of
     Sq xs -> case toList xs of
         [tag, payload] -> case tag of
-            Tg i _ -> raise i payload
-            _ -> error "raise type error"
-        _ -> error "raise wrong number of args to Handle"
-    _ -> error "raise invalid args to Handle"
+            Tg i _ -> curry raise i payload
+            _ -> tyErr
+        _ -> tyErr
+    _ -> tyErr
+    where tyErr = raise $ mkTypeError (Pr Raise) "(Tg, *)" x
 apply (Pr pr) x =
     case lookup pr table of
         Just f -> case f pr x of
             Right val -> done val
-            Left err -> error $ "raise some error in primitive " ++ show pr
-        Nothing -> error $ "unknown primitive " ++ show pr
+            Left err -> raise err
+        Nothing -> error $ "INTERNAL ERROR (Octopus.apply): unknown primitive " ++ show pr
     where
     table = 
-        [ (Match, binary Oct.match)
+        [ (Match, binary Oct.match "TODO")
         
-        , (Delete, binary Oct.delete)
+        , (Delete, binary Oct.delete "TODO")
         , (Keys, unary Oct.keys)
-        , (Get, binary Oct.get)
+        , (Get, binary Oct.get "TODO")
         
-        , (Eq, binary Oct.eq)
-        , (Neq, binary Oct.neq)
-        , (Lt, binary Oct.lt)
-        , (Lte, binary Oct.lte)
-        , (Gt, binary Oct.gt)
-        , (Gt, binary Oct.gt)
+        , (Eq, binary Oct.eq "(*, *)")
+        , (Neq, binary Oct.neq "(*, *)")
+        , (Lt, binary Oct.lt "(Nm, Nm)")
+        , (Lte, binary Oct.lte "(Nm, Nm)")
+        , (Gt, binary Oct.gt "(Nm, Nm)")
+        , (Gt, binary Oct.gt "(Nm, Nm)")
     
-        , (Add, binary Oct.add)
-        , (Sub, binary Oct.sub)
-        , (Mul, binary Oct.mul)
-        , (Div, binary Oct.div)
+        , (Add, binary Oct.add "(Nm, Nm)")
+        , (Sub, binary Oct.sub "(Nm, Nm)")
+        , (Mul, binary Oct.mul "(Nm, Nm)")
+        , (Div, binary Oct.div "(Nm, Nm)")
     
         , (Len, unary Oct.len)
-        , (Cat, binary Oct.cat)
-        , (Cut, binary Oct.cut)
+        , (Cat, binary Oct.cat "∀ f :: Sq * | Tx | By. (f, f)")
+        , (Cut, binary Oct.cut "(Sq * | Tx | By, Nat)")
     
         , (Numer, unary Oct.numer)
         , (Denom, unary Oct.denom)
         , (NumParts, unary Oct.numParts)
         ]
-    binary :: (Val -> Val -> Fallible Val) -> Primitive -> Val -> Fallible Val
-    binary op pr x = case x of
+    binary :: (Val -> Val -> Fallible Val) -> Text -> Primitive -> Val -> Fallible Val
+    binary op ty pr x = case x of
         Sq xs -> case toList xs of
             [a, b] -> op a b
-            _ -> error $ "raise wrong number of args to primitive " ++ show pr
-        _ -> error $ "raise invalid args to primitive " ++ show pr
+            _ -> tyErr
+        _ -> tyErr
+        where tyErr = Left $ mkTypeError (Pr pr) ty x
     unary :: (Val -> Fallible Val) -> Primitive -> Val -> Fallible Val
     unary op pr x = op x
+--TODO Ks
+--TODO apply objects that have a __call__ field, passing the object as the first parameter
+--TODO unwrap Ab and try the __call__ protocol trick
 apply f x = error "TODO apply"
 
 done :: Val -> Machine Val
@@ -164,13 +172,16 @@ done x = do
         (ImptK _ slot):kss                  -> liftIO (slot `putMVar` Right x) >> pop >> done x
 
 
-raise :: Word -> Val -> Machine Val
-raise tg payload = do
+raise :: Exn -> Machine Val
+raise (tg, payload) = do
     (top, rest) <- splitStack tg
-    --error $ show (top, rest)
     case rest of
-        [] -> error "unhandled exception" --return here
-        (ImptK _ _):kss -> error "raise import error" --but here, chop the stack and recurse with the new problem
+        [] -> error $ "unhandled exception: " ++ show (tg, payload) --return here
+        (ImptK file slot):kss -> do
+            let err = (getTag exnImportError, mkSq [exnImportError, Tx file, payload])
+            liftIO $ slot `putMVar` Left err
+            modify $ \s -> s { control = kss }
+            raise err
         (HndlK _ handler):kss -> do
             modify $ \s -> s { control = kss }
             reduce $ mkCall handler payload
@@ -190,19 +201,27 @@ impFile (Tx pathstr) = do
             val_e <- liftIO $ readMVar loaded_var
             case val_e of
                 Right val -> done val
-                Left err -> error $ "raise exception " ++ show err
+                Left err -> raise err
         Nothing -> do
             loading_var <- liftIO newEmptyMVar
             liftIO $ cache_var `putMVar` Map.insert path loading_var cache
             contents_e <- liftIO $ tryIOError $ readFile path'
             case contents_e of
                 Right contents -> do
-                    swapEnv startData
-                    pushK (ImptK path loading_var)
                     case parseOctopusFile path' contents of
-                        Right val -> reduce val --TODO consider which env to start a file off with
-                        Left err -> error "raise SyntaxError" --FIXME also don't forget to fill the loading_var
-                Left err -> error "raise ImportError" --FIXME also don't forget to fill the loading_var
-impFile _ = error "TODO raise TypeError"
+                        Right val -> do
+                            swapEnv startData --TODO consider which env to start a file off with
+                            pushK (ImptK path loading_var)
+                            reduce val
+                        Left raw_err -> do
+                            let err = (getTag exnSyntaxError, mkSq [exnSyntaxError, Tx . pack $ show raw_err])
+                            liftIO $ loading_var `putMVar` Left err
+                            raise err
+                Left raw_err -> do
+                    --TODO format the IOError the way I want it, not the way Haskell gives it
+                    let err = (getTag exnIOError, mkSq [exnIOError, Tx . pack $ show raw_err])
+                    liftIO $ loading_var `putMVar` Left err
+                    raise err
+impFile x = raise $ mkTypeError (Pr Imp) "Tx" x
 
 

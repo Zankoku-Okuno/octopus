@@ -8,7 +8,8 @@ import Control.Monad.State
 import Control.Concurrent.MVar (MVar)
 
 
-type Fallible = Either Val
+type Exn = (Word, Val)
+type Fallible = Either Exn
 
 
 data Val = Nm Rational -- ^ Rational number
@@ -50,7 +51,7 @@ data Primitive = Vau | Eval | Match | Ifz | Imp
 
 
 
-type FileCache = MVar (Either Val Val)
+type FileCache = MVar (Fallible Val)
 type ImportsCache = MVar (Map Text FileCache)
 data MState = MState { environ :: Val
                      , control :: [Control]

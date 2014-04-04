@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Octopus.Primitive (
       resolveSymbol
 
@@ -58,10 +59,10 @@ match var val = mkOb <$> go var val
     where
     go :: Val -> Val -> Fallible [(Symbol, Val)]
     go (Sy x) v = Right [(x, v)]
-    go (Sq ps) (Sq xs) | Seq.length ps == Seq.length xs = do
-        concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
-                       | otherwise = error "raise pattern match failure"
-    go (Sq ps) _ = Left (error "TODO")
+    go (Sq ps) (Sq xs) | Seq.length ps == Seq.length xs =
+                            concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
+                       | otherwise = Left $ mkMatchFail (Sq ps) (Sq xs)
+    go (Sq ps) v = Left $ mkMatchFail (Sq ps) v
     go (Ob ps) _ | length (Map.keys ps) == 0 = Right []
     go (Ob ps) (Ob vs) = goObj (Map.toList ps) vs
         where
@@ -69,24 +70,24 @@ match var val = mkOb <$> go var val
         goObj [] _ = Right []
         goObj ((k, v):ks) vs = case Map.lookup k vs of
             Just v' -> (++) <$> go v v' <*> goObj ks vs
-            Nothing -> error "raise pattern match failure"
+            Nothing -> Left $ mkMatchFail (Ob ps) (Ob vs)
+    go (Ob ps) v = Left $ mkMatchFail (Ob ps) v
     go pat val = error $ "unimplemented pattern-matching:\n" ++ show pat ++ "\n" ++ show val
 
 ifz :: Val -> Val -> Val -> Val
 ifz (Nm x) | x == 0 = const
            | otherwise = ignore
+--TODO float test vs. zero
 ifz _ = ignore
 ignore x y = y
 
 
 ------ Relational ------
 eq :: Val -> Val -> Fallible Val
-eq (Nm a) (Nm b) = Right . mkInt $ if a == b then 1 else 0
-eq _ _ = error "TODO eq"
+eq a b = Right . mkInt $ if a == b then 1 else 0
 
 neq :: Val -> Val -> Fallible Val
-neq (Nm a) (Nm b) = Right . mkInt $ if a == b then 1 else 0
-neq _ _ = error "TODO neq"
+neq a b = Right . mkInt $ if a /= b then 1 else 0
 
 lt :: Val -> Val -> Fallible Val
 lt (Nm a) (Nm b) = Right . mkInt $ if a < b then 1 else 0
@@ -104,19 +105,20 @@ gte (Nm a) (Nm b) = Right . mkInt $ if a >= b then 1 else 0
 ------ Arithmetic ------
 add :: Val -> Val -> Fallible Val
 add (Nm a) (Nm b) = Right . Nm $ a + b
-add _ _ = Left (error "TODO")
+add a b = Left $ mkTypeError (Pr Add) "(Nm, Nm)" (mkSq [a, b])
 
 sub :: Val -> Val -> Fallible Val
 sub (Nm a) (Nm b) = Right . Nm $ a - b
-sub _ _ = Left (error "TODO")
+sub a b = Left $ mkTypeError (Pr Sub) "(Nm, Nm)" (mkSq [a, b])
 
 mul :: Val -> Val -> Fallible Val
 mul (Nm a) (Nm b) = Right . Nm $ a * b
-mul _ _ = Left (error "TODO")
+mul a b = Left $ mkTypeError (Pr Mul) "(Nm, Nm)" (mkSq [a, b])
 
 div :: Val -> Val -> Fallible Val
-div (Nm a) (Nm b) = Right . Nm $ a / b
-div _ _ = Left (error "TODO")
+div (Nm a) (Nm b) | b == 0 = Left (getTag exnDivZero, exnDivZero)
+                  | otherwise = Right . Nm $ a / b
+div a b = Left $ mkTypeError (Pr Div) "(Nm, Nm)" (mkSq [a, b])
 
 --quo :: Val -> Val -> Maybe Val
 --quo = error "TODO"
@@ -131,20 +133,17 @@ div _ _ = Left (error "TODO")
 ------ Rationals ------
 numer :: Val -> Fallible Val
 numer (Nm n) = Right . mkInt $ numerator n
-numer _ = Left (error "TODO")
+numer x = Left $ mkTypeError (Pr Numer) "Nm" x
 
 denom :: Val -> Fallible Val
 denom (Nm n) = Right . mkInt $ denominator n
-denom _ = Left (error "TODO")
-
-trunc :: Val -> Fallible Val
-trunc (Nm n) = Right . mkInt $ truncate n
-trunc _ = Left (error "TODO")
+denom x = Left $ mkTypeError (Pr Denom) "Nm" x
 
 numParts :: Val -> Fallible Val
 numParts (Nm n) = let (whole, frac) = properFraction n
                     in Right $ mkSq [mkInt whole, Nm frac]
-numParts _ = Left (error "TODO")
+--TODO get (whole, mantissa)
+numParts x = Left $ mkTypeError (Pr NumParts) "Nm | Fl" x
 
 
 ------ Floats ------
@@ -155,41 +154,46 @@ len :: Val -> Fallible Val
 len (Sq xs) = Right . mkInt $ Seq.length xs
 len (Tx xs) = Right . mkInt $ T.length xs
 len (By xs) = Right . mkInt $ BS.length xs
-len _ = Left (error "TODO")
+len x = Left $ mkTypeError (Pr Len) "Sq * | Tx | By" x
 
 cat :: Val -> Val -> Fallible Val
 cat (Sq xs) (Sq ys) = Right . Sq $ xs <> ys
 cat (Tx xs) (Tx ys) = Right . Tx $ xs <> ys
 cat (By xs) (By ys) = Right . By $ xs <> ys
-cat _ _ = Left (error "TODO")
+cat x y = Left $ mkTypeError (Pr Cat) "∀ f :: Sq * | Tx | By. (f, f)" (mkSq [x, y])
 
 cut :: Val -> Val -> Fallible Val --FIXME I guess I really need to return (Either Val Val), where the left is an exception to raise
 cut x (Nm q) = 
     case x of
         Sq xs -> do
             i <- n
-            when (i >= Seq.length xs) $ Left (error "TODO")
+            when (i >= Seq.length xs) $ ixErr
             let (as, bs) = Seq.splitAt i xs
             Right $ mkSq [Sq as, Sq bs]
         Tx xs -> do
             i <- n
-            when (i >= T.length xs) $ Left (error "TODO")
+            when (i >= T.length xs) $ ixErr
             let (as, bs) = T.splitAt i xs
             Right $ mkSq [Tx as, Tx bs]
         By xs -> do
             i <- n
-            when (i >= BS.length xs) $ Left (error "TODO")
+            when (i >= BS.length xs) $ ixErr
             let (as, bs) = BS.splitAt i xs
             Right $ mkSq [By as, By bs]
+        _ -> Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [x, Nm q])
     where
-    n = if denominator q == 1 then Right (fromIntegral $ numerator q) else Left (error "TODO")
+    n = if denominator q == 1
+        then Right (fromIntegral $ numerator q)
+        else Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [x, Nm q])
+    ixErr = Left (getTag exnIndexError, mkSq [exnIndexError, Nm q, x])
+cut xs n = Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [xs, n])
 
 
 ------ Xons ------
 {-| @get x f@ retrieves field @f@ from @x@, if the field exists. -}
 get :: Val -> Val -> Fallible Val
-get (Ob ob) (Sy sy) = maybe (Left (error "TODO")) Right $ Map.lookup sy ob
-get _ _ = Left (error "TODO")
+get (Ob ob) (Sy sy) = maybe (Left (getTag exnAttrError, mkSq [exnAttrError, Sy sy, Ob ob])) Right $ Map.lookup sy ob
+get ob sy = Left $ mkTypeError (Pr Get) "(Ob, Sy)" (mkSq [ob, sy])
 
 {-| Get a list of the fields in a value. -}
 keys :: Val -> Fallible Val
@@ -199,7 +203,7 @@ keys _ = Right $ mkSq []
 {-| @extend a b@ extends and overwrites bindings in @b@ with bindings in @a@. -}
 extend :: Val -> Val -> Val
 extend (Ob ob') (Ob ob) = Ob $ Map.union ob' ob
-extend _ (Ob ob) = (Ob ob)
+extend _ (Ob ob) = Ob ob
 extend (Ob ob') _ = Ob ob'
 extend _ _ = mkOb []
 

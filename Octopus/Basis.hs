@@ -1,25 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-| This module contains values that help create and manipulate Octopus
     values that are used by the interpreter, but not strictly primitive,
     that is, they could just as easily be defined in user-space, as long
     as the machine could get at them.
 -}
-module Octopus.Basis (
-      mkVau
-    -- * Basic Protocols
-    -- ** Combination
-    , mkCall
-    , callOpr
-    , callArg
-    , ensureCombination
-    -- ** Closure
-    , mkClosure
-    , ensureClosure
-    -- ** Suspension
-    , mkThunk
-    , ensureThunk
-
-    , module Octopus.Shortcut
-    ) where
+module Octopus.Basis where
 
 import Import
 import qualified Data.Sequence as Seq
@@ -31,6 +16,24 @@ import Octopus.Shortcut
 
 mkVau :: String -> String -> Val -> Val
 mkVau e arg body = mkCall (Pr Vau) (mkSq [mkSq [Sy $ intern e, Sy $ intern arg], body])
+
+
+exnTypeError   = Tg 0 "TypeError"
+exnMatchFail   = Tg 1 "MatchFailure"
+exnScopeError  = Tg 2 "ScopeError"
+exnAttrError   = Tg 3 "AttributeError"
+exnIndexError  = Tg 4 "IndexError"
+exnDivZero     = Tg 5 "DivideByZero"
+exnIOError     = Tg 6 "IOError"
+exnSyntaxError = Tg 7 "SyntaxError"
+exnImportError = Tg 8 "ImportError"
+startTag :: Word
+startTag       =    9
+
+mkTypeError :: Val -> Text -> Val -> (Word, Val)
+mkTypeError f ty val = (getTag exnTypeError, mkSq [exnTypeError, f, Tx ty, val])
+mkMatchFail :: Val -> Val -> (Word, Val)
+mkMatchFail p v = (getTag exnMatchFail, mkSq [exnMatchFail, p, v])
 
 
 {-| Construct a combination: an object with a

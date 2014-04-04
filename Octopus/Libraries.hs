@@ -2,6 +2,7 @@ module Octopus.Libraries where
 
 import Import
 import Octopus.Data
+import Octopus.Shortcut
 import Octopus.Basis
 
 
@@ -48,6 +49,10 @@ startData = mkOb [
     , (intern "__let__",      letDef)
     , (intern "__lambda__",   lambdaDef)
     , (intern "__quote__",    quoteDef)
+    --- Exceptions ---
+    , (intern "TypeError",    exnTypeError)
+    , (intern "MatchFailure", exnMatchFail)
+    , (intern "DivZero",      exnDivZero)
     ]
 
 vauDef = Cl
