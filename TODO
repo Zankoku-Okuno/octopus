@@ -25,7 +25,6 @@ Parser
 	literate files
 	anonymous points
 	block comments
-	primitive literals
 	bytes literals
 	documentation on a (define? export?)
 	decorators in do blocks

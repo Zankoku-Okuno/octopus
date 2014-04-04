@@ -7,7 +7,7 @@ expr ::= \<atom\> | \<list\> | \<object\>
       | \<combination\> | \<block\> | \<quotation\>
       |  '(' \<expr\> ')'
 
-atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _accessor_
+atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _accessor_ | _primitive_
 list ::= '[' (\<expr\>+ (',' \<expr\>+)*)? ']'
 object ::= '{' (_field_ \<expr\>+ (',' _field_ \<expr\>+)*)? '}'
 combination ::= '(' \<expr\> \<expr\>+ ')'
@@ -16,6 +16,7 @@ quotation ::= '`' \<expr\>
 
 symbol ::= \/\<name\>\/ - reserved
     reserved = {'do'}
+primitive ::= \/#\<[a-zA-Z]+\>\/
 field ::= \/\<name\>:\/
 accessor ::= \/:\<name\>\/
 number ::= \/[+-]?(0[xX]\<hexnum\>|0[oO]\<octnum\>|0[bB]\<binnum\>|\<decnum\>)\/
@@ -26,12 +27,12 @@ number ::= \/[+-]?(0[xX]\<hexnum\>|0[oO]\<octnum\>|0[bB]\<binnum\>|\<decnum\>)\/
     exponent ::= \/[eE][+-]?\\d+|[hH][+-]?\\x+\/
 string ::= \/\"([^\\\\\"]|\\\\[abefntv\'\"\\\\&]|\\\\\<numescape\>|\\\\\\s*\\n\\s*\\\\)*\"\/
     numescape ::= \/[oO][0-7]{3}|[xX][0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U0[0-9a-fA-F]{5}|U10[0-9a-fA-F]{4}\/
-heredoc ::= \/\#\<\<\\s*(?\'END\'\\w+)\\s*\\n.*?\\g{END}\/
+heredoc ::= \/\#\<\<(?\'END\'\\w+)\\n.*?\\n\\g{END}\>\>\/
 name ::= \/\<namehead\>\<nametail\>|-(\<namehead\>|-)\<nametail\>|-\/
     nametail = \/[^\#\\\\\"`()[]{}:;.,]*\/
     namehead = \/[^\#\\\\\"`()[]{}:;.,0-9-]\/
 
-linecomment ::= \/#(?!\>\>)\\.*?\\n\/
+linecomment ::= \/#(?!\<)\\.*?\\n\/
 blockcomment ::= \/\#\\{([^\#}]+|\<blockcomment\>|\#[^{]|\\}[^\#])*\\}\#\/
 @
 -}
@@ -79,7 +80,7 @@ define = do
 expr :: Parser Val
 expr = composite P.<|> atom
     where
-    atom = P.choice [symbol, numberLit, textLit, heredoc, accessor] <?> "atom"
+    atom = P.choice [symbol, numberLit, textLit, heredoc, accessor, primitive] <?> "atom"
     composite = P.choice [block, combine, sq, ob, quote]
 
 statement :: Parser (Either (Val, Val) Val)
@@ -87,6 +88,22 @@ statement = (Left <$> define) P.<|> (Right <$> expr)
 
 
 ------ Atoms ------
+primitive :: Parser Val
+primitive = P.choice $ map mkPrimParser table
+    where
+    mkPrimParser (name, val) = string ("#<" ++ name ++ ">") >> return (Pr val)
+    table = [ ("vau", Vau), ("eval", Eval), ("match", Match), ("ifz!", Ifz), ("import", Imp)
+            , ("eq", Eq), ("neq", Neq), ("lt", Lt), ("lte", Lte), ("gt", Gt), ("gte", Gte)
+            , ("add", Add) , ("mul", Mul) , ("sub", Sub) , ("div", Div)
+            , ("numer", Numer) , ("denom", Denom) , ("numParts", NumParts)
+            , ("mkTag", MkTag)
+            , ("len", Len) , ("cat", Cat) , ("cut", Cut)
+            , ("extends", Extends) , ("del", Delete) , ("keys", Keys) , ("get", Get)
+            , ("handle", Handle) , ("raise", Raise)
+            ]
+
+
+
 symbol :: Parser Val
 symbol = do
     n <- name

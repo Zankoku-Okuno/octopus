@@ -7,44 +7,8 @@ import Octopus.Basis
 
 
 startData = mkOb [
-    --- Non-data ---
-      (intern "__vau__",      Pr Vau)
-    , (intern "__match__",    Pr Match)
-    , (intern "__eval__",     Pr Eval)
-    , (intern "__ifz!__",     Pr Ifz)
-    , (intern "__import__",   Pr Imp)
-    --- Relationals ---
-    , (intern "__eq__",       Pr Eq)
-    , (intern "__neq__",      Pr Neq)
-    , (intern "__lt__",       Pr Lt)
-    , (intern "__lte__",      Pr Lte)
-    , (intern "__gt__",       Pr Gt)
-    , (intern "__gte__",      Pr Gt)
-    --- Arithmetic ---
-    , (intern "__add__",      Pr Add)
-    , (intern "__mul__",      Pr Mul)
-    , (intern "__sub__",      Pr Sub)
-    , (intern "__div__",      Pr Div)
-    --- Numbers ---
-    , (intern "__numer__",    Pr Numer)
-    , (intern "__denom__",    Pr Denom)
-    , (intern "__numparts__", Pr NumParts)
-    --- Tags ---
-    , (intern "__mkTag__",    Pr MkTag)
-    --- Lists ---
-    , (intern "__len__",      Pr Len)
-    , (intern "__cat__",      Pr Cat)
-    , (intern "__cut__",      Pr Cut)
-    --- Xonses ---
-    , (intern "__extends__",  Pr Extends)
-    , (intern "__del__",      Pr Delete)
-    , (intern "__keys__",     Pr Keys)
-    --TODO __lookup__
-    --- Control ---
-    , (intern "__handle__",   Pr Handle)
-    , (intern "__raise__",    Pr Raise)
     --- Niceties ---
-    , (intern "vau",          vauDef)
+      (intern "vau",          vauDef)
     , (intern "__get__",      getDef)
     , (intern "__let__",      letDef)
     , (intern "__lambda__",   lambdaDef)

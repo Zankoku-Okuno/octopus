@@ -22,14 +22,14 @@ main = do
 
     test "#<<END\na\\s;dg\nasdg\nEND>>"
     test "do four: 4 ((vau x x) four);"
-    test "do four: 4 ((vau x (__eval__ x)) four);"
+    test "do four: 4 ((vau x (#<eval> x)) four);"
     test "((vau [e, ast] e) dne)"
     test "((vau [e, ast] ast) dne)"
-    test "(__extends__ [{a: 3}, {a: 2}, {a: 1}])"
-    test "((vau [e, ast] (__eval__ [__extends__ [{five: 5}, e], ast])) five)"
-    test "do four: 4 (vau [{}, ob] (__keys__ ob) {foo: 3, bar: four});"
+    test "(#<extends> [{a: 3}, {a: 2}, {a: 1}])"
+    test "((vau [e, ast] (#<eval> [#<extends> [{five: 5}, e], ast])) five)"
+    test "do four: 4 (vau [{}, ob] (#<keys> ob) {foo: 3, bar: four});"
     test "do four: 4 ((vau [e, ob] (:x ob)) {x: four});"
-    test "do four: 4 ((vau [e, ob] (__eval__ [e, :x ob])) {x: four});"
+    test "do four: 4 ((vau [e, ob] (#<eval> [e, :x ob])) {x: four});"
     test $ "do four: 4 (" ++ lambda ++ " ob (:x ob) {x: four});"
     test $ "(" ++ lambda ++ " eight eight 8)"
     test $ "("++letin++" eight 8 eight)"
@@ -54,9 +54,9 @@ main = do
     test "[__lambda__ x x 3, __lambda__ y y 4]" --[3, 4]
 
     test "do \955: __lambda__\n   x: 1 \n   (\955 x x 3)\n   y: 2\n   [x, y];" --[1, 2]
-    test "(__del__ [{x: 1, y: 2}, `y])"
+    test "(#<del> [{x: 1, y: 2}, `y])"
     test "do \955: __lambda__\n\
-         \   delete: (\955 ob (vau [{}, field] (__del__ [ob, field])))\n\
+         \   delete: (\955 ob (vau [{}, field] (#<del> [ob, field])))\n\
          \   (delete {x: 1, y: 2} x);"
     test "do x: do \955: __lambda__\n\
          \         (\955 y y 3);\n\
@@ -67,32 +67,32 @@ main = do
          \   (defx5 x);"
     test "do [a, b, c]: [`there, `Bob, `hi] [c, a, b];"
 
-    test "do x: (__add__ [1, 2])\n   y: (__sub__ [1, 2])\n   z: (__mul__ [2, 3])\n   w: (__div__ [2, 3])\n   [x, y, z, w];"
-    test "do [a, b]: (__cut__ [[1, 2, 3, 4, 5], 3])\n   [a, b, __len__ a];"
-    test "do [a, b]: (__cut__ [\"hello\", 3])\n   [a, b, __len__ a];"
-    test "do y: (__ifz!__ [0, `y, `n])\n   n: (__ifz!__ [1, `y, `n])\n   [y, n];"
+    test "do x: (#<add> [1, 2])\n   y: (#<sub> [1, 2])\n   z: (#<mul> [2, 3])\n   w: (#<div> [2, 3])\n   [x, y, z, w];"
+    test "do [a, b]: (#<cut> [[1, 2, 3, 4, 5], 3])\n   [a, b, #<len> a];"
+    test "do [a, b]: (#<cut> [\"hello\", 3])\n   [a, b, #<len> a];"
+    test "do y: (#<ifz!> [0, `y, `n])\n   n: (#<ifz!> [1, `y, `n])\n   [y, n];"
 
-    test "do {\955: \955}: (__import__ \"./test/foo.oct\") (\955 x x 6);"
+    test "do {\955: \955}: (#<import> \"./test/foo.oct\") (\955 x x 6);"
 
-    test "do t: (__mkTag__ \"phoey\")\n   (__handle__ [t, 3, `5]);"
-    test "do id: (__lambda__ x x)\n   t: (__mkTag__ \"phoey\")\n   (__handle__ [t, id,\n      `(__add__ [3, (__raise__ [t, 7])])]);"
+    test "do t: (#<mkTag> \"phoey\")\n   (#<handle> [t, 3, `5]);"
+    test "do id: (__lambda__ x x)\n   t: (#<mkTag> \"phoey\")\n   (#<handle> [t, id,\n      `(#<add> [3, (#<raise> [t, 7])])]);"
     test "do \955: __lambda__\n\
          \   id: (\955 x x)\n\
-         \   +: (\955 x (\955 y (__add__ [x, y])))\n\
-         \   ex: (__mkTag__ \"exn\")\n\
+         \   +: (\955 x (\955 y (#<add> [x, y])))\n\
+         \   ex: (#<mkTag> \"exn\")\n\
          \   handle: (\955 tag (\955 handler (vau thunk\n\
-         \              (__handle__ [tag, handler, `(__eval__ thunk)]))))\n\
+         \              (#<handle> [tag, handler, `(#<eval> thunk)]))))\n\
          \   [ handle ex (+ 3) (+ 1 6)\n\
-         \   , handle ex (+ 3) (+ 1 (__raise__ [ex, 10]))];"
-    test "(__handle__ [TypeError, (__lambda__ x x), `(__add__ 3 4)])"
-    test "(__handle__ [TypeError, (__lambda__ x x), `(__add__ [3, 4])])"
-    test "(__handle__ [TypeError, (__lambda__ x x), `(__add__ [3, 5, 4])])"
-    test "(__handle__ [DivZero, (vau {} 1), `do (__div__ [3, 0]) (__raise__ []);])"
+         \   , handle ex (+ 3) (+ 1 (#<raise> [ex, 10]))];"
+    test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> 3 4)])"
+    test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> [3, 4])])"
+    test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> [3, 5, 4])])"
+    test "(#<handle> [DivZero, (vau {} 1), `do (#<div> [3, 0]) (#<raise> []);])"
 
 
 
-lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
-letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"
+lambda = "(vau [{}, var] (vau [static, ast] (vau arg (#<eval> [#<extends> [#<match> [var, #<eval> arg], static], ast ]))))"
+letin  = "(vau [{}, x] (vau val (vau [e, body] (#<eval> [#<extends> [#<match> [x, #<eval> val], e], body]))))"
 
 
 
@@ -102,7 +102,7 @@ letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__
 
 testParse input = case parseOctopusExpr "" input of
     Right val -> print val
-    Left err -> print err
+    Left err -> print err >> exitFailure
 test input = do
     putStr $ input ++ " ===> "
     cache <- newMVar Map.empty
