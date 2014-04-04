@@ -73,6 +73,17 @@ main = do
 
     test "do {\955: \955}: (__import__ \"./test/foo.oct\") (\955 x x 6);"
 
+    test "do t: (__mkTag__ \"phoey\")\n   (__handle__ [t, 3, `5]);"
+    test "do id: (__lambda__ x x)\n   t: (__mkTag__ \"phoey\")\n   (__handle__ [t, id,\n      `(__add__ [3, (__raise__ [t, 7])])]);"
+    test "do \955: __lambda__\n\
+         \   id: (\955 x x)\n\
+         \   +: (\955 x (\955 y (__add__ [x, y])))\n\
+         \   ex: (__mkTag__ \"exn\")\n\
+         \   handle: (\955 tag (\955 handler (vau thunk\n\
+         \              (__handle__ [tag, handler, `(__eval__ thunk)]))))\n\
+         \   [ handle ex (+ 3) (+ 1 6)\n\
+         \   , handle ex (+ 3) (+ 1 (__raise__ [ex, 10]))];"
+
 
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"
 letin  = "(vau [{}, x] (vau val (vau [e, body] (__eval__ [__extends__ [__match__ [x, __eval__ val], e], body]))))"

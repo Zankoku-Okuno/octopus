@@ -28,6 +28,8 @@ startData = mkOb [
     , (intern "__numer__",    Pr Numer)
     , (intern "__denom__",    Pr Denom)
     , (intern "__numparts__", Pr NumParts)
+    --- Tags ---
+    , (intern "__mkTag__",    Pr MkTag)
     --- Lists ---
     , (intern "__len__",      Pr Len)
     , (intern "__cat__",      Pr Cat)
@@ -37,6 +39,9 @@ startData = mkOb [
     , (intern "__del__",      Pr Delete)
     , (intern "__keys__",     Pr Keys)
     --TODO __lookup__
+    --- Control ---
+    , (intern "__handle__",   Pr Handle)
+    , (intern "__raise__",    Pr Raise)
     --- Niceties ---
     , (intern "vau",          vauDef)
     , (intern "__get__",      getDef)

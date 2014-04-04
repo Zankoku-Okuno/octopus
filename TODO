@@ -18,10 +18,11 @@ Parser
 		directives are line tht start with #! (though #! on very first line is ignored)
 		massage the input by blanking these lines, but also collect and parse the directives
 	anonymous points
-	special syntax for lambda and vau (use the primitive ones, allow for stuff like (\l (x y z) body))
 	block comments
+	primitive literals
 	heredocs
 	bytes literals
+	documentation on a (define? export?)
 	decorators in do blocks?
 	ellipsis?
 	assertion syntax?
@@ -31,7 +32,10 @@ Parser
 		exprort ::= 'export' <pattern>
 	import form objects
 		{x, y, z: foo} === {x: x, y: y, z: foo}
-	literals for closures, primitives, tags, &c (using #<...> syntax)?
+	literals for closures, tags, handlers, &c (using #<...> syntax)?
+	special syntax for lambda and vau
+		use the primitive ones, allow for stuff like (\l (x y z) body)
+		nah, I can do this in userland
 
 Interpreter
 	Data primitives
@@ -44,9 +48,12 @@ Interpreter
 		conversions
 	Exceptions
 		new handler
-		raise
-		capture and raise cannot propagate past ImptK
-	First-class control (caputure, Ks is an applicative)
+		raise (cannot propagate past ImptK)
+		handle
+	First-class control
+		caputure (cannot propagate past ImptK)
+		Ks is an applicative
+		guards (onWind, onUnwind, onAbort)
 	match literals
 	abstract types
 	objects and lists are self-evaluating, except those that have not yet been eval'd
@@ -59,6 +66,7 @@ Interpreter
 	re-raise exceptions?
 		perhaps by keeping the last unwond stack around until a handler returns normally
 		on re-raise, we simply cat the stacks
+		alternately, do it as a library
 
 Documentation
 	geting started
@@ -67,6 +75,7 @@ Documentation
 	every primitive type and operation: what they do and when/how they fail
 
 Cleanup
+	Exposed modules use unallocated top-level names: Octopus
 	put Shortcuts in Octopus.Data
 	eliminate magic field names
 	make an actual lookup primitive, desugar :x into that instead of into __get__
@@ -92,6 +101,21 @@ Performance
 	try using `Rose (Map Symbol (Maybe Val))` for objects to reduce space consumption
 		The maybe val is there so that a lookup can return (Just Nothing), which is equivalent to (Nothing)
 
-
+Standard libraries
+	simulate (parametric) modules (thereby typeclasses minus ad hoc)
+	monads (including monadic IO)
+	structured data
+		html
+		annotated sexpr protocol (generalizing html/xml)
+		metadata protocol
+		d3-style joins
+	parsers (glob, regular, context-free, CFG+static alloc'd storage, combinator)
+	servers
+		conduits
+		string builders
+		sockets
+		databases
+	stm
+	mutable objects/smalltalk
 
 

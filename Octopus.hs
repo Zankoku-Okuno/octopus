@@ -22,6 +22,7 @@ eval cache env code = evalStateT (runReaderT (reduce code) cache) startState
     where
     startState = MState { environ = env --Ob Map.empty
                         , control = [NormK []]
+                        , nextTag = 0 --FIXME increase this to make room for builtin tags
                         }
 
 
@@ -30,11 +31,13 @@ reduce x@(Nm _) = done x
 reduce x@(By _) = done x
 reduce x@(Tx _) = done x
 reduce x@(Fp _) = done x
-reduce x@(Tg _) = done x
+reduce x@(Tg _ _) = done x
 reduce x@(Ab _ _) = done x
 reduce x@(Cl _ _ _) = done x
 reduce x@(Ce _) = done x
 reduce x@(Ar _) = done x
+--reduce x@(Eh _ _) = done x
+--reduce x@(Ex _ _) = done x
 reduce x@(Pr _) = done x
 reduce sq@(Sq xs) = case toList xs of
     [] -> done sq
@@ -83,6 +86,23 @@ apply (Pr Extends) x = case x of
         [] -> done $ mkOb []
         xs -> done $ foldr1 Oct.extend xs
     _ -> error "raise invalid args to primitive Extends"
+apply (Pr MkTag) x = case x of
+    Tx spelling -> done =<< mkTag spelling
+    _ -> error "raise type error"
+apply (Pr Handle) x = case x of
+    Sq xs -> case toList xs of
+        [tag, handler, body] -> case tag of
+            Tg i _ -> pushK (HndlK i handler) >> reduce body
+            _ -> error "raise type error"
+        _ -> error "raise wrong number of args to Handle"
+    _ -> error "raise invalid args to Handle"
+apply (Pr Raise) x = case x of
+    Sq xs -> case toList xs of
+        [tag, payload] -> case tag of
+            Tg i _ -> raise i payload
+            _ -> error "raise type error"
+        _ -> error "raise wrong number of args to Handle"
+    _ -> error "raise invalid args to Handle"
 apply (Pr pr) x =
     case lookup pr table of
         Just f -> case f pr x of
@@ -140,7 +160,20 @@ done x = do
         (NormK (Eo k xs ((k',x'):xs'):_)):_ -> replace (Eo k' ((k,x):xs) xs') >> reduce x'
         (NormK (Op arg:ks)):kss             -> pop >> combine x arg
         (NormK (Ap f:ks)):kss               -> pop >> apply f x
-        (ImptK _ slot):ks                   -> liftIO (slot `putMVar` Right x) >> pop >> done x
+        (HndlK _ _):kss                     -> pop >> done x
+        (ImptK _ slot):kss                  -> liftIO (slot `putMVar` Right x) >> pop >> done x
+
+
+raise :: Word -> Val -> Machine Val
+raise tg payload = do
+    (top, rest) <- splitStack tg
+    --error $ show (top, rest)
+    case rest of
+        [] -> error "unhandled exception" --return here
+        (ImptK _ _):kss -> error "raise import error" --but here, chop the stack and recurse with the new problem
+        (HndlK _ handler):kss -> do
+            modify $ \s -> s { control = kss }
+            reduce $ mkCall handler payload
 
 
 impFile :: Val -> Machine Val

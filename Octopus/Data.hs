@@ -16,7 +16,7 @@ data Val = Nm Rational -- ^ Rational number
          | Tx Text -- ^ Text data
          | Fp Handle -- ^ Input/output handle
          | Sy Symbol -- ^ Symbol, aka. identifier
-         | Tg Word -- ^ Unique tag
+         | Tg Word Text -- ^ Unique tag
          | Ab Word Val -- ^ Abstract data
          | Sq (Seq Val) -- ^ Sequence, aka. list
          | Ob (Map Symbol Val) -- ^ Symbol-value map, aka. object
@@ -24,7 +24,8 @@ data Val = Nm Rational -- ^ Rational number
          | Ce (IORef Val) -- ^ Reference cell
          | Ar (IOArray Int Val) -- ^ Mutable array
          | Pr Primitive -- ^ Primitive operations
-         | Pt Int -- ^ Control prompt --TODO consider removing this in favor of using tags and a handler protocol
+         -- | Eh Val Val -- ^ Exception handler/control prompt
+         -- | Ex Val Val -- ^ Propagating exception
          | Ks [Control] -- ^ Control stack 
          --TODO bytestring/buffer/bytes/other name?
          --TODO concurrency
@@ -37,20 +38,24 @@ data Primitive = Vau | Eval | Match | Ifz | Imp
                --TODO Tx data primitives
                --TODO Fp data primitives
                --TODO Sy data primitives
-               --TODO Tg data primitives
+               | MkTag
                | Wrap Word | Unwrap Word
                | Len | Cat | Cut
                | Extends | Delete | Keys | Get
                --TODO Ce data primitives
                --TODO Ar data primitives
                --TODO Pt/Ks data primitives
+               | Handle | Raise
     deriving (Eq, Show)
 
 
 
 type FileCache = MVar (Either Val Val)
 type ImportsCache = MVar (Map Text FileCache)
-data MState = MState { environ :: Val, control :: [Control] }
+data MState = MState { environ :: Val
+                     , control :: [Control]
+                     , nextTag :: Word
+                     }
 
 type Machine = ReaderT ImportsCache (StateT MState IO)
 
@@ -62,13 +67,13 @@ data Context = Op Val -- ^ Hole must be a combiner, val is the uneval'd argument
              | Eo Symbol [(Symbol, Val)] [(Symbol, Val)] -- ^ Object evaluation
     deriving (Eq, Show)
 data Control = NormK [Context]
-             | HndlK Val
+             | HndlK Word Val
           --TODO onEnter/onSuccess/onFail
              | ImptK Text (MVar (Fallible Val))
     deriving (Eq)
 instance Show Control where
     show (NormK k) = "NormK " ++ show k
-    show (HndlK x) = "HndlK " ++ show x
+    show (HndlK i fn) = "HndlK " ++ show i ++ " " ++ show fn
     show (ImptK path slot) = "ImptK " ++ show path
 
 
@@ -91,14 +96,11 @@ pop = do
         (NormK []):kss -> modify $ \s -> s { control = kss }
         (NormK (Re env:ks)):kss -> modify $ \s -> s { environ = env, control = (NormK ks):kss }
         (NormK (_:ks)):kss -> modify $ \s -> s { control = (NormK ks):kss }
-        (ImptK _ _):ks -> modify $ \s -> s { control = ks }
+        (HndlK _ _):kss -> modify $ \s -> s { control = kss }
+        (ImptK _ _):kss -> modify $ \s -> s { control = kss }
 replace :: Context -> Machine ()
-replace k = do
-    stack <- gets control
-    case stack of
-        (NormK []):kss -> modify $ \s -> s { control = (NormK [k]):kss }
-        (NormK (_:ks)):kss -> modify $ \s -> s { control = (NormK (k:ks)):kss }
-        (ImptK _ _):ks -> pop >> replace k
+replace k = pop >> push k
+
 swapEnv :: Val -> Machine ()
 swapEnv env' = do
     env <- gets environ
@@ -107,16 +109,31 @@ swapEnv env' = do
         (Re _):_ -> modify $ \s -> s { environ = env' } --allows tail recursion by not restoring environments that will immediately be thrown away by a second restoration
         ks -> modify $ \s -> s { environ = env', control = (NormK ((Re env):ks)):kss }
 
+splitStack :: Word -> Machine ([Control], [Control])
+splitStack tg = break isPoint <$> gets control
+    where
+    isPoint (HndlK tg' _) = tg == tg'
+    isPoint (ImptK _ _) = True
+    isPoint _ = False
+
+
+
+mkTag :: Text -> Machine Val
+mkTag spelling = do
+    n <- gets nextTag
+    modify $ \s -> s { nextTag = n + 1 }
+    return $ Tg n spelling
+
 
 instance Show Val where
     show (Nm nm) | denominator nm == 1 = show $ numerator nm
                  | otherwise           = show (numerator nm) ++ "/" ++ show (denominator nm)
     show (By bytes) = "b" ++ show bytes --FIXME show with \x?? for non-ascii printable chars
     show (Tx text) = show text --FIXME show using Octopus encoding, not Haskell
-    show (Fp _) = "<handle>" --TODO at least show some metadata
+    show (Fp _) = "#<handle>" --TODO at least show some metadata
     show (Sy sy) = show sy
-    show (Tg i) = "<tag: " ++ show i ++ ">"
-    show (Ab tag x) = "<box " ++ show tag ++ ": " ++ show x ++ ">"
+    show (Tg i spelling) = "#<tag " ++ show i ++ ": " ++ show spelling ++ ">"
+    show (Ab tag x) = "#<box " ++ show tag ++ ": " ++ show x ++ ">"
     show (Sq xs) = "[" ++ intercalate ", " (show <$> toList xs) ++ "]"
     show (Ob m) = case getCombo m of
             Nothing -> "{" ++ intercalate ", " (showPair <$> Map.toList m) ++ "}"
@@ -126,7 +143,8 @@ instance Show Val where
         getCombo ob = case (Map.lookup (intern "__car__") ob, Map.lookup (intern "__cdr__") ob) of
             (Just f, Just x) -> if length (Map.keys ob) == 2 then Just (f, x) else Nothing
             _ -> Nothing
-    show (Cl var ast env) = "<closure: var: " ++ show var ++ ", ast: " ++ show ast ++ ", env: " ++ show env ++ ">"
+    show (Cl var ast env) = "#<closure: var: " ++ show var ++ ", ast: " ++ show ast ++ ", env: " ++ show env ++ ">"
     show (Ce x) = "<reference cell>" --TODO show contents
-    show (Ar xs) = "<mutable array>" --TODO show contents
-    show (Pr f) = "<" ++ show f ++ ">"
+    show (Ar xs) = "#<mutable array>" --TODO show contents
+    --show (Eh tag fn) = "#<handler " ++ show tag ++ ": " ++ show fn ++ ">"
+    show (Pr f) = "#<" ++ show f ++ ">"
