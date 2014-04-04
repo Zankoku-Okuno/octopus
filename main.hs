@@ -20,6 +20,7 @@ main = do
     --        print =<< eval startData val
     --exitSuccess
 
+    test "#<<END\na\\s;dg\nasdg\nEND>>"
     test "do four: 4 ((vau x x) four);"
     test "do four: 4 ((vau x (__eval__ x)) four);"
     test "((vau [e, ast] e) dne)"
@@ -88,7 +89,6 @@ main = do
     test "(__handle__ [TypeError, (__lambda__ x x), `(__add__ [3, 5, 4])])"
     test "(__handle__ [DivZero, (vau {} 1), `do (__div__ [3, 0]) (__raise__ []);])"
 
-    test "(__import__ \"dne.oct\")"
 
 
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (__eval__ [__extends__ [__match__ [var, __eval__ arg], static], ast ]))))"

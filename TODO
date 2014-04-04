@@ -5,7 +5,6 @@ General
 		show as octopus parses, not as haskell does
 		apply judicious indentation
 		the angle brackets are ambiguous, use #<...>
-	first-class patterns?
 	serialize values, even mutable cells and the current program state
 	consider putting types into the grammar, unchecked of course
 
@@ -17,16 +16,19 @@ Parser
 		takes an object, uses that obj to extend the env for the rest of the do/file
 		could be used to ease ad-hoc overloading: in particulat, open a monad, then perform monadic computations w/o mentioning the monad explicitly
 	indentation sensitivity?
+		each indent, open paren/brack/brace/do gets pushed onto the stack
+		an indent means going further than the last column of the peek
+		a dedent means not going as far as the pop
 	distfixes
 		directives are line tht start with #! (though #! on very first line is ignored)
 		massage the input by blanking these lines, but also collect and parse the directives
+	literate files
 	anonymous points
 	block comments
 	primitive literals
-	heredocs
 	bytes literals
 	documentation on a (define? export?)
-	decorators in do blocks?
+	decorators in do blocks
 	ellipsis?
 	assertion syntax?
 	export form in file
@@ -57,10 +59,10 @@ Interpreter
 		guards (onWind, onUnwind, onAbort)
 	match literals
 	abstract types
-	objects and lists are self-evaluating, except those that have not yet been eval'd
-		a primitive to construct a triple of (tag, constructor, deconstructor)
-		we'll need a typeof operator, which returns a tag.
-		might be nice to give names to types
+	BUGFIX: objects and lists should be self-evaluating, except those that have not yet been eval'd
+	a primitive to construct a triple of (tag, constructor, deconstructor)
+	we'll need a typeof operator, which returns a tag.
+	might be nice to give names to types
 	force import despite caching
 	pass arbitrary flags to interpreter (like -D in gcc), look them up at runtime
 	REPL
@@ -95,8 +97,9 @@ Tooling
 		unsafe filenames (target the lowest common denominator)
 		malformed type names (these should have a standard form, like /\w+(\.\s+)*/)
 		warn about rebinding double-underscore symbols
+		warn about use of tabs
 	When you run the interpreter, allow for hooks.
-		Say you do `octopus "somefile.oct", then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
+		Say you do `octopus "somefile.oct"`, then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
 	Perform imports statically (may require an import keyword)
 
 Performance
@@ -106,6 +109,8 @@ Performance
 		The maybe val is there so that a lookup can return (Just Nothing), which is equivalent to (Nothing)
 
 Standard libraries
+	os interface
+	first-class patterns
 	translate type errors: catch a type error underneath, then throw a new type error with a new origin
 	simulate (parametric) modules (thereby typeclasses minus ad hoc)
 	monads (including monadic IO)

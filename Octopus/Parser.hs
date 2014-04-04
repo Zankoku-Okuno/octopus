@@ -101,16 +101,15 @@ numberLit = Nm <$> anyNumber
 textLit :: Parser Val
 textLit = do
     content <- catMaybes <$> between2 (char '\"') (P.many maybeLiteralChar)
-    return $ mkTxt content
+    return $ mkTx content
 mkBytes = By . encodeUtf8 . T.pack
-mkTxt = Tx . T.pack
 
 heredoc :: Parser Val
 heredoc = do
     string "#<<"
-    --grab until end of line, strip whitespace, save as `end`
-    --anyChar `manyThru` end
-    parserZero --TODO
+    end <- P.many1 P.letter <* char '\n'
+    let endParser = char '\n' *> P.string (end ++ ">>") <* (void (char '\n') P.<|> eof)
+    mkTx <$> anyChar `manyThru` endParser
 
 accessor :: Parser Val
 accessor = do
@@ -171,7 +170,7 @@ whitespace = (<?> "space") . P.skipMany1 $ P.choice [spaces1, lineComment, block
 
 lineComment :: Parser ()
 lineComment = void $ do
-    try $ char '#' >> P.notFollowedBy (string "<<")
+    try $ char '#' >> P.notFollowedBy (char '<')
     anyChar `manyThru` (void (char '\n') P.<|> eof)
 
 blockComment :: Parser ()

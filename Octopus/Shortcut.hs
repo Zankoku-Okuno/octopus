@@ -13,6 +13,9 @@ mkInt = Nm . fromIntegral
 mkSy :: String -> Val
 mkSy = Sy . intern
 
+mkTx :: String -> Val
+mkTx = Tx . pack
+
 mkSq :: [Val] -> Val
 mkSq = Sq . Seq.fromList
 
