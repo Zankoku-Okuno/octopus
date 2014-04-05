@@ -1,12 +1,15 @@
 import System.IO
 import System.Environment
 import System.Exit
-import Control.Applicative
 import Control.Concurrent.MVar
 
+import Import
 import Octopus
 import Octopus.Parser
 import Octopus.Libraries
+import Octopus.Data
+import Octopus.Shortcut
+import Octopus.Basis
 
 import qualified Data.Map as Map
 
@@ -72,7 +75,7 @@ main = do
     test "do [a, b]: (#<cut> [\"hello\", 3])\n   [a, b, #<len> a];"
     test "do y: (#<ifz!> [0, `y, `n])\n   n: (#<ifz!> [1, `y, `n])\n   [y, n];"
 
-    test "do {\955: \955}: (#<import> \"./test/foo.oct\") (\955 x x 6);"
+    test "do {\955: \955}: (#<import> \"./test/basis.oct\") (\955 x x 6);"
 
     test "do t: (#<mkTag> \"phoey\")\n   (#<handle> [t, 3, `5]);"
     test "do id: (__lambda__ x x)\n   t: (#<mkTag> \"phoey\")\n   (#<handle> [t, id,\n      `(#<add> [3, (#<raise> [t, 7])])]);"
@@ -124,3 +127,48 @@ test input = do
     case parseOctopusExpr "repl" input of
         Right val -> print =<< eval cache startData val
         Left err -> print err
+
+
+startData = mkOb [
+    --- Syntax ---
+      (intern "__get__",      getDef)
+    , (intern "__let__",      letDef)
+    , (intern "__quote__",    quoteDef)
+    --- Niceties --- TODO translate into Octopus libraries
+    , (intern "vau",          vauDef)
+    , (intern "__lambda__",   lambdaDef)
+    --- Exceptions --- TODO give builtin literals
+    , (intern "TypeError",    exnTypeError)
+    , (intern "MatchFailure", exnMatchFail)
+    , (intern "DivZero",      exnDivZero)
+    ]
+
+vauDef = Cl
+    (mkSq [mkOb [], mkSy "x"])
+    (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "body"],
+        mkCall (Pr Vau) (mkSq [mkSy "arg",
+            mkCall (Pr Eval) (mkSq [
+                mkCall (Pr Extends) (mkSq [
+                    mkCall (Pr Match) (mkSq [mkSy "x", mkSy "arg"]),
+                    mkSy "static"]),
+                mkSy "body"])])]))
+    (mkOb [])
+
+getDef = Cl
+    (mkSq [mkOb [], mkSy "x"])
+    (mkCall (Pr Vau) (mkSq [mkSy "ob",
+        mkCall (Pr Eval) (mkSq [mkCall (Pr Eval) (mkSy "ob"), mkSy "x"])]))
+    (mkOb [])
+
+lambdaDef = Cl
+    (mkSq [mkOb [], mkSy "var"])
+    (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "ast"],
+        mkCall (Pr Vau) (mkSq [mkSy "arg",
+            mkCall (Pr Eval) (mkSq
+                [ mkCall (Pr Extends) (mkSq
+                    [ mkCall (Pr Match) (mkSq [mkSy "var", mkCall (Pr Eval) (mkSy "arg")])
+                    , mkSy "static"])
+                , mkSy "ast"])])]))
+    (mkOb [])
+
+quoteDef = Cl (mkSq [mkOb [], mkSy "ast"]) (mkSy "ast") (mkOb [])

@@ -10,6 +10,8 @@ import qualified Data.Map as Map
 import Octopus
 import Octopus.Parser
 import Octopus.Libraries
+import Octopus.Primitive (resolveSymbol)
+import Octopus.Shortcut (mkOb)
 
 progVersion = "v0.0.1a"
 main :: IO ()
@@ -19,10 +21,11 @@ main = do
     parse_e <- parseOctopusFile filepath <$> readFile filepath
     case parse_e of
         Left err -> print err
-        Right val -> do
-            print val
-            putStrLn "===>"
-            print =<< eval cache startData val
+        Right (_, val) -> do
+            fileEnv <- eval cache initialEnv val
+            case resolveSymbol (intern "main") fileEnv of
+                Nothing -> print (mkOb [])
+                Just main -> print =<< eval cache fileEnv main
     exitSuccess
 
 

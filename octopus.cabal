@@ -25,6 +25,7 @@ library
                        Octopus.Data,
                        Octopus.Shortcut
                        Octopus.Parser,
+                       Octopus.Parser.Preprocess,
                        Octopus.Basis,
                        Octopus.Primitive,
                        Octopus.Libraries

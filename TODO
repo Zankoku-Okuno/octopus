@@ -56,8 +56,10 @@ Interpreter
 		guards (onWind, onUnwind, onAbort)
 	match literals
 	abstract types
+		a primitive to construct a triple of (tag, constructor, deconstructor)
+		wrap and unwrap parameterized primitives
 	BUGFIX: objects and lists should be self-evaluating, except those that have not yet been eval'd
-	a primitive to construct a triple of (tag, constructor, deconstructor)
+	directives
 	we'll need a typeof operator, which returns a tag.
 	might be nice to give names to types
 	force import despite caching

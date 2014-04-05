@@ -209,8 +209,8 @@ impFile (Tx pathstr) = do
             case contents_e of
                 Right contents -> do
                     case parseOctopusFile path' contents of
-                        Right val -> do
-                            swapEnv startData --TODO consider which env to start a file off with
+                        Right (_, val) -> do
+                            swapEnv initialEnv --TODO consider which env to start a file off with
                             pushK (ImptK path loading_var)
                             reduce val
                         Left raw_err -> do

@@ -55,22 +55,26 @@ import Language.Desugar
 import Octopus.Data
 import Octopus.Shortcut
 import Octopus.Basis
+import Octopus.Parser.Preprocess
 
 
 type Parser = Parsec String ()
+type Directive = String
 
 parseOctopusExpr :: SourceName -> String -> Either ParseError Val
 parseOctopusExpr sourceName input = desugar <$> P.runParser (padded expr <* padded eof) () sourceName input
 
-parseOctopusFile :: SourceName -> String -> Either ParseError Val
-parseOctopusFile sourceName input = P.runParser octopusFile () sourceName input
+parseOctopusFile :: SourceName -> String -> Either ParseError ([Directive], Val)
+parseOctopusFile sourceName input =
+    let (directives, code) = partitionCode input
+    in (,) directives <$> P.runParser octopusFile () sourceName code
     where
     octopusFile = do
         es <- P.many $ desugarStatement <$> padded statement
         padded eof
         return $ loop es
     loop [] = mkCall getenv (mkOb [])
-    loop (Defn s:rest)  = mkCall (mkDefn s) (loop rest)
+    loop (Defn s:rest) = mkCall (mkDefn s) (loop rest)
     loop (Expr e:rest) = mkCall (mkExpr e) (loop rest)
     getenv = (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkOb []], mkSy "e"]))
 

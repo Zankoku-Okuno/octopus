@@ -1,0 +1,32 @@
+vau: (#<vau> [[{}, var],
+         #<vau> [[static, body],
+            #<vau> [arg,
+               do arg': (#<match> [var, arg])
+                  env': (#<extends> [arg', static])
+                  (#<eval> [env', body]);
+               ]]])
+λ: (vau [{}, var] (vau [static, body] (vau arg
+      do arg': (#<eval> arg)
+         env': (#<extends> [#<match> [var, arg'], static])
+         (#<eval> [env', body]);
+      )))
+let: __let__
+
+
+eval: (λ env (λ ast (#<eval> [env, ast])))
+match: (λ var (λ val (#<match> [var, val])))
+with: (λ base (λ new (#<extends> [new, base])))
+
+
+__quote__: (vau [{}, ast] ast)
+__get__: (vau [{}, field] (λ x (x .eval field)))
+__modify__: (vau [{}, field] (λ f (λ x
+                  (x .with (field .match (f (x .eval field))))
+            )))
+
+
++: (λ x (λ y (#<add> [x, y])))
+-: (λ x (λ y (#<sub> [x, y])))
+*: (λ x (λ y (#<mul> [x, y])))
+/: (λ x (λ y (#<div> [x, y])))
+
