@@ -39,7 +39,6 @@ Parser
 		nah, I can do this in userland
 
 Interpreter
-	driver to interpret a file
 	BUGFIX: tags are created local to a thread, either:
 		make a tag generator thread-global
 		attach a threadid to the tag

@@ -1,0 +1,61 @@
+
+
+Protocols:
+	Closure (__var__ __ast__ __env___)
+	Callable (__call__ returns a closure or callable)
+	Thunk (pair, fst is env, snd is ast)
+	Combination (__car__, __cdr__) 
+
+Primitive operations:
+	vau: pattern -> * -> closure
+		constructs an operative
+	force: thunk -> *
+		forces a thunk
+	match: pattern -> any -> environment
+		matches the argument against the pattern, returns the resulting environment
+	*:
+		eq
+	Nm:
+		arithmetic, relationals
+	By:
+		=seq
+	Tx:
+		=seq
+	Fp:
+		read, write, flush, close
+	Sy:
+	Tg:
+		mkTag
+	Sq:
+		len, cut, cat
+	Ob:
+		extends: [ob] -> ob
+			constructor -- left-biased union of input objects
+		__del__: (ob, sy) -> ob
+			constructor -- removes key from input object
+		keys: ob -> [sy]
+			get a list of all keys available in this object
+		__get__: ob -> sy -> *
+			deconstructor -- retrieves value stored in object at the key, or fails with KeyError
+	Ce:
+		alloc: *
+			create a new cell filled with an initial value
+		deref: Ce a -> a
+			read the contents of a cell
+		assign: Ce a -> a -> {}
+			set the contents of a cell
+	Ar:
+		alloca, derefAt, assignAt
+	TODO...
+
+
+hd/tl can be done with destructuring the output of a particular split
+ix can be done with splitAt and hd
+cons/snoc is just putting togethera singletone with a list, singleton is easy to define
+has can be "get keys, search for symbol"
+bind Sy in Ob can be done by building a singleton object, then using it to extend
+technically, we could replace "keys" and "get" with "items" (get list of key-value pairs from object), but that's really just too slow.
+
+every basic data type has an associated tag on which you can switch
+once you've dispatched to an object, you could further dispatch if it has a __tag__ field
+user tags begin after the built-in ones, and grow from there
