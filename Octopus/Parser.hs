@@ -84,6 +84,13 @@ define = do
     body <- expr
     return (var, body)
 
+letrec :: Parser (Defn Syx)
+letrec = do
+    try $ string "letrec" <* whitespace
+    var <- try (expr <* char ':' <* whitespace)
+    body <- expr
+    return (var, body)    
+
 open :: Parser Syx
 open = do
     try $ string "open" *> whitespace
@@ -98,6 +105,7 @@ expr = composite P.<|> atom
 
 statement :: Parser (Statement Syx)
 statement = P.choice [ Defn <$> define
+                     , LRec <$> letrec
                      , Open <$> open
                      , Expr <$> expr
                      ]
@@ -105,6 +113,7 @@ statement = P.choice [ Defn <$> define
 
 ------ Sugar ------
 data Statement a = Defn (Defn a)
+                 | LRec (Defn a)
                  | Expr a
                  | Open a
                  | Deco a
@@ -137,6 +146,7 @@ desugar (Do xs) = loop xs
     loop [Defn d]      = mkCall (mkDefn $ desugarDefine d) (mkOb [])
     loop [Expr e]      = desugar e
     loop (Defn d:rest) = mkCall (mkDefn $ desugarDefine d) (loop rest)
+    loop (LRec d:rest) = mkCall (mkDefn $ desugarLetrec d) (loop rest)
     loop (Open e:rest) = mkCall (mkOpen $ desugar e) (loop rest)
     loop (Expr e:rest) = mkCall (mkExpr $ desugar e) (loop rest)
 desugar x = error $ "INTERNAL ERROR Octopus.Parser.desugar: " ++ show x
@@ -147,8 +157,13 @@ desugarField (k, e) = (k, desugar e)
 desugarDefine :: Defn Syx -> (Val, Val)
 desugarDefine (x, e) = (desugar x, desugar e)
 
+desugarLetrec :: Defn Syx -> (Val, Val)
+desugarLetrec (x, e) = let f = desugar x
+                       in (f, mkCall (mkSy "__Y__") (mkCall (mkCall (mkSy "__lambda__") f) (desugar e)))
+
 desugarStatement :: Statement Syx -> Statement Val
 desugarStatement (Defn d) = Defn (desugarDefine d)
+desugarStatement (LRec d) = Defn (desugarLetrec d)
 desugarStatement (Expr e) = Expr (desugar e)
 desugarStatement (Open e) = Open (desugar e)
 desugarStatement (Deco f) = Deco (desugar f)

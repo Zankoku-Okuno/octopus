@@ -1,0 +1,17 @@
+open (#<import> "basis.oct")
+
+S: (λ x (λ y (\z (x z (y z)))))
+K: (λ x (λ {} x))
+I: (λ x x)
+
+B: (λ x (λ y (λ z (x (y z)))))
+C: (λ x (λ y (λ z (x z y))))
+# K already defined
+W: (λ x (λ y (x y y)))
+
+X: (λ x (x S K))
+
+T: K
+F: (λ {} (λ y y))
+
+Ω: (S I I (S I I))

@@ -1,3 +1,4 @@
+### These are the true basis of using the vau calculus. ###
 vau: (#<vau> [[{}, var],
          #<vau> [[static, body],
             #<vau> [arg,
@@ -13,20 +14,28 @@ vau: (#<vau> [[{}, var],
 let: __let__
 
 
+### These are just prettier ways of getting at important primitives. ###
 eval: (λ env (λ ast (#<eval> [env, ast])))
 match: (λ var (λ val (#<match> [var, val])))
 with: (λ base (λ new (#<extends> [new, base])))
 
 
+### These are necessary for syntacti sugar. ###
 __quote__: (vau [{}, ast] ast)
 __get__: (vau [{}, field] (λ x (x .eval field)))
 __modify__: (vau [{}, field] (λ f (λ x
                   (x .with (field .match (f (x .eval field))))
             )))
 
-
+### Pretty data primitives. Probably should be in their own file. ###
 _+_: (λ x (λ y (#<add> [x, y])))
 _-_: (λ x (λ y (#<sub> [x, y])))
 _*_: (λ x (λ y (#<mul> [x, y])))
 _/_: (λ x (λ y (#<div> [x, y])))
+
+
+### Now, really common operations. Probably should be in their own file. ###
+ifz_then_else_: (λ p (vau c (vau a
+   (#<eval> (#<ifz!> [p, c, a])))))
+--: (λ x (#<sub> [x, 1]))
 

@@ -15,13 +15,13 @@ import qualified Data.Map as Map
 
 main :: IO ()
 main = do
-    --parse_e <- parseOctopusFile "foo.oct" <$> readFile "test/foo.oct"
-    --case parse_e of
-    --    Left err -> print err
-    --    Right val -> do
-    --        print val
-    --        print =<< eval startData val
-    --exitSuccess
+    parse_e <- parseOctopusFile "y.oct" <$> readFile "y.oct"
+    case parse_e of
+        Left err -> print err
+        Right (dirs, val) -> do
+            print val
+            --print =<< eval startData val
+    exitSuccess
 
     test "#<<END\na\\s;dg\nasdg\nEND>>"
     test "do four: 4 ((vau x x) four);"
