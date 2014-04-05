@@ -16,6 +16,9 @@ mkSy = Sy . intern
 mkTx :: String -> Val
 mkTx = Tx . pack
 
+mkBy :: String -> Val
+mkBy = By . encodeUtf8 . pack
+
 mkSq :: [Val] -> Val
 mkSq = Sq . Seq.fromList
 

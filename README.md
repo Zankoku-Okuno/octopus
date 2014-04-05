@@ -5,6 +5,13 @@ Octopus is a hacking language. Dynamism and expressivity are the watchwords of O
 
 So why the name octopus? Octopuses are well known for their curiosity, intelligence, and dexterity, so it seems perfectly apt to associate such a dynamic like this after such a creature. Not to mention they are one of my favorite animals; I would probably keep one as a pet if it weren't so high-maintenance, or had less debatable ethics.
 
+Installation
+============
+
+There's a cabal package, so you can use `cabal install octopus`. Alternately, install from github with `git clone github.com/Zankoku-Okuno/octopus.git && cd octopus && cabal install`.
+
+In either case, the executable is of little use so far, so I'd advise writing your own driver. I'll have a file interpreter in the near future.
+
 Features
 ========
 

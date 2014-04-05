@@ -10,44 +10,43 @@ General
 
 Parser
 	letrec
-	atom ::= ... | ':(' /<name>:/ <expr>+ ')' | /@<name>/ | @(' /<name>:/ <expr>+ ')' | /\.<expr>/ | '.(' <expr>+ ')'
-		@ is prefix, : and . are infix
 	open statement
 		takes an object, uses that obj to extend the env for the rest of the do/file
 		could be used to ease ad-hoc overloading: in particulat, open a monad, then perform monadic computations w/o mentioning the monad explicitly
-	indentation sensitivity?
-		each indent, open paren/brack/brace/do gets pushed onto the stack
-		an indent means going further than the last column of the peek
-		a dedent means not going as far as the pop
 	distfixes
 		directives are line tht start with #! (though #! on very first line is ignored)
 		massage the input by blanking these lines, but also collect and parse the directives
 	literate files
+	export form in file
+		currently, it exports the whole environment
+		a way to give out a limited set would be very useful
+		export ::= 'export' <pattern>
 	anonymous points
 	block comments
 	bytes literals
 	documentation on a (define? export?)
 	decorators in do blocks
-	ellipsis?
-	assertion syntax?
-	export form in file
-		currently, it exports the whole environment
-		a way to give out a limited set would be very useful
-		exprort ::= 'export' <pattern>
 	import form objects
 		{x, y, z: foo} === {x: x, y: y, z: foo}
+	indentation sensitivity?
+		each indent, open paren/brack/brace/do gets pushed onto the stack
+		an indent means going further than the last column of the peek
+		a dedent means not going as far as the pop
+	ellipsis?
 	literals for closures, tags, handlers, &c (using #<...> syntax)?
 	special syntax for lambda and vau
 		use the primitive ones, allow for stuff like (\l (x y z) body)
 		nah, I can do this in userland
 
 Interpreter
+	driver to interpret a file
 	BUGFIX: tags are created local to a thread, either:
 		make a tag generator thread-global
 		attach a threadid to the tag
 	Data primitives
 		fileps
 		tags
+		abstypes
 		reference cells
 		arrays
 		handlers

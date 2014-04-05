@@ -36,7 +36,7 @@ library
                        symbol ==0.2.1,
                        mtl ==2.1.*,
                        parsec ==3.1.*,
-                       hexpr ==0.0.0.0
+                       hexpr ==0.0.0.1
 
 executable octopus
   main-is:             main.hs
@@ -49,4 +49,4 @@ executable octopus
                        symbol ==0.2.1,
                        mtl ==2.1.*,
                        parsec ==3.1.*,
-                       hexpr ==0.0.0.0
+                       hexpr ==0.0.0.1

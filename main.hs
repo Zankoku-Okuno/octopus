@@ -28,9 +28,9 @@ main = do
     test "(#<extends> [{a: 3}, {a: 2}, {a: 1}])"
     test "((vau [e, ast] (#<eval> [#<extends> [{five: 5}, e], ast])) five)"
     test "do four: 4 (vau [{}, ob] (#<keys> ob) {foo: 3, bar: four});"
-    test "do four: 4 ((vau [e, ob] (:x ob)) {x: four});"
-    test "do four: 4 ((vau [e, ob] (#<eval> [e, :x ob])) {x: four});"
-    test $ "do four: 4 (" ++ lambda ++ " ob (:x ob) {x: four});"
+    test "do four: 4 ((vau [e, ob] (@x ob)) {x: four});"
+    test "do four: 4 ((vau [e, ob] (#<eval> [e, @x ob])) {x: four});"
+    test $ "do four: 4 (" ++ lambda ++ " ob (@x ob) {x: four});"
     test $ "(" ++ lambda ++ " eight eight 8)"
     test $ "("++letin++" eight 8 eight)"
     
@@ -88,6 +88,21 @@ main = do
     test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> [3, 4])])"
     test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> [3, 5, 4])])"
     test "(#<handle> [DivZero, (vau {} 1), `do (#<div> [3, 0]) (#<raise> []);])"
+
+    test "do \955: __lambda__\n\
+         \   __modify__: (vau [{}, field] (\955 f (\955 x\n\
+         \                  (#<extends> [#<match> [field, (f (__get__ field x))], x]))))\n\
+         \   K: (\955 x (vau {} x))\n\
+         \   (@(x: K 3) {x: 1, y: 2});"
+    test "do \955: __lambda__\n\
+         \   __modify__: (vau [{}, field] (\955 f (\955 x\n\
+         \                  (#<extends> [#<match> [field, (f (__get__ field x))], x]))))\n\
+         \   K: (\955 x (vau {} x))\n\
+         \   [{x: 1, y: 2} :x, {x: 1, y: 2} :(x: K 6)];"
+    test "do \955: __lambda__\n\
+         \   +: (\955 x (\955 y (#<add> [x, y])))\n\
+         \   ++: (+ 1)\n\
+         \   [3 .+ 4, 8 .++, ++ 8];"
 
 
 
