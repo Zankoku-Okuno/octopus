@@ -144,7 +144,7 @@ instance Show Val where
         getCombo ob = case (Map.lookup (intern "__car__") ob, Map.lookup (intern "__cdr__") ob) of
             (Just f, Just x) -> if length (Map.keys ob) == 2 then Just (f, x) else Nothing
             _ -> Nothing
-    show (Cl var ast env) = "#<closure: var: " ++ show var ++ ", ast: " ++ show ast ++ ", env: " ++ show env ++ ">"
+    show (Cl var ast env) = "#<closure>"
     show (Ce x) = "<reference cell>" --TODO show contents
     show (Ar xs) = "#<mutable array>" --TODO show contents
     --show (Eh tag fn) = "#<handler " ++ show tag ++ ": " ++ show fn ++ ">"

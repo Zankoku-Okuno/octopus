@@ -6,11 +6,16 @@ Octopus is a hacking language. Dynamism and expressivity are the watchwords of O
 So why the name octopus? Octopuses are well known for their curiosity, intelligence, and dexterity, so it seems perfectly apt to associate such a dynamic like this after such a creature. Not to mention they are one of my favorite animals; I would probably keep one as a pet if it weren't so high-maintenance, or had less debatable ethics.
 
 Installation
-============
+------------
 
 There's a cabal package, so you can use `cabal install octopus`. Alternately, install from github with `git clone github.com/Zankoku-Okuno/octopus.git && cd octopus && cabal install`.
 
-In either case, the executable is of little use so far, so I'd advise writing your own driver. I'll have a file interpreter in the near future.
+Usage
+-----
+
+Installation will give you the `octopus` program. So far, there are no fancy features, simply pass it a single file, and the file will be interpreted. If the file exports a binding for `main`, then its value will eval'd in the environment exported by the file.
+
+There are a couple simple example programs under the `examples` directory. Import path normalization is not yet implemented, so interpret these files inside the directory.
 
 Features
 ========
@@ -22,7 +27,7 @@ Executive summary: it's a Lisp with first-class-everything. For more detail, it 
 * First-class environments: You decide what's in scope and what isn't.
 * Immutable values: Data structures are default persistent; never corrupt your program state again.
 * First-class control: Conquer the last resistance to abstraction; define any control flow construct ever dreamt of.
-* Streamlined syntax: With only eight grammar rules, you might miss them if you blink.
+* Streamlined syntax: With only a handlful of grammar rules, you might miss them if you blink.
 * Permissive identifiers: Unicode identifiers and user-defined disfixes open new possibilities; make Lisp read/write.
 * Natural concurrency: Any concurrency model can be implemented as a library; tame the multiprocessing beast.
 

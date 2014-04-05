@@ -1,43 +1,42 @@
 {-| Parse Octopus source code. The Octopus grammar is:
 
-@
-file ::= (\<expr\> | \<defn\>)*
-defn ::= _field_ \<expr\>
-expr ::= \<atom\> | \<list\> | \<object\>
-      |  \<combination\> | \<block\> | \<quotation\>
-      |  \/\\.\<expr\>\/ | '(' \<expr\> ')'
-      |  \<accessor\> | \<mutator\>
 
-atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _primitive_
-list ::= '[' (\<expr\>+ (',' \<expr\>+)*)? ']'
-object ::= '{' (_field_ \<expr\>+ (',' _field_ \<expr\>+)*)? '}'
-combination ::= '(' \<expr\> \<expr\>+ ')'
-block ::= 'do' (\<expr\> | \<defn\>)+ ';'
-accessor ::= \/@\<name\>\/ | \/:\<name\>\/
-mutator ::= '@(' _field_ \<expr\>+ ')' | ':(' _field_ \<expr\>+ ')'
-quotation ::= '`' \<expr\>
+> file ::= ('export' <expr>)? <stmt>*
+> stmt ::= <expr> | _field_ <expr> | 'open' <expr>
+> expr ::= <atom> | <list> | <object>
+>       |  <combination> | <block> | <quotation>
+>       |  <accessor> | <mutator>
+>       | '(' <expr> ')' |  /\.<expr>/
+> 
+> atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _primitive_
+> list ::= '[' (<expr>+ (',' <expr>+)*)? ']'
+> object ::= '{' (_field_ <expr>+ (',' _field_ <expr>+)*)? '}'
+> combination ::= '(' <expr> <expr>+ ')'
+> block ::= 'do' <stmt>+ ';'
+> accessor ::= /@<name>/ | /:<name>/
+> mutator ::= '@(' _field_ <expr>+ ')' | ':(' _field_ <expr>+ ')'
+> quotation ::= /`<expr>/
+> 
+> symbol ::= _name_ - reserved
+>     reserved = {'do', 'letrec', 'export', 'open'}
+> primitive ::= /#<[a-zA-Z]+>/
+> field ::= /<name>:/
+> number ::= /[+-]?(0[xX]<hexnum>|0[oO]<octnum>|0[bB]<binnum>|<decnum>)/
+>     decnum ::= /\d+(\.\d+<exponent>?|\/\d+)?/
+>     hexnum ::= /\x+(\.\x+([hH][+-]?\x+)?|\/\x+)?/
+>     octnum ::= /[0-7]+(\.[0-7]+<exponent>?|\/[0-7]+)?/
+>     binnum ::= /[01]+(\.[01]+<exponent>?|\/[01]+)?/
+>     exponent ::= /[eE][+-]?\d+|[hH][+-]?\x+/
+> string ::= /"([^"\\]|\\[abefntv'"&\\]|\\<numescape>|\\\s*\n\s*\\)*"/
+>     numescape ::= /[oO][0-7]{3}|[xX]\x{2}|u\x{4}|U0\x{5}|U10x{4}/
+> heredoc ::= /#<<(?'END'\w+)\n.*?\n\g{END}>>(\n|$)/
+> name ::= /<namehead><nametail>|-<namehead><nametail>|-(-<nametail>)?/
+>     namehead = /[^#\\"`()[]{}@:;.,0-9-]/
+>     nametail = /[^#\\"`()[]{}@:;.,]*/
+> 
+> linecomment ::= /#(?!<)\.*?\n/
+> blockcomment ::= /#\{([^#}]+|<blockcomment>|#[^{]|\}[^#])*\}#/
 
-symbol ::= \/\<name\>\/ - reserved
-    reserved = {'do'}
-primitive ::= \/#\<[a-zA-Z]+\>\/
-field ::= \/\<name\>:\/
-accessor ::= \/:\<name\>\/
-number ::= \/[+-]?(0[xX]\<hexnum\>|0[oO]\<octnum\>|0[bB]\<binnum\>|\<decnum\>)\/
-    decnum ::= \/\\d+(\\.\\d+\<exponent\>?|\\\/\\d+)?\/
-    hexnum ::= \/\\x+(\\.\\x+([hH][+-]?\\x+)?|\\\/\\x+)?\/
-    octnum ::= \/[0-7]+(\\.[0-7]+\<exponent\>?|\\\/[0-7]+)?\/
-    binnum ::= \/[01]+(\\.[01]+\<exponent\>?|\\\/[01]+)?\/
-    exponent ::= \/[eE][+-]?\\d+|[hH][+-]?\\x+\/
-string ::= \/\"([^\\\\\"]|\\\\[abefntv\'\"\\\\&]|\\\\\<numescape\>|\\\\\\s*\\n\\s*\\\\)*\"\/
-    numescape ::= \/[oO][0-7]{3}|[xX][0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U0[0-9a-fA-F]{5}|U10[0-9a-fA-F]{4}\/
-heredoc ::= \/\#\<\<(?\'END\'\\w+)\\n.*?\\n\\g{END}\>\>\/
-name ::= \/\<namehead\>\<nametail\>|-(\<namehead\>|-)\<nametail\>|-\/
-    nametail = \/[^\#\\\\\"`()[]{}@:;.,]*\/
-    namehead = \/[^\#\\\\\"`()[]{}@:;.,0-9-]\/
-
-linecomment ::= \/#(?!\<)\\.*?\\n\/
-blockcomment ::= \/\#\\{([^\#}]+|\<blockcomment\>|\#[^{]|\\}[^\#])*\\}\#\/
-@
 -}
 module Octopus.Parser where
 
@@ -75,6 +74,7 @@ parseOctopusFile sourceName input =
         return $ loop es
     loop [] = mkCall getenv (mkOb [])
     loop (Defn s:rest) = mkCall (mkDefn s) (loop rest)
+    loop (Open e:rest) = mkCall (mkOpen e) (loop rest)
     loop (Expr e:rest) = mkCall (mkExpr e) (loop rest)
     getenv = (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkOb []], mkSy "e"]))
 
@@ -84,6 +84,11 @@ define = do
     body <- expr
     return (var, body)
 
+open :: Parser Syx
+open = do
+    try $ string "open" *> whitespace
+    expr
+
 expr :: Parser Syx
 expr = composite P.<|> atom
     where
@@ -92,12 +97,16 @@ expr = composite P.<|> atom
                          , accessor, mutator, infixAccessor, infixMutator]
 
 statement :: Parser (Statement Syx)
-statement = P.choice [Defn <$> define, Expr <$> expr]
+statement = P.choice [ Defn <$> define
+                     , Open <$> open
+                     , Expr <$> expr
+                     ]
 
 
 ------ Sugar ------
 data Statement a = Defn (Defn a)
                  | Expr a
+                 | Open a
                  | Deco a
     deriving (Show)
 type Defn a = (a, a)
@@ -108,10 +117,6 @@ data Syx = Lit Val
          | Do [Statement Syx]
          | Infix Syx
     deriving (Show)
-
-
-
-
 
 desugar :: Syx -> Val
 desugar (Lit x) = x
@@ -132,6 +137,7 @@ desugar (Do xs) = loop xs
     loop [Defn d]      = mkCall (mkDefn $ desugarDefine d) (mkOb [])
     loop [Expr e]      = desugar e
     loop (Defn d:rest) = mkCall (mkDefn $ desugarDefine d) (loop rest)
+    loop (Open e:rest) = mkCall (mkOpen $ desugar e) (loop rest)
     loop (Expr e:rest) = mkCall (mkExpr $ desugar e) (loop rest)
 desugar x = error $ "INTERNAL ERROR Octopus.Parser.desugar: " ++ show x
 
@@ -144,6 +150,7 @@ desugarDefine (x, e) = (desugar x, desugar e)
 desugarStatement :: Statement Syx -> Statement Val
 desugarStatement (Defn d) = Defn (desugarDefine d)
 desugarStatement (Expr e) = Expr (desugar e)
+desugarStatement (Open e) = Open (desugar e)
 desugarStatement (Deco f) = Deco (desugar f)
 
 
@@ -165,7 +172,8 @@ primitive = P.choice (map mkPrimParser table)
 symbol :: Parser Val
 symbol = do
     n <- name
-    when (n == "do") (unexpected "reserved word (do)") --FIXME report error position before token, not after
+    when (n `elem` ["do", "letrec", "export", "open"])
+        (unexpected $ "reserved word (" ++ n ++ ")") --FIXME report error position before token, not after
     return $ mkSy n
 
 numberLit :: Parser Val
@@ -295,6 +303,7 @@ bareCombination = do
     return $ case es of { [e] -> e; es -> Call es }
 
 mkDefn (x, val) = mkCall (mkCall (mkSy "__let__") x) val
+mkOpen env = mkCall (mkSy "__open__") env
 mkExpr e = mkCall (mkCall (mkSy "__let__") (mkOb [])) e
 
 

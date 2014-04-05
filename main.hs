@@ -24,7 +24,7 @@ main = do
         Right (_, val) -> do
             fileEnv <- eval cache initialEnv val
             case resolveSymbol (intern "main") fileEnv of
-                Nothing -> print (mkOb [])
+                Nothing -> return ()
                 Just main -> print =<< eval cache fileEnv main
     exitSuccess
 

@@ -10,11 +10,8 @@ General
 
 Parser
 	letrec
-	open statement
-		takes an object, uses that obj to extend the env for the rest of the do/file
-		could be used to ease ad-hoc overloading: in particulat, open a monad, then perform monadic computations w/o mentioning the monad explicitly
 	distfixes
-		directives are line tht start with #! (though #! on very first line is ignored)
+		directives are line that start with #! (though #! on very first line is ignored)
 		massage the input by blanking these lines, but also collect and parse the directives
 	literate files
 	export form in file

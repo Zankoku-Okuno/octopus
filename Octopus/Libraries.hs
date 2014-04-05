@@ -6,7 +6,8 @@ import Octopus.Shortcut
 import Octopus.Basis
 
 initialEnv = mkOb [
-      (intern "__let__",      letDef)
+      (intern "__let__", letDef)
+    , (intern "__open__", openDef)
     --- Exceptions --- TODO give builtin literals
     , (intern "TypeError",    exnTypeError)
     , (intern "MatchFailure", exnMatchFail)
@@ -23,3 +24,14 @@ letDef = Cl
                     , mkSy "e"])
                 , mkSy "body"])])]))
     (mkOb [])
+openDef = Cl
+    (mkSy "env")
+    (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "body"],
+        mkCall (Pr Eval) (mkSq 
+            [ mkCall (Pr Extends) (mkSq
+                [ mkCall (Pr Eval) (mkSy "env")
+                , mkSy "static"])
+            , mkSy "body"])]))
+    (mkOb [])
+    
+
