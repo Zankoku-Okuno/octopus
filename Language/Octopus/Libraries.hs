@@ -1,9 +1,9 @@
-module Octopus.Libraries where
+module Language.Octopus.Libraries where
 
 import Import
-import Octopus.Data
-import Octopus.Shortcut
-import Octopus.Basis
+import Language.Octopus.Data
+import Language.Octopus.Data.Shortcut
+import Language.Octopus.Basis
 
 initialEnv = mkOb [
       (intern "__let__", letDef)

@@ -9,12 +9,13 @@ General
 	consider putting types into the grammar, unchecked of course
 
 Parser
-	letrec
+	mutual letrec
 	distfixes
-		directives are line that start with #! (though #! on very first line is ignored)
-		massage the input by blanking these lines, but also collect and parse the directives
+		parse config
+		interpret config
+		apply
 	literate files
-	export form in file
+	export form in file/do
 		currently, it exports the whole environment
 		a way to give out a limited set would be very useful
 		export ::= 'export' <pattern>
@@ -76,12 +77,11 @@ Documentation
 	every primitive type and operation: what they do and when/how they fail
 
 Cleanup
-	Exposed modules use unallocated top-level names: Octopus
-	put Shortcuts in Octopus.Data
 	eliminate magic field names
 	make an actual lookup primitive, desugar :x into that instead of into __get__
 
 Tooling
+	editor configs (Sublime, vim, emacs, yi, ...)
 	grotto (virtualenv)
 	Packaging
 		may as well design it general:

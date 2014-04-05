@@ -21,14 +21,14 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     Octopus,
-                       Octopus.Data,
-                       Octopus.Shortcut
-                       Octopus.Parser,
-                       Octopus.Parser.Preprocess,
-                       Octopus.Basis,
-                       Octopus.Primitive,
-                       Octopus.Libraries
+  exposed-modules:     Language.Octopus,
+                       Language.Octopus.Data,
+                       Language.Octopus.Data.Shortcut
+                       Language.Octopus.Parser,
+                       Language.Octopus.Parser.Preprocess,
+                       Language.Octopus.Basis,
+                       Language.Octopus.Primitive,
+                       Language.Octopus.Libraries
   build-depends:       base ==4.6.*,
                        bytestring ==0.10.*,
                        text ==0.11.*,
@@ -39,7 +39,7 @@ library
                        parsec ==3.1.*,
                        hexpr ==0.0.0.1
 
-executable octopus
+executable octi
   main-is:             main.hs
   -- other-modules:       
   build-depends:       base ==4.6.*,

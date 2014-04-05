@@ -11,9 +11,6 @@ turing-fixpoint: ( (λ x (λ y (y (λ z (x x y z))))) (λ x (λ y (y (λ z (x x 
 applicative-fixpoint: (λ f (let maker (λ x (f (λ arg (x x arg))))
                                 (maker maker)))
 
-Y: applicative-fixpoint
-__Y__: applicative-fixpoint
-__lambda__: λ
 
 
 

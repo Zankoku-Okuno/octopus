@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Octopus where
+module Language.Octopus where
 
 import Import
 import qualified Data.Sequence as Seq
@@ -10,12 +10,12 @@ import Control.Monad.Reader
 import System.IO.Error
 import Control.Concurrent.MVar
 
-import Octopus.Data
-import Octopus.Parser (parseOctopusFile)
-import qualified Octopus.Primitive as Oct
-import Octopus.Basis
-import Octopus.Shortcut
-import Octopus.Libraries
+import Language.Octopus.Data
+import Language.Octopus.Parser (parseOctopusFile)
+import qualified Language.Octopus.Primitive as Oct
+import Language.Octopus.Basis
+import Language.Octopus.Data.Shortcut
+import Language.Octopus.Libraries
 
 
 eval :: ImportsCache -> Val -> Val -> IO Val

@@ -12,6 +12,8 @@ vau: (#<vau> [[{}, var],
          (#<eval> [env', body]);
       )))
 let: __let__
+Y: (λ f (let maker (λ x (f (λ arg (x x arg))))
+             (maker maker)))
 
 
 ### These are just prettier ways of getting at important primitives. ###
@@ -20,7 +22,9 @@ match: (λ var (λ val (#<match> [var, val])))
 with: (λ base (λ new (#<extends> [new, base])))
 
 
-### These are necessary for syntacti sugar. ###
+### These are necessary for syntactic sugar. ###
+__lambda__: λ
+__Y__: Y
 __quote__: (vau [{}, ast] ast)
 __get__: (vau [{}, field] (λ x (x .eval field)))
 __modify__: (vau [{}, field] (λ f (λ x

@@ -4,14 +4,14 @@
     that is, they could just as easily be defined in user-space, as long
     as the machine could get at them.
 -}
-module Octopus.Basis where
+module Language.Octopus.Basis where
 
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
 
-import Octopus.Data
-import Octopus.Shortcut
+import Language.Octopus.Data
+import Language.Octopus.Data.Shortcut
 
 
 mkVau :: String -> String -> Val -> Val

@@ -1,4 +1,4 @@
-module Octopus.Data where
+module Language.Octopus.Data where
 
 import Import
 import qualified Data.Sequence as Seq

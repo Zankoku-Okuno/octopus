@@ -1,4 +1,4 @@
-module Octopus.Parser.Preprocess where
+module Language.Octopus.Parser.Preprocess where
 
 import Import
 

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Octopus.Primitive (
+module Language.Octopus.Primitive (
       resolveSymbol
 
     , match
@@ -35,9 +35,9 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.ByteString as BS
 
-import Octopus.Data
-import Octopus.Shortcut
-import Octopus.Basis
+import Language.Octopus.Data
+import Language.Octopus.Data.Shortcut
+import Language.Octopus.Basis
 
 
 ------ Internals ------

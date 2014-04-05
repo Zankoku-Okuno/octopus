@@ -7,11 +7,11 @@ import Control.Concurrent.MVar
 
 import qualified Data.Map as Map
 
-import Octopus
-import Octopus.Parser
-import Octopus.Libraries
-import Octopus.Primitive (resolveSymbol)
-import Octopus.Shortcut (mkOb)
+import Language.Octopus
+import Language.Octopus.Parser
+import Language.Octopus.Libraries
+import Language.Octopus.Primitive (resolveSymbol)
+import Language.Octopus.Data.Shortcut (mkOb)
 
 progVersion = "v0.0.1a"
 main :: IO ()

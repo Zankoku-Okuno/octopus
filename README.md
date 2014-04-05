@@ -13,9 +13,9 @@ There's a cabal package, so you can use `cabal install octopus`. Alternately, in
 Usage
 -----
 
-Installation will give you the `octopus` program. So far, there are no fancy features, simply pass it a single file, and the file will be interpreted. If the file exports a binding for `main`, then its value will eval'd in the environment exported by the file.
+Installation will give you the `octi` program. So far, there are no fancy features, simply pass it a single file, and the file will be interpreted. If the file exports a binding for `main`, then its value will eval'd in the environment exported by the file.
 
-There are a couple simple example programs under the `examples` directory. Import path normalization is not yet implemented, so interpret these files inside the directory.
+There are a couple toy programs under the `examples` directory. Import path normalization is not yet implemented, so interpret these files inside the directory.
 
 Features
 ========

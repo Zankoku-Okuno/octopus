@@ -1,0 +1,8 @@
+Demographic
+===========
+
+  * Problems that involve heavy logical/mathematical resoning.
+  * Embedded scripting language in a larger program.
+  * Where the bottlenecks are not memory- or cycle-constraints.
+  * Boilerplate is a developtime bottleneck.
+  * For fun brain stretching.

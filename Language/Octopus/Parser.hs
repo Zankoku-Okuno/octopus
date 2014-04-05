@@ -38,7 +38,7 @@
 > blockcomment ::= /#\{([^#}]+|<blockcomment>|#[^{]|\}[^#])*\}#/
 
 -}
-module Octopus.Parser where
+module Language.Octopus.Parser where
 
 import Import
 
@@ -51,10 +51,10 @@ import qualified Text.Parsec as P
 import Language.Parse
 import Language.Desugar
 
-import Octopus.Data
-import Octopus.Shortcut
-import Octopus.Basis
-import Octopus.Parser.Preprocess
+import Language.Octopus.Data
+import Language.Octopus.Data.Shortcut
+import Language.Octopus.Basis
+import Language.Octopus.Parser.Preprocess
 
 
 type Parser = Parsec String ()

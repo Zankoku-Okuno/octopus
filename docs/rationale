@@ -49,5 +49,21 @@ Lisp macros are unhygenic. Scheme macros are their own, separate language. Neith
 
 You decide when and where code gets evaluated, in the very same language the code is written in. This, not macros, is the real benefit of code-as-data/data-as-code. If you want macros, even quasiquotation, it's not to hard to implement them yourself, but Aater enough time with vau, I doubt you'll bother. Vau can do everything macros can do, and more, and are hygenic by default (but can be unhygenic exaclty when and how you want).
 
+What happened to contextual equivalence?
+----------------------------------------
+
+I saw this list of problems [somewhere](http://www.eighty-twenty.org/index.cgi/tech/scheme/fexprs-remain-inscrutable-20110929.html), and I have responses for them.
+
+  * Compilation, automatic refactoring, and cross-referencing impossible in general.
+  * Contextual equivalence is too fine.
+
+Static stuff (compilation, automatic refactoring, optimizations) is _hard_, but then Octopus is an unashamedly dynamic language. I don't care about static analysis.
+
+As far as contextual equivalence, his practical example is really just a typing issue. Sure, Octopus is unityped, but that doesn't stop humans from reading types into the code. Yes, `(λ f (f (3 + 4)))` and `(λ f (f (4 + 3)))` are not equivalent when you pass an operative for `f`. 
+There's another "problem" where two different implementations of foldr either allows the passed combiner to control the recursion or else controls the recursion itself. While the author considered this an implementation detail, I would consider it a matter of strictness, which is definitely part of the implementation.
+
+In both these cases, the user's problems are solved simply by examining the documentation, which should specify a type. Type in Octopus are unchecked (see type checker), but they can be very descriptive nonetheless. In the first example, simply specify that the argument `f` should be an applicative. If the user abides the constraints, we retrive equivalence. For the foldr example, stipluate strictness (it's a pity most programming languages don't have a way to express strictness in their type system).
+
+
 
 

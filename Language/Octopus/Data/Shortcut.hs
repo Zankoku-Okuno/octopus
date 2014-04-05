@@ -1,10 +1,10 @@
-module Octopus.Shortcut where
+module Language.Octopus.Data.Shortcut where
 
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
 
-import Octopus.Data
+import Language.Octopus.Data
 
 
 mkInt :: Integral a => a -> Val
