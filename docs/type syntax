@@ -5,7 +5,6 @@ introducing a type variable:
 	<protocol> <type> \To <type>
 	multiple introduction can be done easily with extra commas as in `\forall x :: Nat, y :: Nat` and `Monad m, Stream s \To ...`
 technically, free symbols are assumed to be types, type constructors or protocols, but as long as things are obvious, this can be relaxed
-protocols-abiding types may be easily introduced
 anywhere you can use :: to mean "has type", you can use <: "subtype" or <: "supertype".
 
 functions are denoted with the infix -> or \to, which is right-associative

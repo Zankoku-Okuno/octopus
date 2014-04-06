@@ -186,7 +186,11 @@ primitive = P.choice (map mkPrimParser table)
             , ("handle", Pr Handle) , ("raise", Pr Raise)
 
             , ("stdin", fpStdin), ("stdout", fpStdout), ("stdin", fpStderr)
-            , ("IOError", exnIOError)
+
+            , ("TypeError", exnTypeError), ("MatchFail", exnMatchFail)
+            , ("ScopeError", exnScopeError), ("AttrError", exnAttrError), ("IndexError", exnIndexError)
+            , ("DivZero", exnDivZero), ("IOError", exnIOError)
+            , ("SyntaxError", exnSyntaxError), ("ImportError", exnImportError)
             ]
 
 symbol :: Parser Val

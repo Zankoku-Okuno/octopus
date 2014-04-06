@@ -87,10 +87,10 @@ main = do
          \              (#<handle> [tag, handler, `(#<eval> thunk)]))))\n\
          \   [ handle ex (+ 3) (+ 1 6)\n\
          \   , handle ex (+ 3) (+ 1 (#<raise> [ex, 10]))];"
-    test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> 3 4)])"
-    test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> [3, 4])])"
-    test "(#<handle> [TypeError, (__lambda__ x x), `(#<add> [3, 5, 4])])"
-    test "(#<handle> [DivZero, (vau {} 1), `do (#<div> [3, 0]) (#<raise> []);])"
+    test "(#<handle> [#<TypeError>, (__lambda__ x x), `(#<add> 3 4)])"
+    test "(#<handle> [#<TypeError>, (__lambda__ x x), `(#<add> [3, 4])])"
+    test "(#<handle> [#<TypeError>, (__lambda__ x x), `(#<add> [3, 5, 4])])"
+    test "(#<handle> [#<DivZero>, (vau {} 1), `do (#<div> [3, 0]) (#<raise> []);])"
 
     test "do \955: __lambda__\n\
          \   __modify__: (vau [{}, field] (\955 f (\955 x\n\
@@ -108,11 +108,11 @@ main = do
          \   [3 .+ 4, 8 .++, ++ 8];"
     test "[#<get> [{x: 3}, `x], {x: 3} :x]"
 
+    test "do (#<writeByte> [#<stdout>, 67]) (#<writeByte> [#<stdout>, 10]);"
     test "do fp: (#<openFile> [\"spotcheck.hs\", `rw])\n\
          \   c: (#<readByte> fp)\n\
-         \   (#<writeByte> [#<stdout>, c])(#<writeByte> [#<stdout>, 10])\n\
          \   (#<close> fp)\n\
-         \   (#<handle> [#<IOError>, (vau {} `read_after_close_handled), `(#<readByte> fp)]);"
+         \   (#<handle> [#<IOError>, (vau {} c), `(#<readByte> fp)]);"
 
 
 
@@ -144,10 +144,6 @@ startData = mkOb [
     --- Niceties --- TODO translate into Octopus libraries
     , (intern "vau",          vauDef)
     , (intern "__lambda__",   lambdaDef)
-    --- Exceptions --- TODO give builtin literals
-    , (intern "TypeError",    exnTypeError)
-    , (intern "MatchFailure", exnMatchFail)
-    , (intern "DivZero",      exnDivZero)
     ]
 
 vauDef = Cl

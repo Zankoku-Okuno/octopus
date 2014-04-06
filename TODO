@@ -39,7 +39,6 @@ Parser
 Interpreter
 	BUGFIX: objects and lists should be self-evaluating, except those that have not yet been eval'd
 	Data primitives
-		fileps
 		tags
 		abstypes
 		reference cells
@@ -56,6 +55,7 @@ Interpreter
 		wrap and unwrap parameterized primitives
 	directives
 	we'll need a typeof operator, which returns a tag.
+		builtin tags for each primitive data type
 	BUGFIX: tags are created local to a thread, either:
 		make a tag generator thread-global
 		attach a threadid to the tag
@@ -83,6 +83,7 @@ Cleanup
 	make an actual lookup primitive, desugar :x into that instead of into __get__
 
 Tooling
+	build in unicoder
 	editor configs (Sublime, vim, emacs, yi, ...)
 	grotto (virtualenv)
 	Packaging
