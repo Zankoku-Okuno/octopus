@@ -16,6 +16,7 @@ v0.0.2.0-alpha (2014-04-06)
  + Raise and handle exceptions
  + Built-in exceptions
  + I/O primitives
+ + Block comments
  + Heredoc text literals
  + Literals for builtins
  + Syntactic sugar: `@`, `:`-syntax, infix `.`-syntax

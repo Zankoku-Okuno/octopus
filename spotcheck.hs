@@ -24,6 +24,7 @@ main = do
     --exitSuccess
 
     test "#<<END\na\\s;dg\nasdg\nEND>>"
+    test "3 #{block #{com}#ment #3 {} }#"
     test "do four: 4 ((vau x x) four);"
     test "do four: 4 ((vau x (#<eval> x)) four);"
     test "((vau [e, ast] e) dne)"

@@ -20,7 +20,6 @@ Parser
 		a way to give out a limited set would be very useful
 		export ::= 'export' <pattern>
 	anonymous points
-	block comments
 	bytes literals
 	documentation on a (define? export?)
 	decorators in do blocks
@@ -37,7 +36,6 @@ Parser
 		nah, I can do this in userland
 
 Interpreter
-	BUGFIX: objects and lists should be self-evaluating, except those that have not yet been eval'd
 	Data primitives
 		tags
 		abstypes
