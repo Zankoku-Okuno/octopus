@@ -45,8 +45,8 @@ import Import
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Text as T
 import Text.Parsec ( Parsec, SourceName, ParseError
-                   , try, (<?>), unexpected, parserZero
-                   , char, anyChar, eof)
+                   , try, (<?>), unexpected
+                   , char, anyChar, oneOf, noneOf, eof)
 import qualified Text.Parsec as P
 import Language.Parse
 import Language.Desugar
@@ -295,11 +295,16 @@ whitespace = (<?> "space") . P.skipMany1 $ P.choice [spaces1, lineComment, block
 
 lineComment :: Parser ()
 lineComment = void $ do
-    try $ char '#' >> P.notFollowedBy (char '<')
+    try $ char '#' >> P.notFollowedBy (oneOf "{<")
     anyChar `manyThru` (void (char '\n') P.<|> eof)
 
 blockComment :: Parser ()
-blockComment = parserZero
+blockComment = P.between (string "#{") (string "}#") $ P.skipMany $
+    P.choice [ void $ P.many1 (noneOf "}#")
+             , blockComment
+             , void $ try $ char '#' >> P.notFollowedBy (char '{')
+             , void $ try $ char '}' >> P.notFollowedBy (char '#')
+             ]
 
 padded :: Parser a -> Parser a
 padded p = try $ P.optional whitespace >> p

@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                octopus
-version:             0.0.1.0
+version:             0.0.2.0
 synopsis:            Lisp with more dynamism, more power, more simplicity.
 description:         Octopus is a highly dynamic programming language with an astounding (I think)
                      power-to-weight ratio (expressivity-to-complexity). With just a handful of
