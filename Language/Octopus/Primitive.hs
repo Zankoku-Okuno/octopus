@@ -13,7 +13,7 @@ module Language.Octopus.Primitive (
     
     --TODO float arithmetic (exp, log, ln, trig)
 
-    --, read, write, flush, close
+    , openFp, readFp, writeFp, flushFp, closeFp
 
     --, newTag
 
@@ -34,6 +34,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.ByteString as BS
+import System.IO.Error
 
 import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
@@ -148,6 +149,65 @@ numParts x = Left $ mkTypeError (Pr NumParts) "Nm | Fl" x
 
 ------ Floats ------
 
+
+------ Handles ------
+openFp :: Val -> IO (Fallible Val)
+openFp (Sq args) = case toList args of
+    [Tx path, Sy m] -> do
+        fp_m <- tryIOError $ openBinaryFile (unpack path) (mode m)
+        case fp_m of
+            Right fp -> return . Right $ Fp fp
+            Left err -> return . Left $ (getTag exnIOError, mkSq [exnIOError, mkTx $ show err])
+    _ -> return . Left $ mkTypeError (Pr OpenFp) "(Tx, { mode ← mode ∈ [`r, `w, `rw, `a] })" (Sq args)
+    where
+    mode m = case unintern m of
+        "r" -> ReadMode
+        "w" -> WriteMode
+        "a" -> AppendMode
+        "rw" -> ReadWriteMode
+        _ -> error "TODO Type error"
+openFp args = return . Left $ mkTypeError (Pr OpenFp) "(Tx, { mode ← mode ∈ [`r, `w, `rw, `a] })" args
+
+readFp :: Val -> IO (Fallible Val)
+readFp (Fp fp) = do
+    c_m <- tryIOError $ hGetChar fp
+    return $ case c_m of
+        Right c -> Right $ mkInt (ord c)
+        Left err -> Left $ (getTag exnIOError, mkSq [exnIOError, mkTx $ show err])
+readFp x = return . Left $ mkTypeError (Pr OpenFp) "Fp" x
+
+writeFp :: Val -> IO (Fallible Val)
+writeFp (Sq args) = case toList args of
+    [Fp fp, x] -> case ensureByte x of
+        Right byte -> do
+            success <- tryIOError $ hPutChar fp byte
+            return $ case success of
+                Right () -> Right $ mkOb []
+                Left err -> Left $ (getTag exnIOError, mkSq [exnIOError, mkTx $ show err])
+        Left err -> return . Left $ mkTypeError (Pr WriteFp) "(Fp, Byte)" (Sq args)
+    _ -> return . Left $ mkTypeError (Pr WriteFp) "(Fp, Byte)" (Sq args)
+    where
+    ensureByte (Nm q) | denominator q == 1 =
+        let n = numerator q
+        in if 0 <= n && n < 256
+            then Right (chr $ fromIntegral n)
+            else Left $ mkTypeError (Pr WriteFp) "(Fp, Byte)" (Sq args)
+    ensureByte _ = Left $ mkTypeError (Pr WriteFp) "(Fp, Byte)" (Sq args)
+writeFp args = return . Left $ mkTypeError (Pr WriteFp) "(Fp, Byte)" args
+
+flushFp :: Val -> IO (Fallible Val)
+flushFp (Fp fp) = do
+    success <- tryIOError $ hFlush fp
+    return $ case success of
+        Right () -> Right $ mkOb []
+        Left err -> Left $ (getTag exnIOError, mkSq [exnIOError, mkTx $ show err])
+flushFp x = return . Left $ mkTypeError (Pr FlushFp) "Fp" x
+
+closeFp :: Val -> IO (Fallible Val)
+closeFp (Fp fp) = do
+    hClose fp
+    return . Right $ mkOb []
+closeFp x = return . Left $ mkTypeError (Pr CloseFp) "Fp" x
 
 ------ Sequence/Text/Bytes ------
 len :: Val -> Fallible Val

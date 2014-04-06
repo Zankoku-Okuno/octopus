@@ -8,6 +8,7 @@ module Import (
 import Data.Word as X
 import Data.Ratio as X
 import Data.Symbol as X
+import Data.Char as X
 import Data.ByteString (ByteString)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)

@@ -26,9 +26,9 @@ with: (λ base (λ new (#<extends> [new, base])))
 __lambda__: λ
 __Y__: Y
 __quote__: (vau [{}, ast] ast)
-__get__: (vau [{}, field] (λ x (x .eval field)))
+__get__: (vau [{}, field] (λ x (#<get> [x, field])))
 __modify__: (vau [{}, field] (λ f (λ x
-                  (x .with (field .match (f (x .eval field))))
+                  (x .with (field .match (f (__get__ feild x))))
             )))
 
 ### Pretty data primitives. Probably should be in their own file. ###

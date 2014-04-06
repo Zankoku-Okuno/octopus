@@ -173,15 +173,20 @@ desugarStatement (Deco f) = Deco (desugar f)
 primitive :: Parser Val
 primitive = P.choice (map mkPrimParser table)
     where
-    mkPrimParser (name, val) = string ("#<" ++ name ++ ">") >> return (Pr val)
-    table = [ ("vau", Vau), ("eval", Eval), ("match", Match), ("ifz!", Ifz), ("import", Imp)
-            , ("eq", Eq), ("neq", Neq), ("lt", Lt), ("lte", Lte), ("gt", Gt), ("gte", Gte)
-            , ("add", Add) , ("mul", Mul) , ("sub", Sub) , ("div", Div)
-            , ("numer", Numer) , ("denom", Denom) , ("numParts", NumParts)
-            , ("mkTag", MkTag)
-            , ("len", Len) , ("cat", Cat) , ("cut", Cut)
-            , ("extends", Extends) , ("del", Delete) , ("keys", Keys) , ("get", Get)
-            , ("handle", Handle) , ("raise", Raise)
+    mkPrimParser (name, val) = string ("#<" ++ name ++ ">") >> return val
+    table = [ ("vau", Pr Vau), ("eval", Pr Eval), ("match", Pr Match), ("ifz!", Pr Ifz), ("import", Pr Imp)
+            , ("eq", Pr Eq), ("neq", Pr Neq), ("lt", Pr Lt), ("lte", Pr Lte), ("gt", Pr Gt), ("gte", Pr Gte)
+            , ("add", Pr Add) , ("mul", Pr Mul) , ("sub", Pr Sub) , ("div", Pr Div)
+            , ("numer", Pr Numer) , ("denom", Pr Denom) , ("numParts", Pr NumParts)
+            , ("openFile", Pr OpenFp), ("flush", Pr FlushFp), ("close", Pr CloseFp)
+            , ("readByte", Pr ReadFp), ("writeByte", Pr WriteFp)
+            , ("mkTag", Pr MkTag)
+            , ("len", Pr Len) , ("cat", Pr Cat) , ("cut", Pr Cut)
+            , ("extends", Pr Extends) , ("del", Pr Delete) , ("keys", Pr Keys) , ("get", Pr Get)
+            , ("handle", Pr Handle) , ("raise", Pr Raise)
+
+            , ("stdin", fpStdin), ("stdout", fpStdout), ("stdin", fpStderr)
+            , ("IOError", exnIOError)
             ]
 
 symbol :: Parser Val

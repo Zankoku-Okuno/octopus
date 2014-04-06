@@ -38,6 +38,7 @@ data Primitive = Vau | Eval | Match | Ifz | Imp
                --TODO By data primitives
                --TODO Tx data primitives
                --TODO Fp data primitives
+               | OpenFp | ReadFp | WriteFp | FlushFp | CloseFp
                --TODO Sy data primitives
                | MkTag
                | Wrap Word | Unwrap Word

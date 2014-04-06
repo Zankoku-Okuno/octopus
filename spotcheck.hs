@@ -4,24 +4,24 @@ import System.Exit
 import Control.Concurrent.MVar
 
 import Import
-import Octopus
-import Octopus.Parser
-import Octopus.Libraries
-import Octopus.Data
-import Octopus.Shortcut
-import Octopus.Basis
+import Language.Octopus
+import Language.Octopus.Parser
+import Language.Octopus.Libraries
+import Language.Octopus.Data
+import Language.Octopus.Data.Shortcut
+import Language.Octopus.Basis
 
 import qualified Data.Map as Map
 
 main :: IO ()
 main = do
-    parse_e <- parseOctopusFile "y.oct" <$> readFile "y.oct"
-    case parse_e of
-        Left err -> print err
-        Right (dirs, val) -> do
-            print val
-            --print =<< eval startData val
-    exitSuccess
+    --parse_e <- parseOctopusFile "y.oct" <$> readFile "y.oct"
+    --case parse_e of
+    --    Left err -> print err
+    --    Right (dirs, val) -> do
+    --        print val
+    --        --print =<< eval startData val
+    --exitSuccess
 
     test "#<<END\na\\s;dg\nasdg\nEND>>"
     test "do four: 4 ((vau x x) four);"
@@ -75,7 +75,7 @@ main = do
     test "do [a, b]: (#<cut> [\"hello\", 3])\n   [a, b, #<len> a];"
     test "do y: (#<ifz!> [0, `y, `n])\n   n: (#<ifz!> [1, `y, `n])\n   [y, n];"
 
-    test "do {\955: \955}: (#<import> \"./test/basis.oct\") (\955 x x 6);"
+    test "do {\955: \955}: (#<import> \"./examples/basis.oct\") (\955 x x 6);"
 
     test "do t: (#<mkTag> \"phoey\")\n   (#<handle> [t, 3, `5]);"
     test "do id: (__lambda__ x x)\n   t: (#<mkTag> \"phoey\")\n   (#<handle> [t, id,\n      `(#<add> [3, (#<raise> [t, 7])])]);"
@@ -106,6 +106,13 @@ main = do
          \   +: (\955 x (\955 y (#<add> [x, y])))\n\
          \   ++: (+ 1)\n\
          \   [3 .+ 4, 8 .++, ++ 8];"
+    test "[#<get> [{x: 3}, `x], {x: 3} :x]"
+
+    test "do fp: (#<openFile> [\"spotcheck.hs\", `rw])\n\
+         \   c: (#<readByte> fp)\n\
+         \   (#<writeByte> [#<stdout>, c])(#<writeByte> [#<stdout>, 10])\n\
+         \   (#<close> fp)\n\
+         \   (#<handle> [#<IOError>, (vau {} `read_after_close_handled), `(#<readByte> fp)]);"
 
 
 
@@ -156,8 +163,8 @@ vauDef = Cl
 
 getDef = Cl
     (mkSq [mkOb [], mkSy "x"])
-    (mkCall (Pr Vau) (mkSq [mkSy "ob",
-        mkCall (Pr Eval) (mkSq [mkCall (Pr Eval) (mkSy "ob"), mkSy "x"])]))
+    (mkCall (Pr Vau) (mkSq [mkSy "ob", 
+        mkCall (Pr Get) (mkSq [mkCall (Pr Eval) (mkSy "ob"), mkSy "x"])]))
     (mkOb [])
 
 lambdaDef = Cl

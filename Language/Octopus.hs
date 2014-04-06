@@ -107,6 +107,19 @@ apply (Pr Raise) x = case x of
         _ -> tyErr
     _ -> tyErr
     where tyErr = raise $ mkTypeError (Pr Raise) "(Tg, *)" x
+apply (Pr pr) x | pr `elem` (map fst table) = do
+    result <- liftIO $ (fromJust $ lookup pr table) x
+    case result of
+        Right val -> done val
+        Left err -> raise err
+    where
+    table =
+        [ (OpenFp, Oct.openFp)
+        , (ReadFp, Oct.readFp)
+        , (WriteFp, Oct.writeFp)
+        , (FlushFp, Oct.flushFp)
+        , (CloseFp, Oct.closeFp)
+        ]
 apply (Pr pr) x =
     case lookup pr table of
         Just f -> case f pr x of

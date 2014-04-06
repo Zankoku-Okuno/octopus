@@ -37,9 +37,7 @@ Parser
 		nah, I can do this in userland
 
 Interpreter
-	BUGFIX: tags are created local to a thread, either:
-		make a tag generator thread-global
-		attach a threadid to the tag
+	BUGFIX: objects and lists should be self-evaluating, except those that have not yet been eval'd
 	Data primitives
 		fileps
 		tags
@@ -56,13 +54,17 @@ Interpreter
 	abstract types
 		a primitive to construct a triple of (tag, constructor, deconstructor)
 		wrap and unwrap parameterized primitives
-	BUGFIX: objects and lists should be self-evaluating, except those that have not yet been eval'd
 	directives
 	we'll need a typeof operator, which returns a tag.
-	might be nice to give names to types
+	BUGFIX: tags are created local to a thread, either:
+		make a tag generator thread-global
+		attach a threadid to the tag
 	force import despite caching
 	pass arbitrary flags to interpreter (like -D in gcc), look them up at runtime
 	REPL
+	ffi
+	an interpreter maker, configured in a Haskell program `(perfile, repl) = octi someConfig`
+		actual C and JS FFIs
 	Floating point primitive type
 	version specifier in import string
 	re-raise exceptions?

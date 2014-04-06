@@ -9,14 +9,15 @@ module Language.Octopus.Basis where
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
+import System.IO
 
 import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
 
 
-mkVau :: String -> String -> Val -> Val
-mkVau e arg body = mkCall (Pr Vau) (mkSq [mkSq [Sy $ intern e, Sy $ intern arg], body])
-
+fpStdin = Fp stdin
+fpStdout = Fp stdout
+fpStderr = Fp stderr
 
 exnTypeError   = Tg 0 "TypeError"
 exnMatchFail   = Tg 1 "MatchFailure"
@@ -30,11 +31,16 @@ exnImportError = Tg 8 "ImportError"
 startTag :: Word
 startTag       =    9
 
+
+
 mkTypeError :: Val -> Text -> Val -> (Word, Val)
 mkTypeError f ty val = (getTag exnTypeError, mkSq [exnTypeError, f, Tx ty, val])
 mkMatchFail :: Val -> Val -> (Word, Val)
 mkMatchFail p v = (getTag exnMatchFail, mkSq [exnMatchFail, p, v])
 
+
+mkVau :: String -> String -> Val -> Val
+mkVau e arg body = mkCall (Pr Vau) (mkSq [mkSq [Sy $ intern e, Sy $ intern arg], body])
 
 {-| Construct a combination: an object with a
     @__car__@ slot and a @__cdr__@ slot.
