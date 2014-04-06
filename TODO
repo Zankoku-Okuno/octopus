@@ -80,7 +80,6 @@ Documentation
 
 Cleanup
 	eliminate magic field names
-	make an actual lookup primitive, desugar :x into that instead of into __get__
 
 Tooling
 	build in unicoder

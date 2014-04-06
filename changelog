@@ -1,0 +1,25 @@
+v0.0.1.0-alpha (2014-03-31)
+===========================
+
+Initial release version.
+ + Turing-complete: `vau`, `eval`, `match`, `extends`.
+ + Pattern matching on symbols, seqs, xonses.
+ + Primitive operations: xonses, numbers, arithmetic, relationals, strict if-zero
+ + Import primitive
+ + Expression and file parsers
+ + Syntactic sugar: `do`-expressions
+ + Syntactic sugar: quoted expressions
+
+v0.0.2.0-alpha (2014-04-06)
+===========================
+
+ + Raise and handle exceptions
+ + Built-in exceptions
+ + I/O primitives
+ + Heredoc text literals
+ + Literals for builtins
+ + Syntactic sugar: `@`, `:`-syntax, infix `.`-syntax
+ + Syntactic sugar: `open` statement
+ + Syntactic sugar: non-mutual `letrec` statement 
+ + Draft of `basis.oct`
+ - Closures do not print their internals

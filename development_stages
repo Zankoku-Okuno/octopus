@@ -1,0 +1,36 @@
+Stages of Growth
+================
+
+There are requirements to calling a language 'usable' or 'practical', or whatever. Here's a quick breakdown of the major points for Octopus specifically. This is open to change, but the spirit should remain pretty constant.
+
+Any feature may be worked on before "its stage" comes. Simply that I won't call Octopus featureful if it doesn't have letrec, even if it has floating point and literate files and a REPL and...
+
+Turing-complete
+	vau, eval, match, extends
+	parser
+Usable
+	I/O, exceptions
+	import files
+Featureful
+	letrec
+	small standard libraries
+	distfixes, anonymous points
+	all data primitives
+Stable
+	first-class control
+	remove leaks that Haskell is the host
+	export statement, import pattern
+	decide on indentation (implement if needed)
+Practical
+	reference guide
+	floating point
+	custom builtins
+	REPL
+Growth
+	literate files, docstrings
+	package management
+	locations for community (IRC, mailinglist, package repo)
+
+Mature
+	lots of libraries
+	ffi

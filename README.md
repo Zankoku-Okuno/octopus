@@ -24,11 +24,11 @@ Executive summary: it's a Lisp with first-class-everything. For more detail, it 
 
 * Code is data/Data is code: Write programs to write your programs for you; eradicate boilerplate.
 * Vau operator: You control when arguments get evaluated; mix and match lazy and strict.
-* First-class environments: You decide what's in scope and what isn't.
 * Immutable values: Data structures are default persistent; never corrupt your program state again.
-* First-class control: Conquer the last resistance to abstraction; define any control flow construct ever dreamt of.
 * Streamlined syntax: With only a handlful of grammar rules, you might miss them if you blink.
-* Permissive identifiers: Unicode identifiers and user-defined disfixes open new possibilities; make Lisp read/write.
+* First-class environments: You decide what's in scope and what isn't.
+* First-class control: Conquer the last resistance to abstraction; define any control flow construct ever dreamt of.
+* Permissive identifiers: Unicode identifiers and user-defined distfixes open new possibilities; make Lisp read/write.
 * Natural concurrency: Any concurrency model can be implemented as a library; tame the multiprocessing beast.
 
 Future Features
@@ -51,8 +51,9 @@ That being said, static types are impossible in general, compilation gains you l
 Status
 ======
 
-* 2014-03-31: With bugfixes, achieved Turing-complete.
-* 2014-04-03: Implemented an import. Well on the way to a useful language.
+* 2014-03-31: With bugfixes, achieved Turing-complete. The next step is usable.
+* 2014-04-06: Multiple files, interpreter program, I/O primitives, exception handling.
+              Still on the way to stable.
 
 The Story
 =========
