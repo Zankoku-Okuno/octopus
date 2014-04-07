@@ -27,7 +27,7 @@ mkOb = Ob . Map.fromList
 
 
 getTag :: Val -> Word
-getTag (Tg tg _) = tg
+getTag (Tg (tg, _)) = tg
 
 fromEnv :: Val -> Map Symbol Val
 fromEnv (Ob ob) = ob

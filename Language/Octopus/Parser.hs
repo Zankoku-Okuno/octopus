@@ -8,7 +8,7 @@
 >       |  <accessor> | <mutator>
 >       | '(' <expr> ')' |  /\.<expr>/
 > 
-> atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _primitive_
+> atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _builtin_
 > list ::= '[' (<expr>+ (',' <expr>+)*)? ']'
 > object ::= '{' (_field_ <expr>+ (',' _field_ <expr>+)*)? '}'
 > combination ::= '(' <expr> <expr>+ ')'
@@ -19,7 +19,7 @@
 > 
 > symbol ::= _name_ - reserved
 >     reserved = {'do', 'letrec', 'export', 'open'}
-> primitive ::= /#<[a-zA-Z]+>/
+> builtin ::= /#<[a-zA-Z]+>/
 > field ::= /<name>:/
 > number ::= /[+-]?(0[xX]<hexnum>|0[oO]<octnum>|0[bB]<binnum>|<decnum>)/
 >     decnum ::= /\d+(\.\d+<exponent>?|\/\d+)?/
@@ -99,7 +99,7 @@ open = do
 expr :: Parser Syx
 expr = composite P.<|> atom
     where
-    atom = Lit <$> P.choice [symbol, numberLit, textLit, heredoc, primitive] <?> "atom"
+    atom = Lit <$> P.choice [symbol, numberLit, textLit, heredoc, builtin] <?> "atom"
     composite = P.choice [ block, combine, sq, ob, quote, dottedExpr
                          , accessor, mutator, infixAccessor, infixMutator]
 
@@ -170,8 +170,8 @@ desugarStatement (Deco f) = Deco (desugar f)
 
 
 ------ Atoms ------
-primitive :: Parser Val
-primitive = P.choice (map mkPrimParser table)
+builtin :: Parser Val
+builtin = P.choice (map mkPrimParser table)
     where
     mkPrimParser (name, val) = string ("#<" ++ name ++ ">") >> return val
     table = [ ("vau", Pr Vau), ("eval", Pr Eval), ("match", Pr Match), ("ifz!", Pr Ifz), ("import", Pr Imp)
@@ -180,13 +180,19 @@ primitive = P.choice (map mkPrimParser table)
             , ("numer", Pr Numer) , ("denom", Pr Denom) , ("numParts", Pr NumParts)
             , ("openFile", Pr OpenFp), ("flush", Pr FlushFp), ("close", Pr CloseFp)
             , ("readByte", Pr ReadFp), ("writeByte", Pr WriteFp)
-            , ("mkTag", Pr MkTag), ("mkAbstype", Pr MkAbstype)
+            , ("mkTag", Pr MkTag), ("mkAbstype", Pr MkAbstype), ("typeof", Pr Typeof)
             , ("len", Pr Len) , ("cat", Pr Cat) , ("cut", Pr Cut)
             , ("extends", Pr Extends) , ("del", Pr Delete) , ("keys", Pr Keys) , ("get", Pr Get)
             , ("handle", Pr Handle) , ("raise", Pr Raise)
 
             , ("stdin", fpStdin), ("stdout", fpStdout), ("stdin", fpStderr)
 
+            , ("Nm", tyNm), ("Fn", tyFn)
+            , ("Sy", tySy), ("Tg", tyTg)
+            , ("By", tyBy), ("Tx", tyTx)
+            , ("Sq", tySq), ("Ob", tyOb)
+            , ("Ce", tyCe), ("Ar", tyAr), ("Fp", tyFp)
+            
             , ("TypeError", exnTypeError), ("MatchFail", exnMatchFail)
             , ("ScopeError", exnScopeError), ("AttrError", exnAttrError), ("IndexError", exnIndexError)
             , ("DivZero", exnDivZero), ("IOError", exnIOError)

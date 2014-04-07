@@ -115,9 +115,10 @@ main = do
          \   (#<close> fp)\n\
          \   (#<handle> [#<IOError>, (vau {} c), `(#<readByte> fp)]);"
 
+    test "[#<typeof> 3, #<typeof> \"blah\", #<typeof> {}, #<typeof> (vau {} {})]"
     test "do [t, c, d]: (#<mkAbstype> \"Foo\")\n\
          \   foo: (c 431)\n\
-         \   (d foo);"
+         \   [#<typeof> foo, d foo];"
 
 
 

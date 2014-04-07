@@ -19,17 +19,30 @@ fpStdin = Fp stdin
 fpStdout = Fp stdout
 fpStderr = Fp stderr
 
-exnTypeError   = Tg 0 "TypeError"
-exnMatchFail   = Tg 1 "MatchFailure"
-exnScopeError  = Tg 2 "ScopeError"
-exnAttrError   = Tg 3 "AttributeError"
-exnIndexError  = Tg 4 "IndexError"
-exnDivZero     = Tg 5 "DivideByZero"
-exnIOError     = Tg 6 "IOError"
-exnSyntaxError = Tg 7 "SyntaxError"
-exnImportError = Tg 8 "ImportError"
+tyNm           = Tg ( 0, "Nm")
+tyBy           = Tg ( 1, "By")
+tyTx           = Tg ( 2, "Tx")
+tyFp           = Tg ( 3, "Fp")
+tySy           = Tg ( 4, "Sy")
+tyTg           = Tg ( 5, "Tg")
+tySq           = Tg ( 6, "Sq")
+tyOb           = Tg ( 7, "Ob")
+tyFn           = Tg ( 8, "* -> *")
+tyCe           = Tg ( 9, "Ce")
+tyAr           = Tg (10, "Ar")
+
+exnTypeError   = Tg (20, "TypeError")
+exnMatchFail   = Tg (21, "MatchFailure")
+exnScopeError  = Tg (22, "ScopeError")
+exnAttrError   = Tg (23, "AttributeError")
+exnIndexError  = Tg (24, "IndexError")
+exnDivZero     = Tg (25, "DivideByZero")
+exnIOError     = Tg (26, "IOError")
+exnSyntaxError = Tg (27, "SyntaxError")
+exnImportError = Tg (28, "ImportError")
+
 startTag :: Word
-startTag       =    9
+startTag       =     50
 
 
 

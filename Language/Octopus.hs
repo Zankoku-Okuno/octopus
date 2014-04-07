@@ -32,13 +32,11 @@ reduce x@(Nm _) = done x
 reduce x@(By _) = done x
 reduce x@(Tx _) = done x
 reduce x@(Fp _) = done x
-reduce x@(Tg _ _) = done x
+reduce x@(Tg _) = done x
 reduce x@(Ab _ _) = done x
 reduce x@(Cl _ _ _) = done x
 reduce x@(Ce _) = done x
 reduce x@(Ar _) = done x
---reduce x@(Eh _ _) = done x
---reduce x@(Ex _ _) = done x
 reduce x@(Pr _) = done x
 reduce sq@(Sq xs) = case toList xs of
     [] -> done sq
@@ -94,14 +92,14 @@ apply (Pr MkTag) x = case x of
 apply (Pr MkAbstype) x = case x of
     Tx spelling -> mkAbstype spelling >>= \(tag, ctor, dtor) -> done (mkSq [tag, ctor, dtor])
     _ -> raise $ mkTypeError (Pr MkAbstype) "Tx" x
-apply (Pr (Wrap n spelling)) x = done (Ab n x)
-apply pr@(Pr (Unwrap n spelling)) x = case x of
-    Ab n' val | n == n' -> done val
+apply (Pr (Wrap tg)) x = done (Ab tg x)
+apply pr@(Pr (Unwrap (n, spelling))) x = case x of
+    Ab (n', _) val | n == n' -> done val
     _ -> raise $ mkTypeError pr spelling x
 apply (Pr Handle) x = case x of
     Sq xs -> case toList xs of
         [tag, handler, body] -> case tag of
-            Tg i _ -> pushK (HndlK i handler) >> reduce body
+            Tg tg -> pushK (HndlK tg handler) >> reduce body
             _ -> tyErr
         _ -> tyErr
     _ -> tyErr
@@ -109,7 +107,7 @@ apply (Pr Handle) x = case x of
 apply (Pr Raise) x = case x of
     Sq xs -> case toList xs of
         [tag, payload] -> case tag of
-            Tg i _ -> curry raise i payload
+            Tg (i, _) -> curry raise i payload
             _ -> tyErr
         _ -> tyErr
     _ -> tyErr
@@ -153,6 +151,8 @@ apply (Pr pr) x =
         , (Mul, binary Oct.mul "(Nm, Nm)")
         , (Div, binary Oct.div "(Nm, Nm)")
     
+        , (Typeof, unary Oct.typeof)
+
         , (Len, unary Oct.len)
         , (Cat, binary Oct.cat "∀ f :: Sq * | Tx | By. (f, f)")
         , (Cut, binary Oct.cut "(Sq * | Tx | By, Nat)")

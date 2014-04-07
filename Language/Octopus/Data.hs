@@ -8,6 +8,7 @@ import Control.Monad.State
 import Control.Concurrent.MVar (MVar)
 
 
+type Tag = (Word, Text) -- ^ Integer for comparison, Text for spelling error reports
 type Exn = (Word, Val)
 type Fallible = Either Exn
 
@@ -17,18 +18,15 @@ data Val = Nm Rational -- ^ Rational number
          | Tx Text -- ^ Text data
          | Fp Handle -- ^ Input/output handle
          | Sy Symbol -- ^ Symbol, aka. identifier
-         | Tg Word Text -- ^ Unique tag
-         | Ab Word Val -- ^ Abstract data
+         | Tg Tag -- ^ Unique tag
+         | Ab Tag Val -- ^ Abstract data
          | Sq (Seq Val) -- ^ Sequence, aka. list
          | Ob (Map Symbol Val) -- ^ Symbol-value map, aka. object
          | Cl Val Val Val -- ^ Operative closure
          | Ce (IORef Val) -- ^ Reference cell
          | Ar (IOArray Int Val) -- ^ Mutable array
          | Pr Primitive -- ^ Primitive operations
-         -- | Eh Val Val -- ^ Exception handler/control prompt
-         -- | Ex Val Val -- ^ Propagating exception
          | Ks [Control] -- ^ Control stack 
-         --TODO bytestring/buffer/bytes/other name?
          --TODO concurrency
     deriving (Eq)
 data Primitive = Vau | Eval | Match | Ifz | Imp
@@ -40,7 +38,7 @@ data Primitive = Vau | Eval | Match | Ifz | Imp
                --TODO Fp data primitives
                | OpenFp | ReadFp | WriteFp | FlushFp | CloseFp
                --TODO Sy data primitives
-               | MkTag | MkAbstype | Wrap Word Text | Unwrap Word Text
+               | MkTag | MkAbstype | Wrap Tag | Unwrap Tag | Typeof
                | Len | Cat | Cut
                | Extends | Delete | Keys | Get
                --TODO Ce data primitives
@@ -68,7 +66,7 @@ data Context = Op Val -- ^ Hole must be a combiner, val is the uneval'd argument
              | Eo Symbol [(Symbol, Val)] [(Symbol, Val)] -- ^ Object evaluation
     deriving (Eq, Show)
 data Control = NormK [Context]
-             | HndlK Word Val
+             | HndlK Tag Val
           --TODO onEnter/onSuccess/onFail
              | ImptK Text (MVar (Fallible Val))
     deriving (Eq)
@@ -113,7 +111,7 @@ swapEnv env' = do
 splitStack :: Word -> Machine ([Control], [Control])
 splitStack tg = break isPoint <$> gets control
     where
-    isPoint (HndlK tg' _) = tg == tg'
+    isPoint (HndlK (tg', _) _) = tg == tg'
     isPoint (ImptK _ _) = True
     isPoint _ = False
 
@@ -123,13 +121,13 @@ mkTag :: Text -> Machine Val
 mkTag spelling = do
     n <- gets nextTag
     modify $ \s -> s { nextTag = n + 1 }
-    return $ Tg n spelling
+    return $ Tg (n, spelling)
 
 mkAbstype :: Text -> Machine (Val, Val, Val)
 mkAbstype spelling = do
     tag <- mkTag spelling
-    let (Tg n spelling) = tag
-    return (tag, Pr (Wrap n spelling), Pr (Unwrap n spelling))
+    let (Tg (n, spelling)) = tag
+    return (tag, Pr (Wrap (n, spelling)), Pr (Unwrap (n, spelling)))
 
 
 instance Show Val where
@@ -139,7 +137,7 @@ instance Show Val where
     show (Tx text) = show text --FIXME show using Octopus encoding, not Haskell
     show (Fp _) = "#<handle>" --TODO at least show some metadata
     show (Sy sy) = show sy
-    show (Tg i spelling) = "#<tag " ++ show i ++ ": " ++ show spelling ++ ">"
+    show (Tg (i, spelling)) = "#<tag " ++ show i ++ ": " ++ show spelling ++ ">"
     show (Ab tag x) = "#<box " ++ show tag ++ ": " ++ show x ++ ">"
     show (Sq xs) = "[" ++ intercalate ", " (show <$> toList xs) ++ "]"
     show (Ob m) = case getCombo m of

@@ -1,0 +1,20 @@
+Type checking in a dynamic language? What?
+
+It's not just checking types, it's about checking that you code works correctly. That's hardly a new concept for dynamic languages: primitives are always type-checked to ensure memory-safety, and testing is common. What might be odd about my appreach to Octopus is that verification is possible.
+
+In a static language, the program doesn't crash because of a type error. With Octopus, it might, and that's the difference. But its the only difference: importantly, you can still formally prove invariants, if only at runtime. The techique used is simply data abstraction.
+
+In the case of Octopus, data abstraction means you can define new types that act, to an outside observer, as primitives. Recall that primitives are already type checked. When you define your abstract type, all you need do is verify that users have a restricted interface, the pieces of which must check any invariants.
+
+To make this concrete, let's verify that a HTML renderer is immune to XSS attacks. I shouldn't have to explain the benefits of verification here.
+
+```
+html: do export {Html, fromTx, render}
+         [Html, ctor, dtor]: (mkAbstype "Html")
+         fromTx: (\l arg (arg .checkTy Tx .utf8Encode .ctor))
+         render: (\l html (html .dtor .htmlEscape))
+```
+
+As long as `utf8Encode` is a correct UTF-8 codec and `htmlEscape` correctly escapes text for output as HTML, then we know that any value on which `html :render` succeeds is free from XSS, period. If a template renderer only allows values of `Html` abstypes to be inserted dynamically, then the renderer is free from XSS, period. Your program would rather raise an exception, even if it means crashing, than admit a security flaw. I'd still rather verify as early as possible, but I'll settle for making bugs hard to build.
+
+This tenchnique relies on closures being completely opaque. Early in development, I had considered closures simply as normal objects satisfying a protocol. After I realized the verification that can be performed, I made sure closures were actually closed, even to inspection.

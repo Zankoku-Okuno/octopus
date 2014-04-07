@@ -4,6 +4,7 @@ module Language.Octopus.Primitive (
 
     , match
     , ifz
+    , typeof
 
     , eq, neq, lt, gt, lte, gte
 
@@ -79,6 +80,22 @@ ifz (Nm x) | x == 0 = const
 --TODO float test vs. zero
 ifz _ = ignore
 ignore x y = y
+
+typeof :: Val -> Fallible Val
+typeof (Nm _)     = Right tyNm
+typeof (By _)     = Right tyBy
+typeof (Tx _)     = Right tyTx
+typeof (Fp _)     = Right tyFp
+typeof (Sy _)     = Right tySy
+typeof (Tg _)     = Right tyTg
+typeof (Ab tg _)  = Right (Tg tg)
+typeof (Sq _)     = Right tySq
+typeof (Ob _)     = Right tyOb
+typeof (Cl _ _ _) = Right tyFn
+typeof (Ce _)     = Right tyCe
+typeof (Ar _)     = Right tyAr
+typeof (Pr _)     = Right tyFn
+typeof (Ks _)     = Right tyFn
 
 
 ------ Relational ------
