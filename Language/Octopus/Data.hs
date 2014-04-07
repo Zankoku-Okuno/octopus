@@ -26,7 +26,7 @@ data Val = Nm Rational -- ^ Rational number
          | Ce (IORef Val) -- ^ Reference cell
          | Ar (IOArray Int Val) -- ^ Mutable array
          | Pr Primitive -- ^ Primitive operations
-         | Ks [Control] -- ^ Control stack 
+         | Ks [Control] -- ^ Control stack
          --TODO concurrency
     deriving (Eq)
 data Primitive = Vau | Eval | Match | Ifz | Imp

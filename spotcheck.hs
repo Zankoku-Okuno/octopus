@@ -119,6 +119,7 @@ main = do
     test "do [t, c, d]: (#<mkAbstype> \"Foo\")\n\
          \   foo: (c 431)\n\
          \   [#<typeof> foo, d foo];"
+    test "do 3: 3;"
 
 
 

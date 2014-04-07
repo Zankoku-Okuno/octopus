@@ -72,6 +72,9 @@ match var val = mkOb <$> go var val
             Just v' -> (++) <$> go v v' <*> goObj ks vs
             Nothing -> Left $ mkMatchFail (Ob ps) (Ob vs)
     go (Ob ps) v = Left $ mkMatchFail (Ob ps) v
+    go p@(Nm _) v = if p == v then Right [] else Left $ mkMatchFail p v
+    go p@(By _) v = if p == v then Right [] else Left $ mkMatchFail p v
+    go p@(Tx _) v = if p == v then Right [] else Left $ mkMatchFail p v
     go pat val = error $ "unimplemented pattern-matching:\n" ++ show pat ++ "\n" ++ show val
 
 ifz :: Val -> Val -> Val -> Val
