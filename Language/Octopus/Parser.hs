@@ -27,7 +27,7 @@
 >     octnum ::= /[0-7]+(\.[0-7]+<exponent>?|\/[0-7]+)?/
 >     binnum ::= /[01]+(\.[01]+<exponent>?|\/[01]+)?/
 >     exponent ::= /[eE][+-]?\d+|[hH][+-]?\x+/
-> string ::= /"([^"\\]|\\[abefntv'"&\\]|\\<numescape>|\\\s*\n\s*\\)*"/
+> string ::= /"([^"\\]|\\[abefnrtv'"&\\]|\\<numescape>|\\\s*\n\s*\\)*"/
 >     numescape ::= /[oO][0-7]{3}|[xX]\x{2}|u\x{4}|U0\x{5}|U10x{4}/
 > heredoc ::= /#<<(?'END'\w+)\n.*?\n\g{END}>>(\n|$)/
 > name ::= /<namehead><nametail>|-<namehead><nametail>|-(-<nametail>)?/
@@ -180,7 +180,7 @@ primitive = P.choice (map mkPrimParser table)
             , ("numer", Pr Numer) , ("denom", Pr Denom) , ("numParts", Pr NumParts)
             , ("openFile", Pr OpenFp), ("flush", Pr FlushFp), ("close", Pr CloseFp)
             , ("readByte", Pr ReadFp), ("writeByte", Pr WriteFp)
-            , ("mkTag", Pr MkTag)
+            , ("mkTag", Pr MkTag), ("mkAbstype", Pr MkAbstype)
             , ("len", Pr Len) , ("cat", Pr Cat) , ("cut", Pr Cut)
             , ("extends", Pr Extends) , ("del", Pr Delete) , ("keys", Pr Keys) , ("get", Pr Get)
             , ("handle", Pr Handle) , ("raise", Pr Raise)

@@ -40,8 +40,7 @@ data Primitive = Vau | Eval | Match | Ifz | Imp
                --TODO Fp data primitives
                | OpenFp | ReadFp | WriteFp | FlushFp | CloseFp
                --TODO Sy data primitives
-               | MkTag
-               | Wrap Word | Unwrap Word
+               | MkTag | MkAbstype | Wrap Word Text | Unwrap Word Text
                | Len | Cat | Cut
                | Extends | Delete | Keys | Get
                --TODO Ce data primitives
@@ -125,6 +124,12 @@ mkTag spelling = do
     n <- gets nextTag
     modify $ \s -> s { nextTag = n + 1 }
     return $ Tg n spelling
+
+mkAbstype :: Text -> Machine (Val, Val, Val)
+mkAbstype spelling = do
+    tag <- mkTag spelling
+    let (Tg n spelling) = tag
+    return (tag, Pr (Wrap n spelling), Pr (Unwrap n spelling))
 
 
 instance Show Val where

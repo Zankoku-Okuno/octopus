@@ -10,14 +10,14 @@ description:         Octopus is a highly dynamic programming language with an as
                      main focus is on complete programmer control, not on performance or static
                      analysis. While the user can shoot themselves, the most natural methods should
                      be the most reasonable.
-
-                     Octopus' is most useful for well-contained problems, for teaching, as a
+                     .
+                     Octopus is most useful for well-contained problems, for teaching, as a
                      (possibly embedded) scripting language, anywhere boilerplate is a serious issue,
                      for problems involving higher math, and for brain-stretching.
-
-                     Octopus is currently in the 'useable' stage of development, in the same way
-                     food might be food might be 'edible' instead of 'tasty'. We are under active
-                     development, working towards 'featureful'.
+                     .
+                     Octopus is currently in the \"useable\" stage of development, in the same way
+                     food might be food might be \"edible\" instead of \"tasty\". We are under active
+                     development, working towards \"featureful\".
 homepage:            https://github.com/Zankoku-Okuno/octopus/
 license:             GPL-3
 license-file:        LICENSE

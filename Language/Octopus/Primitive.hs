@@ -15,8 +15,6 @@ module Language.Octopus.Primitive (
 
     , openFp, readFp, writeFp, flushFp, closeFp
 
-    --, newTag
-
     , len, cat, cut
 
     , get, keys, extend, delete

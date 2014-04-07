@@ -115,6 +115,10 @@ main = do
          \   (#<close> fp)\n\
          \   (#<handle> [#<IOError>, (vau {} c), `(#<readByte> fp)]);"
 
+    test "do [t, c, d]: (#<mkAbstype> \"Foo\")\n\
+         \   foo: (c 431)\n\
+         \   (d foo);"
+
 
 
 lambda = "(vau [{}, var] (vau [static, ast] (vau arg (#<eval> [#<extends> [#<match> [var, #<eval> arg], static], ast ]))))"

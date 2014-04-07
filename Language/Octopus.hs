@@ -91,6 +91,13 @@ apply (Pr Extends) x = case x of
 apply (Pr MkTag) x = case x of
     Tx spelling -> done =<< mkTag spelling
     _ -> raise $ mkTypeError (Pr MkTag) "Tx" x
+apply (Pr MkAbstype) x = case x of
+    Tx spelling -> mkAbstype spelling >>= \(tag, ctor, dtor) -> done (mkSq [tag, ctor, dtor])
+    _ -> raise $ mkTypeError (Pr MkAbstype) "Tx" x
+apply (Pr (Wrap n spelling)) x = done (Ab n x)
+apply pr@(Pr (Unwrap n spelling)) x = case x of
+    Ab n' val | n == n' -> done val
+    _ -> raise $ mkTypeError pr spelling x
 apply (Pr Handle) x = case x of
     Sq xs -> case toList xs of
         [tag, handler, body] -> case tag of

@@ -20,8 +20,8 @@ Parser
 		a way to give out a limited set would be very useful
 		export ::= 'export' <pattern>
 	anonymous points
-	bytes literals
-	documentation on a (define? export?)
+	docstrings
+	bytes, raw string, character literals
 	decorators in do blocks
 	import form objects
 		{x, y, z: foo} === {x: x, y: y, z: foo}
@@ -44,13 +44,10 @@ Interpreter
 		handlers
 		conversions
 	First-class control
+		guards (onWind, onUnwind, onAbort)
 		caputure (cannot propagate past ImptK)
 		Ks is an applicative
-		guards (onWind, onUnwind, onAbort)
 	match literals
-	abstract types
-		a primitive to construct a triple of (tag, constructor, deconstructor)
-		wrap and unwrap parameterized primitives
 	directives
 	we'll need a typeof operator, which returns a tag.
 		builtin tags for each primitive data type
