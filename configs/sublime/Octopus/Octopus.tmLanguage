@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>name</key>
+    <string>Octopus</string>
+    <key>fileTypes</key>
+    <array>
+        <string>oct</string>
+    </array>
+    <key>firstLineMatch</key>
+    <string>^#!/.*\boct(i|opus)\b</string>
+    <key>patterns</key>
+    <array>
+        <dict>
+            <key>comment</key>
+            <string>Builtin literals</string>
+            <key>match</key>
+            <string>#&lt;[a-zA-Z]+&gt;</string>
+            <key>name</key>
+            <string>support.constant.builtin.octopus</string>
+        </dict>
+
+        <dict>
+            <key>comment</key>
+            <string>Numbers</string>
+            <key>match</key>
+            <string>(?x)
+                \b
+                [+-]?
+                ( 0[xX] [0-9a-fA-F]+ ( /  [0-9a-fA-F]+
+                                     | \. [0-9a-fA-F]+ ([hH][+-]?[0-9a-fA-F]+)?
+                                     )?
+                | 0[oO] [0-7]+ ( \  [0-7]+
+                               | \. [0-7]+ ([eE][+-]?\d+|[hH][+-]?[0-9a-fA-F]+)?
+                               )?
+                | 0[bB] [01]+ ( \  [01]+
+                              | \. [01]+ ([eE][+-]?\d+|[hH][+-]?[0-9a-fA-F]+)?
+                              )?
+                | \d+ ( /  \d+
+                      | \. \d+ ([eE][+-]?\d+|[hH][+-]?[0-9a-fA-F]+)?
+                      )?
+                )
+                \b
+            </string>
+            <key>name</key>
+            <string>constant.numeric.octopus</string>
+        </dict>
+        
+        <dict>
+            <key>comment</key>
+            <string>Quoted strings</string>
+            <key>begin</key>
+            <string>"</string>
+            <key>end</key>
+            <string>"</string>
+            <key>name</key>
+            <string>string.quoted.double.octopus</string>
+            <key>patterns</key>
+            <array>
+                <dict>
+                    <key>match</key>
+                    <string>\\([abefnrtv\\\"'\&amp;])</string>
+                    <key>name</key>
+                    <string>constant.character.escape.octopus</string>
+                </dict>
+                <dict>
+                    <key>match</key>
+                    <string>\\([xX][0-9A-Fa-f]{2}|[oO][0-7]{3}|u[0-9A-Fa-f]{4}|U(0[0-9A-Fa-f]|10)[0-9A-Fa-f]{4})</string>
+                    <key>name</key>
+                    <string>constant.character.escape.octopus</string>
+                </dict>
+                <dict>
+                    <key>begin</key>
+                    <string>\\\n</string>
+                    <key>end</key>
+                    <string>\s*\\</string>
+                    <key>name</key>
+                    <string>constant.character.escape.octopus</string>
+                </dict>
+            </array>
+        </dict>
+        
+        <dict>
+            <key>comment</key>
+            <string>Heredoc</string>
+            <key>begin</key>
+            <string>#&lt;&lt;(\w+)</string>
+            <key>end</key>
+            <string>^\1&gt;&gt;$</string>
+            <key>name</key>
+            <string>string.unquoted.octopus</string>
+        </dict>
+
+        <dict>
+            <key>match</key>
+            <string>,(?!\s)</string>
+            <key>name</key>
+            <string>invalid.illegal.octopus</string>
+        </dict>
+        <dict>
+            <key>match</key>
+            <string>[\(\)\[\]\{\},]</string>
+            <key>name</key>
+            <string>punctuation.separator.octopus</string>
+        </dict>
+        <dict>
+            <key>comment</key>
+            <string>Reserved words</string>
+            <key>match</key>
+            <string>\b(do|letrec|export|open)\b|;</string>
+            <key>name</key>
+            <string>keyword.control.octopus</string>
+        </dict>
+        <dict>
+            <key>match</key>
+            <string>[`@:.]</string>
+            <key>name</key>
+            <string>keyword.punctuation.octopus</string>
+        </dict>
+
+        <dict>
+            <key>match</key>
+            <string>#!.*$</string>
+            <key>name</key>
+            <string>meta.preprocessor.octopus</string>
+        </dict>
+        <dict>
+            <key>comment</key>
+            <string>Line comment</string>
+            <key>match</key>
+            <string>#(?![&lt;{!]).*$</string>
+            <key>name</key>
+            <string>comment.line.number_sign.octopus</string>
+        </dict>
+        <dict>
+            <key>include</key>
+            <string>#block_comment</string>
+        </dict>
+        
+        <dict>
+            <key>comment</key>
+            <string>Trailing whitespace</string>
+            <key>match</key>
+            <string>[ \t]+$</string>
+            <key>name</key>
+            <string>invalid.deprecated.trailing-whitespace</string>
+        </dict>
+        
+
+    </array>
+    <key>repository</key>
+    <dict>
+        <key>block_comment</key>
+        <dict>
+            <key>applyEndPatternLast</key>
+            <integer>1</integer>
+            <key>begin</key>
+            <string>#\{</string>
+            <key>captures</key>
+            <dict>
+                <key>0</key>
+                <dict>
+                    <key>name</key>
+                    <string>comment.block.octopus</string>
+                </dict>
+            </dict>
+            <key>end</key>
+            <string>\}#</string>
+            <key>name</key>
+            <string>comment.block.octopus</string>
+            <key>patterns</key>
+            <array>
+                <dict>
+                    <key>include</key>
+                    <string>#block_comment</string>
+                </dict>
+            </array>
+        </dict>
+
+    </dict>
+
+    <key>scopeName</key>
+    <string>source.octopus</string>
+    <key>uuid</key>
+    <string>65FA0C60-DE0E-3C64-4170-976D4CDF0C55</string>
+</dict>
+</plist>
