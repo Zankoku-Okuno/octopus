@@ -42,4 +42,5 @@ _/_: (λ x (λ y (#<div> [x, y])))
 ifz_then_else_: (λ p (vau c (vau a
    (#<eval> (#<ifz!> [p, c, a])))))
 --: (λ x (#<sub> [x, 1]))
+swap: (λ [a, b] [b, a])
 

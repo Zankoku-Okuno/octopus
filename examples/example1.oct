@@ -1,8 +1,0 @@
-open (#<import> "basis.oct")
-
-swap: (λ [a, b] [b, a])
-if_then_else_: (λ p (vau c (vau a
-	(#<eval> (#<ifz!> [p, c, a])))))
-#letrec reverse: (λ xs (#<cat> []) #TODO
-
-main: (if_then_else_ 0 (swap [2, 3]) dne)

@@ -1,0 +1,11 @@
+open (#<import> "basis.oct")
+
+letrec loop: (λ {}
+   do c: (#<readByte> #<stdin>)
+      (#<writeByte> [#<stdout>, c])
+      (ifz_then_else_ (#<eq> [c, 10])
+         (loop {})
+         (#<flush> #<stdout>)
+     );)
+
+main: (loop {})
