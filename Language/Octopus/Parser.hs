@@ -8,7 +8,7 @@
 >       |  <accessor> | <mutator>
 >       | '(' <expr> ')' |  /\.<expr>/
 > 
-> atom ::= _symbol_ | _number_ | _string_ | _heredoc_ | _builtin_
+> atom ::= _symbol_ | _number_ | _character_ | _string_ | _heredoc_ | _builtin_
 > list ::= '[' (<expr>+ (',' <expr>+)*)? ']'
 > object ::= '{' (_field_ <expr>+ (',' _field_ <expr>+)*)? '}'
 > combination ::= '(' <expr> <expr>+ ')'
@@ -27,11 +27,12 @@
 >     octnum ::= /[0-7]+(\.[0-7]+<exponent>?|\/[0-7]+)?/
 >     binnum ::= /[01]+(\.[01]+<exponent>?|\/[01]+)?/
 >     exponent ::= /[eE][+-]?\d+|[hH][+-]?\x+/
+> character ::= /'[^\\]|\\[abefnrtv'"&\\]|\\<numescape>'/
 > string ::= /"([^"\\]|\\[abefnrtv'"&\\]|\\<numescape>|\\\s*\n\s*\\)*"/
 >     numescape ::= /[oO][0-7]{3}|[xX]\x{2}|u\x{4}|U0\x{5}|U10x{4}/
 > heredoc ::= /#<<(?'END'\w+)\n.*?\n\g{END}>>(\n|$)/
 > name ::= /<namehead><nametail>|-<namehead><nametail>|-(-<nametail>)?/
->     namehead = /[^#\\"`()[]{}@:;.,0-9-]/
+>     namehead = /[^#\\"`()[]{}@:;.,'0-9-]/
 >     nametail = /[^#\\"`()[]{}@:;.,]*/
 > 
 > linecomment ::= /#(?!<)\.*?\n/
@@ -69,7 +70,7 @@ parseOctopusFile sourceName input =
     in (,) directives <$> P.runParser octopusFile () sourceName code
     where
     octopusFile = do
-        es <- P.many $ desugarStatement <$> padded statement
+        es <- P.many $ desugarStatement <$> padded (Dfix <$> distfix P.<|> statement)
         padded eof
         return $ loop es
     loop [] = mkCall getenv (mkOb [])
@@ -99,7 +100,7 @@ open = do
 expr :: Parser Syx
 expr = composite P.<|> atom
     where
-    atom = Lit <$> P.choice [symbol, numberLit, textLit, heredoc, builtin] <?> "atom"
+    atom = Lit <$> P.choice [symbol, numberLit, charLit, textLit, heredoc, builtin] <?> "atom"
     composite = P.choice [ block, combine, sq, ob, quote, dottedExpr
                          , accessor, mutator, infixAccessor, infixMutator]
 
@@ -117,6 +118,7 @@ data Statement a = Defn (Defn a)
                  | Expr a
                  | Open a
                  | Deco a
+                 | Dfix DistfixConfig
     deriving (Show)
 type Defn a = (a, a)
 data Syx = Lit Val
@@ -209,6 +211,9 @@ symbol = do
 numberLit :: Parser Val
 numberLit = Nm <$> anyNumber
 
+charLit :: Parser Val
+charLit = mkInt . ord <$> between2 (char '\'') (literalChar P.<|> oneOf "\'\"")
+
 --TODO maybe bytes literals
 
 textLit :: Parser Val
@@ -295,6 +300,72 @@ infixMutator = do
     return . Infix $ Call [Lit $ mkSy "__modify__", Lit $ mkSy key, e]
 
 
+------ Notation ------
+data DistfixConfig = DfImp String
+                   | DfDef String [DistfixLevel]
+                   | DfUse String
+    deriving (Show)
+data DistfixLevel = NamedLv String
+                  | AnonLv [DistfixLine]
+    deriving (Show)
+data DistfixLine = DfLine String DistfixAsoc
+    deriving (Show)
+data DistfixAsoc = NoAsoc | LeftAsoc | RightAsoc | NonAsoc
+    deriving (Show)
+
+
+distfix :: Parser DistfixConfig
+distfix = do
+    try $ char '(' >> padded (string "distfix-conf")
+    res <- padded $ P.choice
+        [ string "import" >> padded distfixImport
+        , string "def" >> padded distfixDefine
+        , string "use" >> padded (DfUse <$> name)
+        ]
+    padded (char ')')
+    return res
+
+distfixImport :: Parser DistfixConfig
+distfixImport = DfImp <$> between2 (char '\"') (P.many literalChar)
+
+distfixDefine :: Parser DistfixConfig
+distfixDefine =
+    DfDef <$> (name <* char ':') <*> (padded $ parens1 distfixLevel)
+
+distfixLevel :: Parser DistfixLevel
+distfixLevel = P.between (postPadded $ char '(') (char ')') $
+    P.choice [ string "use" >> namedLevel
+             , string "level" >> anonLevel
+             ]
+
+namedLevel :: Parser DistfixLevel
+namedLevel = NamedLv <$> padded name
+
+anonLevel :: Parser DistfixLevel
+anonLevel = AnonLv <$> padded (P.many1 $ postPadded distfixLine)
+
+distfixLine :: Parser DistfixLine
+distfixLine = justName P.<|> parened
+    where
+    justName = do
+        n <- name
+        return $ DfLine n NoAsoc
+    parened = do
+        postPadded $ char '('
+        n <- name
+        asoc <- padded distfixAsoc
+        padded $ char ')'
+        return $ DfLine n asoc
+
+distfixAsoc :: Parser DistfixAsoc
+distfixAsoc = P.choice
+    [ string "left" >>  return LeftAsoc
+    , string "right" >> return RightAsoc
+    , string "non" >>   return NonAsoc
+    ,                   return NoAsoc
+    ]
+
+
 ------ Space ------
 whitespace :: Parser ()
 whitespace = (<?> "space") . P.skipMany1 $ P.choice [spaces1, lineComment, blockComment]
@@ -327,7 +398,7 @@ name = P.choice [ (:) <$> namehead <*> nametail
     namehead = blacklistChar (`elem` reservedFirstChar)
     nametail = P.many $ blacklistChar (`elem` reservedChar)
     reservedChar = "#\\\"`()[]{}@:;.,"
-    reservedFirstChar = reservedChar ++ "-0123456789"
+    reservedFirstChar = reservedChar ++ "-'0123456789"
 
 comma :: Parser ()
 comma = char ',' >> whitespace
@@ -341,5 +412,7 @@ mkDefn (x, val) = mkCall (mkCall (mkSy "__let__") x) val
 mkOpen env = mkCall (mkSy "__open__") env
 mkExpr e = mkCall (mkCall (mkSy "__let__") (mkOb [])) e
 
-
+parens1 :: Parser a -> Parser [a]
+parens1 p = P.between (postPadded $ char '(') (char ')')
+    (P.many1 $ postPadded p)
 

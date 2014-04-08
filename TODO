@@ -4,7 +4,6 @@ General
 	better pretty-print
 		show as octopus parses, not as haskell does
 		apply judicious indentation
-		the angle brackets are ambiguous, use #<...>
 	serialize values, even mutable cells and the current program state
 	consider putting types into the grammar, unchecked of course
 
@@ -30,15 +29,13 @@ Parser
 		an indent means going further than the last column of the peek
 		a dedent means not going as far as the pop
 	ellipsis?
-	literals for closures, tags, handlers, &c (using #<...> syntax)?
 	special syntax for lambda and vau
 		use the primitive ones, allow for stuff like (\l (x y z) body)
 		nah, I can do this in userland
 
 Interpreter
+	import path normalization
 	Data primitives
-		tags
-		abstypes
 		reference cells
 		arrays
 		handlers
@@ -47,14 +44,11 @@ Interpreter
 		guards (onWind, onUnwind, onAbort)
 		caputure (cannot propagate past ImptK)
 		Ks is an applicative
-	match literals
 	directives
-	we'll need a typeof operator, which returns a tag.
-		builtin tags for each primitive data type
 	BUGFIX: tags are created local to a thread, either:
-		make a tag generator thread-global
-		attach a threadid to the tag
-	force import despite caching
+		make the tag generator thread-global
+		attach a threadid to the tag (assuming tids are not reused)
+	offer a way to force import despite caching
 	pass arbitrary flags to interpreter (like -D in gcc), look them up at runtime
 	REPL
 	ffi
@@ -91,6 +85,7 @@ Tooling
 		malformed type names (these should have a standard form, like /\w+(\.\s+)*/)
 		warn about rebinding double-underscore symbols
 		warn about use of tabs
+		same name defined twice in a file/do block
 	When you run the interpreter, allow for hooks.
 		Say you do `octopus "somefile.oct"`, then we should look up from configuration a list of commands to run when a file is provided. The is given to these commands and each command is run. If all the commands succeed, then we send the file (which many have been modified, say by unicoder) into the interpreter.
 	Perform imports statically (may require an import keyword)

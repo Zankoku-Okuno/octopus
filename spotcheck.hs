@@ -120,6 +120,7 @@ main = do
          \   foo: (c 431)\n\
          \   [#<typeof> foo, d foo];"
     test "do 3: 3;"
+    test "['a', 'λ', ''']"
 
 
 
