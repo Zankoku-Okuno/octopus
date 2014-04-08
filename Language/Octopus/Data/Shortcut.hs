@@ -3,6 +3,7 @@ module Language.Octopus.Data.Shortcut where
 import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
+import qualified Data.ByteString as BS
 
 import Language.Octopus.Data
 
@@ -16,8 +17,8 @@ mkSy = Sy . intern
 mkTx :: String -> Val
 mkTx = Tx . pack
 
-mkBy :: String -> Val
-mkBy = By . encodeUtf8 . pack
+mkBy :: [Word8] -> Val
+mkBy = By . BS.pack
 
 mkSq :: [Val] -> Val
 mkSq = Sq . Seq.fromList

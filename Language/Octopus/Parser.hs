@@ -29,6 +29,8 @@
 >     exponent ::= /[eE][+-]?\d+|[hH][+-]?\x+/
 > character ::= /'[^\\]|\\[abefnrtv'"&\\]|\\<numescape>'/
 > string ::= /"([^"\\]|\\[abefnrtv'"&\\]|\\<numescape>|\\\s*\n\s*\\)*"/
+>         |  /r"([^"]|"")*"/
+>         |  'b"' /\x\x/* '"'
 >     numescape ::= /[oO][0-7]{3}|[xX]\x{2}|u\x{4}|U0\x{5}|U10x{4}/
 > heredoc ::= /#<<(?'END'\w+)\n.*?\n\g{END}>>(\n|$)/
 > name ::= /<namehead><nametail>|-<namehead><nametail>|-(-<nametail>)?/
@@ -100,7 +102,7 @@ open = do
 expr :: Parser Syx
 expr = composite P.<|> atom
     where
-    atom = Lit <$> P.choice [symbol, numberLit, charLit, textLit, heredoc, builtin] <?> "atom"
+    atom = Lit <$> P.choice [numberLit, charLit, textLit, rawTextLit, heredoc, bytesLiteral, builtin, symbol] <?> "atom"
     composite = P.choice [ block, combine, sq, xn, quote, dottedExpr
                          , accessor, mutator, infixAccessor, infixMutator]
 
@@ -214,11 +216,27 @@ numberLit = Nm <$> anyNumber
 charLit :: Parser Val
 charLit = mkInt . ord <$> between2 (char '\'') (literalChar P.<|> oneOf "\'\"")
 
---TODO maybe bytes literals
+bytesLiteral :: Parser Val
+bytesLiteral = do
+        postPadded $ string "b\""
+        content <- P.many1 $ postPadded byte
+        string "\""
+        return $ mkBy content
+    where
+    byte = do
+        one <- P.hexDigit
+        two <- P.hexDigit
+        return . fromIntegral $ stringToInteger 16 [one, two]
 
 textLit :: Parser Val
 textLit = do
     content <- catMaybes <$> between2 (char '\"') (P.many maybeLiteralChar)
+    return $ mkTx content
+
+rawTextLit :: Parser Val
+rawTextLit = do
+    content <- P.between (string "r\"") (char '"') $
+        P.many (noneOf "\"" P.<|> (const '"' <$> string "\"\""))
     return $ mkTx content
 
 heredoc :: Parser Val

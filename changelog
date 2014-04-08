@@ -30,4 +30,5 @@ v0.0.3.0-alpha (TBA)
 
  + Abstract types
  + Character literals
+ + Raw text literals
  - Identifiers can no longer begin with apostrophe

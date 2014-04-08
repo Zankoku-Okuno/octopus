@@ -23,7 +23,11 @@ main = do
     --        --print =<< eval startData val
     --exitSuccess
 
+    test "\"hi\""
+    test "r\"b\"\"\\foo\\n\""
     test "#<<END\na\\s;dg\nasdg\nEND>>"
+    test "b\" 0abb 55 #should be 'U'\n\""
+    
     test "3 #{block #{com}#ment #3 {} }#"
     test "do four: 4 ((vau x x) four);"
     test "do four: 4 ((vau x (#<eval> x)) four);"
