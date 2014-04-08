@@ -24,3 +24,10 @@ v0.0.2.0-alpha (2014-04-06)
  + Syntactic sugar: non-mutual `letrec` statement 
  + Draft of `basis.oct`
  - Closures do not print their internals
+
+v0.0.3.0-alpha (TBA)
+=======================================
+
+ + Abstract types
+ + Character literals
+ - Identifiers can no longer begin with apostrophe

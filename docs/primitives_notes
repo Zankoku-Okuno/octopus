@@ -29,13 +29,13 @@ Primitive operations:
 	Sq:
 		len, cut, cat
 	Ob:
-		extends: [ob] -> ob
+		extends: [xn] -> xn
 			constructor -- left-biased union of input objects
-		__del__: (ob, sy) -> ob
+		__del__: (xn, sy) -> xn
 			constructor -- removes key from input object
-		keys: ob -> [sy]
+		keys: xn -> [sy]
 			get a list of all keys available in this object
-		__get__: ob -> sy -> *
+		__get__: xn -> sy -> *
 			deconstructor -- retrieves value stored in object at the key, or fails with KeyError
 	Ce:
 		alloc: *

@@ -11,9 +11,8 @@ import Language.Octopus
 import Language.Octopus.Parser
 import Language.Octopus.Libraries
 import Language.Octopus.Primitive (resolveSymbol)
-import Language.Octopus.Data.Shortcut (mkOb)
 
-progVersion = "v0.0.1a"
+progVersion = "v0.0.2a"
 main :: IO ()
 main = do
     (opts, filepath) <- getOptions

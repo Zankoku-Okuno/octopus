@@ -21,7 +21,7 @@ import Language.Octopus.Libraries
 eval :: ImportsCache -> Val -> Val -> IO Val
 eval cache env code = evalStateT (runReaderT (reduce code) cache) startState
     where
-    startState = MState { environ = env --Ob Map.empty
+    startState = MState { environ = env --Xn Map.empty
                         , control = [NormK []]
                         , nextTag = startTag
                         }
@@ -41,10 +41,10 @@ reduce x@(Pr _) = done x
 reduce sq@(Sq xs) = case toList xs of
     [] -> done sq
     (x:xs) -> push (Es [] xs) >> reduce x
-reduce ob@(Ob m) = case ensureCombination ob of
+reduce xn@(Xn m) = case ensureCombination xn of
     Just (f, x) -> push (Op x) >> reduce f
     Nothing -> case Map.toList m of
-                [] -> done (mkOb [])
+                [] -> done (mkXn [])
                 ((k,v):xs) -> push (Eo k [] xs) >> reduce v
 reduce (Sy x) = gets environ >>= \env -> case Oct.resolveSymbol x env of
     Just val -> done val
@@ -83,7 +83,7 @@ apply (Pr Ifz) x = case x of
 apply (Pr Imp) x = impFile x
 apply (Pr Extends) x = case x of
     Sq xs -> case toList xs of
-        [] -> done $ mkOb []
+        [] -> done $ mkXn []
         xs -> done $ foldr1 Oct.extend xs
     _ -> raise $ mkTypeError (Pr Extends) "[*]" x
 apply (Pr MkTag) x = case x of
@@ -184,7 +184,7 @@ done x = do
         (NormK (Re _:_)):_                  -> pop >> done x
         (NormK (Es xs []:_)):_              -> pop >> done (Sq . Seq.fromList $ reverse (x:xs))
         (NormK (Es xs (x':xs'):_)):_        -> replace (Es (x:xs) xs') >> reduce x'
-        (NormK (Eo k xs []:_)):_            -> pop >> done (Ob . Map.fromList $ (k,x):xs)
+        (NormK (Eo k xs []:_)):_            -> pop >> done (Xn . Map.fromList $ (k,x):xs)
         (NormK (Eo k xs ((k',x'):xs'):_)):_ -> replace (Eo k' ((k,x):xs) xs') >> reduce x'
         (NormK (Op arg:ks)):kss             -> pop >> combine x arg
         (NormK (Ap f:ks)):kss               -> pop >> apply f x

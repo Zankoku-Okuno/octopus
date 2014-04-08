@@ -21,7 +21,7 @@ data Val = Nm Rational -- ^ Rational number
          | Tg Tag -- ^ Unique tag
          | Ab Tag Val -- ^ Abstract data
          | Sq (Seq Val) -- ^ Sequence, aka. list
-         | Ob (Map Symbol Val) -- ^ Symbol-value map, aka. object
+         | Xn (Map Symbol Val) -- ^ Symbol-value map, aka. object
          | Cl Val Val Val -- ^ Operative closure
          | Ce (IORef Val) -- ^ Reference cell
          | Ar (IOArray Int Val) -- ^ Mutable array
@@ -140,13 +140,13 @@ instance Show Val where
     show (Tg (i, spelling)) = "#<tag " ++ show i ++ ": " ++ show spelling ++ ">"
     show (Ab tag x) = "#<box " ++ show tag ++ ": " ++ show x ++ ">"
     show (Sq xs) = "[" ++ intercalate ", " (show <$> toList xs) ++ "]"
-    show (Ob m) = case getCombo m of
+    show (Xn m) = case getCombo m of
             Nothing -> "{" ++ intercalate ", " (showPair <$> Map.toList m) ++ "}"
             Just (f, x) -> "(" ++ show f ++ " " ++ show x ++ ")"
         where
         showPair (k,v) = show k ++ ": " ++ show v
-        getCombo ob = case (Map.lookup (intern "__car__") ob, Map.lookup (intern "__cdr__") ob) of
-            (Just f, Just x) -> if length (Map.keys ob) == 2 then Just (f, x) else Nothing
+        getCombo xn = case (Map.lookup (intern "__car__") xn, Map.lookup (intern "__cdr__") xn) of
+            (Just f, Just x) -> if length (Map.keys xn) == 2 then Just (f, x) else Nothing
             _ -> Nothing
     show (Cl var ast env) = "#<closure>"
     show (Ce x) = "<reference cell>" --TODO show contents

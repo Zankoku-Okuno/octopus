@@ -26,7 +26,7 @@ tyFp           = Tg ( 3, "Fp")
 tySy           = Tg ( 4, "Sy")
 tyTg           = Tg ( 5, "Tg")
 tySq           = Tg ( 6, "Sq")
-tyOb           = Tg ( 7, "Ob")
+tyXn           = Tg ( 7, "Xn")
 tyFn           = Tg ( 8, "* -> *")
 tyCe           = Tg ( 9, "Ce")
 tyAr           = Tg (10, "Ar")
@@ -61,14 +61,14 @@ mkVau e arg body = mkCall (Pr Vau) (mkSq [mkSq [Sy $ intern e, Sy $ intern arg],
 mkCall :: Val -- ^ Combiner (@__car__@)
            -> Val -- ^ Argument (@__cdr__@)
            -> Val
-mkCall f x = mkOb [(callOpr, f), (callArg, x)]
+mkCall f x = mkXn [(callOpr, f), (callArg, x)]
 
 {-| Extract a (combiner, argument) pair from a
     combination-responsive object.
 -}
 ensureCombination :: Val -> Maybe (Val, Val)
-ensureCombination (Ob ob) = (,) <$> Map.lookup callOpr ob
-                                <*> Map.lookup callArg ob
+ensureCombination (Xn xn) = (,) <$> Map.lookup callOpr xn
+                                <*> Map.lookup callArg xn
 ensureCombination _ = Nothing
 
 {-| Combiner slot name in a combination (aka. application) -}

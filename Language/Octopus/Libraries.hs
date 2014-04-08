@@ -5,7 +5,7 @@ import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
 import Language.Octopus.Basis
 
-initialEnv = mkOb [
+initialEnv = mkXn [
       (intern "__let__", letDef)
     , (intern "__open__", openDef)
     --- Exceptions --- TODO give builtin literals
@@ -15,7 +15,7 @@ initialEnv = mkOb [
     ]
 
 letDef = Cl
-    (mkSq [mkOb [], mkSy "x"])
+    (mkSq [mkXn [], mkSy "x"])
     (mkCall (Pr Vau) (mkSq [mkSy "val",
         mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkSy "body"],
             mkCall (Pr Eval) (mkSq
@@ -23,7 +23,7 @@ letDef = Cl
                     [ mkCall (Pr Match) (mkSq [mkSy "x", mkCall (Pr Eval) (mkSy "val")])
                     , mkSy "e"])
                 , mkSy "body"])])]))
-    (mkOb [])
+    (mkXn [])
 openDef = Cl
     (mkSy "env")
     (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "body"],
@@ -32,6 +32,6 @@ openDef = Cl
                 [ mkCall (Pr Eval) (mkSy "env")
                 , mkSy "static"])
             , mkSy "body"])]))
-    (mkOb [])
+    (mkXn [])
     
 

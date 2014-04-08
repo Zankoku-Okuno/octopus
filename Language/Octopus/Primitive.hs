@@ -43,7 +43,7 @@ import Language.Octopus.Basis
 ------ Internals ------
 {-| Lookup symbol in a value, if the binding exists. -}
 resolveSymbol :: Symbol -> Val -> Maybe Val
-resolveSymbol sy (Ob ob) = Map.lookup sy ob
+resolveSymbol sy (Xn xn) = Map.lookup sy xn
 resolveSymbol _ _ = Nothing
 
 
@@ -55,7 +55,7 @@ resolveSymbol _ _ = Nothing
 -}
 match :: Val -> Val -> Fallible Val
 --FIXME disallow double-binding
-match var val = mkOb <$> go var val
+match var val = mkXn <$> go var val
     where
     go :: Val -> Val -> Fallible [(Symbol, Val)]
     go (Sy x) v = Right [(x, v)]
@@ -63,15 +63,15 @@ match var val = mkOb <$> go var val
                             concat <$> mapM (uncurry go) (zip (toList ps) (toList xs))
                        | otherwise = Left $ mkMatchFail (Sq ps) (Sq xs)
     go (Sq ps) v = Left $ mkMatchFail (Sq ps) v
-    go (Ob ps) _ | length (Map.keys ps) == 0 = Right []
-    go (Ob ps) (Ob vs) = goObj (Map.toList ps) vs
+    go (Xn ps) _ | length (Map.keys ps) == 0 = Right []
+    go (Xn ps) (Xn vs) = goXn (Map.toList ps) vs
         where
-        goObj :: [(Symbol, Val)] -> Map Symbol Val -> Fallible [(Symbol, Val)]
-        goObj [] _ = Right []
-        goObj ((k, v):ks) vs = case Map.lookup k vs of
-            Just v' -> (++) <$> go v v' <*> goObj ks vs
-            Nothing -> Left $ mkMatchFail (Ob ps) (Ob vs)
-    go (Ob ps) v = Left $ mkMatchFail (Ob ps) v
+        goXn :: [(Symbol, Val)] -> Map Symbol Val -> Fallible [(Symbol, Val)]
+        goXn [] _ = Right []
+        goXn ((k, v):ks) vs = case Map.lookup k vs of
+            Just v' -> (++) <$> go v v' <*> goXn ks vs
+            Nothing -> Left $ mkMatchFail (Xn ps) (Xn vs)
+    go (Xn ps) v = Left $ mkMatchFail (Xn ps) v
     go p@(Nm _) v = if p == v then Right [] else Left $ mkMatchFail p v
     go p@(By _) v = if p == v then Right [] else Left $ mkMatchFail p v
     go p@(Tx _) v = if p == v then Right [] else Left $ mkMatchFail p v
@@ -93,7 +93,7 @@ typeof (Sy _)     = Right tySy
 typeof (Tg _)     = Right tyTg
 typeof (Ab tg _)  = Right (Tg tg)
 typeof (Sq _)     = Right tySq
-typeof (Ob _)     = Right tyOb
+typeof (Xn _)     = Right tyXn
 typeof (Cl _ _ _) = Right tyFn
 typeof (Ce _)     = Right tyCe
 typeof (Ar _)     = Right tyAr
@@ -200,7 +200,7 @@ writeFp (Sq args) = case toList args of
         Right byte -> do
             success <- tryIOError $ hPutChar fp byte
             return $ case success of
-                Right () -> Right $ mkOb []
+                Right () -> Right $ mkXn []
                 Left err -> Left $ (getTag exnIOError, mkSq [exnIOError, mkTx $ show err])
         Left err -> return . Left $ mkTypeError (Pr WriteFp) "(Fp, Byte)" (Sq args)
     _ -> return . Left $ mkTypeError (Pr WriteFp) "(Fp, Byte)" (Sq args)
@@ -217,14 +217,14 @@ flushFp :: Val -> IO (Fallible Val)
 flushFp (Fp fp) = do
     success <- tryIOError $ hFlush fp
     return $ case success of
-        Right () -> Right $ mkOb []
+        Right () -> Right $ mkXn []
         Left err -> Left $ (getTag exnIOError, mkSq [exnIOError, mkTx $ show err])
 flushFp x = return . Left $ mkTypeError (Pr FlushFp) "Fp" x
 
 closeFp :: Val -> IO (Fallible Val)
 closeFp (Fp fp) = do
     hClose fp
-    return . Right $ mkOb []
+    return . Right $ mkXn []
 closeFp x = return . Left $ mkTypeError (Pr CloseFp) "Fp" x
 
 ------ Sequence/Text/Bytes ------
@@ -270,26 +270,26 @@ cut xs n = Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [xs, n])
 ------ Xons ------
 {-| @get x f@ retrieves field @f@ from @x@, if the field exists. -}
 get :: Val -> Val -> Fallible Val
-get (Ob ob) (Sy sy) = maybe (Left (getTag exnAttrError, mkSq [exnAttrError, Sy sy, Ob ob])) Right $ Map.lookup sy ob
-get ob sy = Left $ mkTypeError (Pr Get) "(Ob, Sy)" (mkSq [ob, sy])
+get (Xn xn) (Sy sy) = maybe (Left (getTag exnAttrError, mkSq [exnAttrError, Sy sy, Xn xn])) Right $ Map.lookup sy xn
+get xn sy = Left $ mkTypeError (Pr Get) "(Xn, Sy)" (mkSq [xn, sy])
 
 {-| Get a list of the fields in a value. -}
 keys :: Val -> Fallible Val
-keys (Ob ob) = Right . mkSq $ Sy <$> Map.keys ob
+keys (Xn xn) = Right . mkSq $ Sy <$> Map.keys xn
 keys _ = Right $ mkSq []
 
 {-| @extend a b@ extends and overwrites bindings in @b@ with bindings in @a@. -}
 extend :: Val -> Val -> Val
-extend (Ob ob') (Ob ob) = Ob $ Map.union ob' ob
-extend _ (Ob ob) = Ob ob
-extend (Ob ob') _ = Ob ob'
-extend _ _ = mkOb []
+extend (Xn xn') (Xn xn) = Xn $ Map.union xn' xn
+extend _ (Xn xn) = Xn xn
+extend (Xn xn') _ = Xn xn'
+extend _ _ = mkXn []
 
 {-| @delete x f@ removes field @f@ from @x@, if the field exists.
     If it does not exist, then there is no change.
 -}
 delete :: Val -> Val -> Fallible Val
-delete (Ob ob) (Sy sy) = Right . Ob $ Map.delete sy ob
+delete (Xn xn) (Sy sy) = Right . Xn $ Map.delete sy xn
 delete x _ = Right x
 
 

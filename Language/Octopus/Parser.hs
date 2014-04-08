@@ -73,11 +73,11 @@ parseOctopusFile sourceName input =
         es <- P.many $ desugarStatement <$> padded (Dfix <$> distfix P.<|> statement)
         padded eof
         return $ loop es
-    loop [] = mkCall getenv (mkOb [])
+    loop [] = mkCall getenv (mkXn [])
     loop (Defn s:rest) = mkCall (mkDefn s) (loop rest)
     loop (Open e:rest) = mkCall (mkOpen e) (loop rest)
     loop (Expr e:rest) = mkCall (mkExpr e) (loop rest)
-    getenv = (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkOb []], mkSy "e"]))
+    getenv = (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkXn []], mkSy "e"]))
 
 define :: Parser (Defn Syx)
 define = do
@@ -101,7 +101,7 @@ expr :: Parser Syx
 expr = composite P.<|> atom
     where
     atom = Lit <$> P.choice [symbol, numberLit, charLit, textLit, heredoc, builtin] <?> "atom"
-    composite = P.choice [ block, combine, sq, ob, quote, dottedExpr
+    composite = P.choice [ block, combine, sq, xn, quote, dottedExpr
                          , accessor, mutator, infixAccessor, infixMutator]
 
 statement :: Parser (Statement Syx)
@@ -124,7 +124,7 @@ type Defn a = (a, a)
 data Syx = Lit Val
          | Call [Syx]
          | SqSyx [Syx]
-         | ObExpr [(Symbol, Syx)]
+         | XnExpr [(Symbol, Syx)]
          | Do [Statement Syx]
          | Infix Syx
     deriving (Show)
@@ -142,10 +142,10 @@ desugar (Call xs) = loop . (desugar <$>) $ revTripBy isInfix (id, rewrite) xs
     isInfix (Infix _) = True
     isInfix _ = False
 desugar (SqSyx xs) = mkSq $ desugar <$> xs
-desugar (ObExpr xs) = mkOb $ desugarField <$> xs
+desugar (XnExpr xs) = mkXn $ desugarField <$> xs
 desugar (Do xs) = loop xs
     where
-    loop [Defn d]      = mkCall (mkDefn $ desugarDefine d) (mkOb [])
+    loop [Defn d]      = mkCall (mkDefn $ desugarDefine d) (mkXn [])
     loop [Expr e]      = desugar e
     loop (Defn d:rest) = mkCall (mkDefn $ desugarDefine d) (loop rest)
     loop (LRec d:rest) = mkCall (mkDefn $ desugarLetrec d) (loop rest)
@@ -192,7 +192,7 @@ builtin = P.choice (map mkPrimParser table)
             , ("Nm", tyNm), ("Fn", tyFn)
             , ("Sy", tySy), ("Tg", tyTg)
             , ("By", tyBy), ("Tx", tyTx)
-            , ("Sq", tySq), ("Ob", tyOb)
+            , ("Sq", tySq), ("Xn", tyXn)
             , ("Ce", tyCe), ("Ar", tyAr), ("Fp", tyFp)
             
             , ("TypeError", exnTypeError), ("MatchFail", exnMatchFail)
@@ -244,12 +244,12 @@ sq = do
     padded $ char ']'
     return $ SqSyx elems
 
-ob :: Parser Syx
-ob = do
+xn :: Parser Syx
+xn = do
     postPadded $ char '{'
     elems <- pair `P.sepBy` padded comma
     padded $ char '}'
-    return $ ObExpr elems
+    return $ XnExpr elems
     where
     pair = do
         key <- intern <$> padded name
@@ -410,7 +410,7 @@ bareCombination = do
 
 mkDefn (x, val) = mkCall (mkCall (mkSy "__let__") x) val
 mkOpen env = mkCall (mkSy "__open__") env
-mkExpr e = mkCall (mkCall (mkSy "__let__") (mkOb [])) e
+mkExpr e = mkCall (mkCall (mkSy "__let__") (mkXn [])) e
 
 parens1 :: Parser a -> Parser [a]
 parens1 p = P.between (postPadded $ char '(') (char ')')

@@ -31,10 +31,10 @@ main = do
     test "((vau [e, ast] ast) dne)"
     test "(#<extends> [{a: 3}, {a: 2}, {a: 1}])"
     test "((vau [e, ast] (#<eval> [#<extends> [{five: 5}, e], ast])) five)"
-    test "do four: 4 (vau [{}, ob] (#<keys> ob) {foo: 3, bar: four});"
-    test "do four: 4 ((vau [e, ob] (@x ob)) {x: four});"
-    test "do four: 4 ((vau [e, ob] (#<eval> [e, @x ob])) {x: four});"
-    test $ "do four: 4 (" ++ lambda ++ " ob (@x ob) {x: four});"
+    test "do four: 4 (vau [{}, xn] (#<keys> xn) {foo: 3, bar: four});"
+    test "do four: 4 ((vau [e, xn] (@x xn)) {x: four});"
+    test "do four: 4 ((vau [e, xn] (#<eval> [e, @x xn])) {x: four});"
+    test $ "do four: 4 (" ++ lambda ++ " xn (@x xn) {x: four});"
     test $ "(" ++ lambda ++ " eight eight 8)"
     test $ "("++letin++" eight 8 eight)"
     
@@ -60,7 +60,7 @@ main = do
     test "do \955: __lambda__\n   x: 1 \n   (\955 x x 3)\n   y: 2\n   [x, y];" --[1, 2]
     test "(#<del> [{x: 1, y: 2}, `y])"
     test "do \955: __lambda__\n\
-         \   delete: (\955 ob (vau [{}, field] (#<del> [ob, field])))\n\
+         \   delete: (\955 xn (vau [{}, field] (#<del> [xn, field])))\n\
          \   (delete {x: 1, y: 2} x);"
     test "do x: do \955: __lambda__\n\
          \         (\955 y y 3);\n\
@@ -144,7 +144,7 @@ test input = do
         Left err -> print err
 
 
-startData = mkOb [
+startData = mkXn [
     --- Syntax ---
       (intern "__get__",      getDef)
     , (intern "__let__",      letDef)
@@ -155,7 +155,7 @@ startData = mkOb [
     ]
 
 vauDef = Cl
-    (mkSq [mkOb [], mkSy "x"])
+    (mkSq [mkXn [], mkSy "x"])
     (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "body"],
         mkCall (Pr Vau) (mkSq [mkSy "arg",
             mkCall (Pr Eval) (mkSq [
@@ -163,16 +163,16 @@ vauDef = Cl
                     mkCall (Pr Match) (mkSq [mkSy "x", mkSy "arg"]),
                     mkSy "static"]),
                 mkSy "body"])])]))
-    (mkOb [])
+    (mkXn [])
 
 getDef = Cl
-    (mkSq [mkOb [], mkSy "x"])
-    (mkCall (Pr Vau) (mkSq [mkSy "ob", 
-        mkCall (Pr Get) (mkSq [mkCall (Pr Eval) (mkSy "ob"), mkSy "x"])]))
-    (mkOb [])
+    (mkSq [mkXn [], mkSy "x"])
+    (mkCall (Pr Vau) (mkSq [mkSy "xn", 
+        mkCall (Pr Get) (mkSq [mkCall (Pr Eval) (mkSy "xn"), mkSy "x"])]))
+    (mkXn [])
 
 lambdaDef = Cl
-    (mkSq [mkOb [], mkSy "var"])
+    (mkSq [mkXn [], mkSy "var"])
     (mkCall (Pr Vau) (mkSq [mkSq [mkSy "static", mkSy "ast"],
         mkCall (Pr Vau) (mkSq [mkSy "arg",
             mkCall (Pr Eval) (mkSq
@@ -180,6 +180,6 @@ lambdaDef = Cl
                     [ mkCall (Pr Match) (mkSq [mkSy "var", mkCall (Pr Eval) (mkSy "arg")])
                     , mkSy "static"])
                 , mkSy "ast"])])]))
-    (mkOb [])
+    (mkXn [])
 
-quoteDef = Cl (mkSq [mkOb [], mkSy "ast"]) (mkSy "ast") (mkOb [])
+quoteDef = Cl (mkSq [mkXn [], mkSy "ast"]) (mkSy "ast") (mkXn [])

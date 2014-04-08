@@ -22,13 +22,13 @@ mkBy = By . encodeUtf8 . pack
 mkSq :: [Val] -> Val
 mkSq = Sq . Seq.fromList
 
-mkOb :: [(Symbol, Val)] -> Val
-mkOb = Ob . Map.fromList
+mkXn :: [(Symbol, Val)] -> Val
+mkXn = Xn . Map.fromList
 
 
 getTag :: Val -> Word
 getTag (Tg (tg, _)) = tg
 
 fromEnv :: Val -> Map Symbol Val
-fromEnv (Ob ob) = ob
+fromEnv (Xn xn) = xn
 fromEnv _ = Map.empty
