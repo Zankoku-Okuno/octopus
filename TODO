@@ -10,7 +10,6 @@ General
 Parser
 	mutual letrec
 	distfixes
-		parse config
 		interpret config
 		apply
 	literate files
@@ -46,10 +45,10 @@ Interpreter
 	concurrency
 		spawn :: `* -> killer #({} -> Bool)
 		when a thread is killed while importing, I'll need to let another thread try the import again, even if there are already threads waiting on it
+		BUGFIX: tags are created local to a thread, either:
+			make the tag generator thread-global
+			attach a threadid to the tag (assuming tids are not reused)
 	directives
-	BUGFIX: tags are created local to a thread, either:
-		make the tag generator thread-global
-		attach a threadid to the tag (assuming tids are not reused)
 	offer a way to force import despite caching
 	pass arbitrary flags to interpreter (like -D in gcc), look them up at runtime
 	an interpreter maker, configured in a Haskell program `(perfile, repl) = octi someConfig`

@@ -11,7 +11,7 @@ Turing-complete
 Usable
 	I/O, exceptions
 	import files
-Featureful
+Tasty
 	letrec
 	small standard libraries
 	distfixes, anonymous points
@@ -30,6 +30,7 @@ Growth
 	literate files, docstrings
 	package management
 	locations for community (IRC, mailinglist, package repo)
+	tooling
 
 Mature
 	lots of libraries

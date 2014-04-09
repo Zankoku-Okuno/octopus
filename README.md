@@ -53,7 +53,7 @@ Status
 
 * 2014-03-31: With bugfixes, achieved Turing-complete. The next step is usable.
 * 2014-04-06: Multiple files, interpreter program, I/O primitives, exception handling.
-              Still on the way to stable.
+              Still on the way to tasty.
 
 The Story
 =========
