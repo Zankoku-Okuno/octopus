@@ -20,15 +20,15 @@ module Language.Octopus.Primitive (
 
     , get, keys, extend, delete
 
-    --, new, deref, assign
+    , new, deref, assign
 
-    --, newArr, getIx, setIx
+    , newArr, bounds, index, assignIx
 
     --TODO os interface (perhaps in a separate file)
     ) where
 
 import Prelude hiding (div, rem)
-import Import hiding (delete)
+import Import hiding (delete, index)
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
 import qualified Data.Text as T
@@ -240,7 +240,7 @@ cat (Tx xs) (Tx ys) = Right . Tx $ xs <> ys
 cat (By xs) (By ys) = Right . By $ xs <> ys
 cat x y = Left $ mkTypeError (Pr Cat) "∀ f :: Sq * | Tx | By. (f, f)" (mkSq [x, y])
 
-cut :: Val -> Val -> Fallible Val --FIXME I guess I really need to return (Either Val Val), where the left is an exception to raise
+cut :: Val -> Val -> Fallible Val
 cut x (Nm q) = 
     case x of
         Sq xs -> do
@@ -258,12 +258,14 @@ cut x (Nm q) =
             when (i >= BS.length xs) $ ixErr
             let (as, bs) = BS.splitAt i xs
             Right $ mkSq [By as, By bs]
-        _ -> Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [x, Nm q])
+        _ -> tyErr
     where
     n = if denominator q == 1
-        then Right (fromIntegral $ numerator q)
-        else Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [x, Nm q])
+        then let z = fromIntegral $ numerator q
+             in if z < 0 then tyErr else Right z
+        else tyErr
     ixErr = Left (getTag exnIndexError, mkSq [exnIndexError, Nm q, x])
+    tyErr = Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [x, Nm q])
 cut xs n = Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [xs, n])
 
 
@@ -292,6 +294,69 @@ delete :: Val -> Val -> Fallible Val
 delete (Xn xn) (Sy sy) = Right . Xn $ Map.delete sy xn
 delete x _ = Right x
 
+------ Cells ------
+new :: Val -> IO (Fallible Val)
+new x = Right . Ce <$> newIORef x
+
+deref :: Val -> IO (Fallible Val)
+deref (Ce ce) = Right <$> readIORef ce
+deref x = return . Left $ mkTypeError (Pr Deref) "Ce" x
+
+assign :: Val -> IO (Fallible Val)
+assign (Sq xs) = case toList xs of
+    [Ce ce, x] -> const (Right $ mkXn []) <$> ce `writeIORef` x
+    _ -> return . Left $ mkTypeError (Pr Assign) "(Ce, *)" (Sq xs)
+assign x = return . Left $ mkTypeError (Pr Assign) "(Ce, *)" x
+
+------ Arrays ------
+newArr :: Val -> IO (Fallible Val)
+newArr (Sq xs) = case toList xs of
+    [Sq xs] -> Right . Ar <$> newListArray (0, Seq.length xs - 1) (toList xs)
+    [Nm q, x] -> case getNat q of
+            Nothing -> return tyErr
+            Just n -> Right . Ar <$> newArray (0, n - 1) x
+    _ -> return tyErr
+    where
+    tyErr = Left $ mkTypeError (Pr NewArr) "Sq * | (Nat, *)" (Sq xs)
+
+bounds :: Val -> IO (Fallible Val)
+bounds (Ar ar) = do
+    (_, last) <- getBounds ar
+    return . Right $ mkInt (last + 1)
+bounds arg = return . Left $ mkTypeError (Pr Bounds) "Ar" arg
+
+index :: Val -> IO (Fallible Val)
+index (Sq args) = case toList args of
+    [Ar ar, Nm q] -> case getNat q of
+        Nothing -> return tyErr
+        Just n -> ar `boundsCheck` n >>= \p -> if p
+            then Right <$> readArray ar (fromInteger n)
+            else return . Left $ (getTag exnIndexError, mkSq [exnIndexError, Nm q, Ar ar])
+    _ -> return tyErr
+    where
+    tyErr = Left $ mkTypeError (Pr Index) "(Ar *, Nat)" (Sq args)
+index args = return . Left $ mkTypeError (Pr Index) "(Ar *, Nat)" args
+
+assignIx :: Val -> IO (Fallible Val)
+assignIx (Sq args) = case toList args of
+    [Ar ar, Nm q, x] -> case getNat q of
+        Nothing -> return tyErr
+        Just n -> ar `boundsCheck` n >>= \p -> if p
+            then do writeArray ar (fromInteger n) x
+                    return . Right $ mkXn []
+            else return . Left $ (getTag exnIndexError, mkSq [exnIndexError, Nm q, Ar ar])
+    _ -> return tyErr
+    where
+    tyErr = Left $ mkTypeError (Pr AssignIx) "(Ar a, Nat, a)" (Sq args)
+assignIx args = return . Left $ mkTypeError (Pr AssignIx) "(Ar a, Nat, a)" args
 
 
+boundsCheck :: IOArray Int Val -> Integer -> IO Bool
+boundsCheck arr n = do
+    (_, last) <- getBounds arr
+    return $ fromIntegral n <= last
 
+getNat q = if denominator q == 1
+        then let z = fromIntegral $ numerator q
+             in if z < 0 then Nothing else Just z
+        else Nothing

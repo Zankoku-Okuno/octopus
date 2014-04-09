@@ -3,11 +3,11 @@
 
 name:                octopus
 version:             0.0.2.1
-synopsis:            Lisp with more dynamism, more power, more simplicity.
+synopsis:            The language with more dynamism, more simplicity, more power.
 description:         Octopus is a highly dynamic programming language with an astounding (I think)
                      power-to-weight ratio (expressivity-to-complexity). With just a handful of
                      simple primitives, Octopus provides a complete programming environment. Its
-                     main focus is on complete programmer control, not on performance or static
+                     main focus is on total programmer control, not on performance or static
                      analysis. While the user can shoot themselves, the most natural methods should
                      be the most reasonable.
                      .

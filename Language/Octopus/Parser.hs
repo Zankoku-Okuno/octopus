@@ -186,6 +186,8 @@ builtin = P.choice (map mkPrimParser table)
             , ("readByte", Pr ReadFp), ("writeByte", Pr WriteFp)
             , ("mkTag", Pr MkTag), ("mkAbstype", Pr MkAbstype), ("typeof", Pr Typeof)
             , ("len", Pr Len) , ("cat", Pr Cat) , ("cut", Pr Cut)
+            , ("new", Pr New), ("deref", Pr Deref), ("assign", Pr Assign)
+            , ("newArr", Pr NewArr), ("bounds", Pr Bounds), ("index", Pr Index), ("assignIx", Pr AssignIx)
             , ("extends", Pr Extends) , ("del", Pr Delete) , ("keys", Pr Keys) , ("get", Pr Get)
             , ("handle", Pr Handle) , ("raise", Pr Raise)
 

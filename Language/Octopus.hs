@@ -124,6 +124,15 @@ apply (Pr pr) x | pr `elem` (map fst table) = do
         , (WriteFp, Oct.writeFp)
         , (FlushFp, Oct.flushFp)
         , (CloseFp, Oct.closeFp)
+
+        , (New, Oct.new)
+        , (Deref, Oct.deref)
+        , (Assign, Oct.assign)
+
+        , (NewArr, Oct.newArr)
+        , (Bounds, Oct.bounds)
+        , (Index, Oct.index)
+        , (AssignIx, Oct.assignIx)
         ]
 apply (Pr pr) x =
     case lookup pr table of

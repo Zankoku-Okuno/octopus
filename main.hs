@@ -12,7 +12,7 @@ import Language.Octopus.Parser
 import Language.Octopus.Libraries
 import Language.Octopus.Primitive (resolveSymbol)
 
-progVersion = "v0.0.2a"
+progVersion = "v0.0.3a"
 main :: IO ()
 main = do
     (opts, filepath) <- getOptions

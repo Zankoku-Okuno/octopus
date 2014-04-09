@@ -33,18 +33,16 @@ data Primitive = Vau | Eval | Match | Ifz | Imp
                | Eq | Neq | Lt | Lte | Gt | Gte
                | Add | Mul | Sub | Div
                | Numer | Denom | NumParts
-               --TODO By data primitives
-               --TODO Tx data primitives
-               --TODO Fp data primitives
-               | OpenFp | ReadFp | WriteFp | FlushFp | CloseFp
-               --TODO Sy data primitives
+               | ReadFp | WriteFp | FlushFp | CloseFp
+               | OpenFp --FIXME refac to be a custom primitive
                | MkTag | MkAbstype | Wrap Tag | Unwrap Tag | Typeof
                | Len | Cat | Cut
                | Extends | Delete | Keys | Get
-               --TODO Ce data primitives
-               --TODO Ar data primitives
-               --TODO Pt/Ks data primitives
+               | New | Deref | Assign
+               | NewArr | Bounds | Index | AssignIx
+               --TODO Ks data primitives
                | Handle | Raise
+               --TODO conversions
     deriving (Eq, Show)
 
 

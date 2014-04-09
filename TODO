@@ -19,8 +19,8 @@ Parser
 		a way to give out a limited set would be very useful
 		export ::= 'export' <pattern>
 	anonymous points
+		then eliminate @-syntax to make it available for decorators (use (_ :x) for a accessor fn)
 	docstrings
-	bytes, raw string, character literals
 	decorators in do blocks
 	import form objects
 		{x, y, z: foo} === {x: x, y: y, z: foo}
@@ -35,26 +35,27 @@ Parser
 
 Interpreter
 	import path normalization
+	separate ImportError (error in interpretring the file) from LibraryError (imported file not available)
 	Data primitives
-		reference cells
-		arrays
-		handlers
+		channels
 		conversions
 	First-class control
 		guards (onWind, onUnwind, onAbort)
 		caputure (cannot propagate past ImptK)
 		Ks is an applicative
+	concurrency
+		spawn :: `* -> killer #({} -> Bool)
+		when a thread is killed while importing, I'll need to let another thread try the import again, even if there are already threads waiting on it
 	directives
 	BUGFIX: tags are created local to a thread, either:
 		make the tag generator thread-global
 		attach a threadid to the tag (assuming tids are not reused)
 	offer a way to force import despite caching
 	pass arbitrary flags to interpreter (like -D in gcc), look them up at runtime
-	REPL
-	ffi
 	an interpreter maker, configured in a Haskell program `(perfile, repl) = octi someConfig`
 		actual C and JS FFIs
-	Floating point primitive type
+	REPL
+	ffi
 	version specifier in import string
 	re-raise exceptions?
 		perhaps by keeping the last unwond stack around until a handler returns normally
@@ -68,6 +69,8 @@ Documentation
 	every primitive type and operation: what they do and when/how they fail
 
 Cleanup
+	systematize the parser
+	break functionality into hexpr
 	eliminate magic field names
 
 Tooling
@@ -91,6 +94,7 @@ Tooling
 	Perform imports statically (may require an import keyword)
 
 Performance
+	Floating point primitive type
 	Extended data primitves
 	Applicative closures?
 	try using `Rose (Map Symbol (Maybe Val))` for objects to reduce space consumption

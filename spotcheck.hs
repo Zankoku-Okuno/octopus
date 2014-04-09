@@ -27,7 +27,7 @@ main = do
     test "r\"b\"\"\\foo\\n\""
     test "#<<END\na\\s;dg\nasdg\nEND>>"
     test "b\" 0abb 55 #should be 'U'\n\""
-    
+
     test "3 #{block #{com}#ment #3 {} }#"
     test "do four: 4 ((vau x x) four);"
     test "do four: 4 ((vau x (#<eval> x)) four);"
@@ -125,6 +125,16 @@ main = do
          \   [#<typeof> foo, d foo];"
     test "do 3: 3;"
     test "['a', 'λ', ''']"
+    
+    test "do x: (#<new> 4)\n\
+         \   (#<assign> [x, (#<add> [#<deref> x, 5])])\n\
+         \   (#<deref> x);"
+    test "do ar1: (#<newArr> [[1, 2, 3]])\n\
+         \   ar2: (#<newArr> [10, 5])\n\
+         \   (#<assignIx> [ar1, 2, 5])\n\
+         \   (#<assignIx> [ar2, 9, 3])\n\
+         \   [ #<bounds> ar1, #<index> [ar1, 1], #<index> [ar1, 2]\n\
+         \   , #<bounds> ar2, #<index> [ar2, 0], #<index> [ar2, 9]];"
 
 
 
