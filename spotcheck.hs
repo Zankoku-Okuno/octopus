@@ -80,7 +80,8 @@ main = do
     test "do [a, b]: (#<cut> [\"hello\", 3])\n   [a, b, #<len> a];"
     test "do y: (#<ifz!> [0, `y, `n])\n   n: (#<ifz!> [1, `y, `n])\n   [y, n];"
 
-    test "do {\955: \955}: (#<import> \"./examples/basis.oct\") (\955 x x 6);"
+    test "do {\955: \955}: (#<import> \"/basis\") (\955 x x 6);"
+    test "do {\955: \955}: (#<import> \"examples/basis\") (\955 x x 6);"
 
     test "do t: (#<mkTag> \"phoey\")\n   (#<handle> [t, 3, `5]);"
     test "do id: (__lambda__ x x)\n   t: (#<mkTag> \"phoey\")\n   (#<handle> [t, id,\n      `(#<add> [3, (#<raise> [t, 7])])]);"
@@ -154,8 +155,8 @@ test input = do
     putStr $ input ++ " ===> "
     cache <- newMVar Map.empty
     case parseOctopusExpr "repl" input of
-        Right val -> print =<< eval cache startData val
-        Left err -> print err
+        Right val -> print =<< eval (MConfig { libdir = "lib/", importsCache = cache, thisFile = Nothing }) startData val
+        Left err -> print err >> exitFailure
 
 
 startData = mkXn [

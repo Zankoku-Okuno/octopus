@@ -48,13 +48,17 @@ data Primitive = Vau | Eval | Match | Ifz | Imp
 
 
 type FileCache = MVar (Fallible Val)
-type ImportsCache = MVar (Map Text FileCache)
+type ImportsCache = MVar (Map FilePath FileCache)
+data MConfig = MConfig { importsCache :: ImportsCache
+                       , libdir :: FilePath
+                       , thisFile :: Maybe FilePath
+                       }
 data MState = MState { environ :: Val
                      , control :: [Control]
                      , nextTag :: Word
                      }
 
-type Machine = ReaderT ImportsCache (StateT MState IO)
+type Machine = ReaderT MConfig (StateT MState IO)
 
 
 data Context = Op Val -- ^ Hole must be a combiner, val is the uneval'd argument
@@ -66,7 +70,7 @@ data Context = Op Val -- ^ Hole must be a combiner, val is the uneval'd argument
 data Control = NormK [Context]
              | HndlK Tag Val
           --TODO onEnter/onSuccess/onFail
-             | ImptK Text (MVar (Fallible Val))
+             | ImptK FilePath (MVar (Fallible Val))
     deriving (Eq)
 instance Show Control where
     show (NormK k) = "NormK " ++ show k
@@ -127,6 +131,16 @@ mkAbstype spelling = do
     let (Tg (n, spelling)) = tag
     return (tag, Pr (Wrap (n, spelling)), Pr (Unwrap (n, spelling)))
 
+
+getCurrentFile :: Machine (Maybe FilePath)
+getCurrentFile = do
+    (top, bottom) <- break isImpt <$> gets control
+    case bottom of
+        (ImptK path _ : _) -> return $ Just path
+        [] -> asks thisFile
+    where
+    isImpt (ImptK _ _) = True
+    isImpt _ = False
 
 instance Show Val where
     show (Nm nm) | denominator nm == 1 = show $ numerator nm

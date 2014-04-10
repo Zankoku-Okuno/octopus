@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                octopus
-version:             0.0.2.1
+version:             0.0.3.0-alpha
 synopsis:            The language with more dynamism, more simplicity, more power.
 description:         Octopus is a highly dynamic programming language with an astounding (I think)
                      power-to-weight ratio (expressivity-to-complexity). With just a handful of
@@ -28,6 +28,7 @@ stability:           alpha
 category:            Language
 build-type:          Simple
 cabal-version:       >=1.8
+data-files:          lib/*.oct
 extra-source-files:  changelog, examples/*.oct
 
 library
@@ -46,6 +47,9 @@ library
                        array ==0.4.*,
                        symbol ==0.2.1,
                        mtl ==2.1.*,
+                       split ==0.2.*,
+                       filepath ==1.3.*,
+                       directory ==1.2.*,
                        parsec ==3.1.*,
                        hexpr ==0.0.0.1
 
@@ -59,5 +63,8 @@ executable octi
                        array ==0.4.*,
                        symbol ==0.2.1,
                        mtl ==2.1.*,
+                       split ==0.2.*,
+                       filepath ==1.3.*,
+                       directory ==1.2.*,
                        parsec ==3.1.*,
                        hexpr ==0.0.0.1

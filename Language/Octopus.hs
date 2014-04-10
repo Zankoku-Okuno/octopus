@@ -5,6 +5,10 @@ import Import
 import qualified Data.Sequence as Seq
 import qualified Data.Map as Map
 
+import Data.List.Split (splitOn)
+import System.FilePath (normalise, takeDirectory)
+--import System.Directory
+
 import Control.Monad.State
 import Control.Monad.Reader
 import System.IO.Error
@@ -18,10 +22,11 @@ import Language.Octopus.Data.Shortcut
 import Language.Octopus.Libraries
 
 
-eval :: ImportsCache -> Val -> Val -> IO Val
-eval cache env code = evalStateT (runReaderT (reduce code) cache) startState
+eval :: MConfig -> Val -> Val -> IO Val
+eval config env code =
+    evalStateT (runReaderT (reduce code) config) startState
     where
-    startState = MState { environ = env --Xn Map.empty
+    startState = MState { environ = env
                         , control = [NormK []]
                         , nextTag = startTag
                         }
@@ -207,7 +212,7 @@ raise (tg, payload) = do
     case rest of
         [] -> error $ "unhandled exception: " ++ show (tg, payload) --return here
         (ImptK file slot):kss -> do
-            let err = (getTag exnImportError, mkSq [exnImportError, Tx file, payload])
+            let err = (getTag exnImportError, mkSq [exnImportError, mkTx file, payload])
             liftIO $ slot `putMVar` Left err
             modify $ \s -> s { control = kss }
             raise err
@@ -218,29 +223,33 @@ raise (tg, payload) = do
 
 impFile :: Val -> Machine Val
 impFile (Tx pathstr) = do
-    let path = pathstr --FIXME normalize path
+    let path = pathstr
         path' = unpack path
-    --TODO check against builtin files, or else pre-populate the cache
+    root <- if length path' > 0 && head path' == '/'
+                then asks libdir
+                else do
+                    file_m <- getCurrentFile
+                    return $ case file_m of
+                        Nothing -> "./"
+                        Just file -> takeDirectory file ++ "/"
+    let normpath = normPath (root ++ path' ++ ".oct")
     --TODO check the path against the current imports on stack to avoid circular import
-    cache_var <- ask
+    cache_var <- asks importsCache
     cache <- liftIO $ takeMVar cache_var
-    case Map.lookup path cache of
+    case Map.lookup normpath cache of
         Just loaded_var -> do
             liftIO $ cache_var `putMVar` cache
-            val_e <- liftIO $ readMVar loaded_var
-            case val_e of
-                Right val -> done val
-                Left err -> raise err
+            either raise done =<< liftIO (readMVar loaded_var)
         Nothing -> do
             loading_var <- liftIO newEmptyMVar
-            liftIO $ cache_var `putMVar` Map.insert path loading_var cache
-            contents_e <- liftIO $ tryIOError $ readFile path'
+            liftIO $ cache_var `putMVar` Map.insert normpath loading_var cache
+            contents_e <- liftIO $ tryIOError $ readFile normpath
             case contents_e of
                 Right contents -> do
-                    case parseOctopusFile path' contents of
+                    case parseOctopusFile normpath contents of
                         Right (_, val) -> do
                             swapEnv initialEnv --TODO consider which env to start a file off with
-                            pushK (ImptK path loading_var)
+                            pushK (ImptK normpath loading_var)
                             reduce val
                         Left raw_err -> do
                             let err = (getTag exnSyntaxError, mkSq [exnSyntaxError, Tx . pack $ show raw_err])
@@ -254,3 +263,11 @@ impFile (Tx pathstr) = do
 impFile x = raise $ mkTypeError (Pr Imp) "Tx" x
 
 
+normPath p = let path = normalise p in go (splitOn "/" path) [] []
+    where
+    go [] yes may = intercalate "/" (yes ++ may)
+    go ("":xs) [] may = go xs [""] may
+    go ("":xs) yes may = go xs yes may
+    go ("..":xs) yes [] = go xs (yes ++ [".."]) []
+    go ("..":xs) yes may = go xs yes (init may)
+    go (x:xs) yes may = go xs yes (may ++ [x])
