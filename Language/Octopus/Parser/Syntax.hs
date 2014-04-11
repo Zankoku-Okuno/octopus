@@ -34,6 +34,13 @@ data Syx = Lit Val
     deriving (Show)
 
 
+statement = P.choice
+    [ openStmt
+    , letrec
+    , defn
+    , Expr <$> bareCombination
+    ]
+
 expr :: Parser Syx
 expr = P.choice
     [ Lit <$> atom, sq, xn
@@ -73,7 +80,7 @@ block = P.choice [
         whitespace0
         dedent >>= endImplicit
         return $ Do states
-    explicitDo = P.parserZero -- FIXME this requires a statement sytnax to swap bareExpression for expr
+    explicitDo = P.parserZero -- FIXME this requires a statement sytnax to swap bareCombination for expr
 
 quote :: Parser Syx
 quote = do
@@ -99,8 +106,29 @@ mutator = do
     return . Infix $ Call [Lit $ mkSy "__modify__", Lit $ mkSy key, e]
 
 
------- Statements ------
-statement = Expr <$> expr --STUB
+------ Definitions ------
+defn :: Parser (Statement Syx)
+defn = do
+    --TODO decorators
+    var <- try $ expr <* char ':'
+    whitespace
+    val <- bareCombination
+    return $ Defn [] var val
+
+letrec :: Parser (Statement Syx)
+letrec = do
+    try $ string "letrec" <* whitespace
+    var <- expr <* char ':' <* whitespace
+    body <- bareCombination
+    return $ LRec var body
+
+openStmt :: Parser (Statement Syx)
+openStmt = do
+    try $ string "open" *> whitespace
+    Open <$> bareCombination
+
+--TODO export statement
+
 
 ------ Helpers ------
 bareCombination :: Parser Syx
