@@ -11,6 +11,8 @@ import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
 import Language.Octopus.Basis
 
+import qualified Language.Octopus.Parser.Syntax as Syx
+
 import qualified Data.Map as Map
 
 main :: IO ()
@@ -21,7 +23,18 @@ main = do
     --    Right (dirs, val) -> do
     --        print val
     --        --print =<< eval startData val
-    --exitSuccess
+    testParse "\n  #qega\n b\"af \n 3637\""
+    testParse "(a b\n   c d\n)"
+    testParse "(a b\n   c d)"
+    testParse "[1, 2 + 3\n,\n  f x]"
+    testParse "{a: 1, b: 2,\n c: (3\n      4)\n}"
+    testParse "do 3\n   4"
+    --testParse "do: 3 4;"
+    testParse "3 .+ 4"
+    testParse "x :y"
+    testParse "x :( y: ++)"
+    testParse "`q"
+    exitSuccess
 
     test "\"hi\""
     test "r\"b\"\"\\foo\\n\""
@@ -148,9 +161,11 @@ letin  = "(vau [{}, x] (vau val (vau [e, body] (#<eval> [#<extends> [#<match> [x
 --dot-infixing as normal
 --colon-infixing also desugars into a getter
 
-testParse input = case parseOctopusExpr "" input of
-    Right val -> print val
-    Left err -> print err >> exitFailure
+testParse input = do
+    putStrLn input
+    case Syx.parseOctopusExpr "" input of
+        Right val -> print val
+        Left err -> print err >> exitFailure
 test input = do
     putStr $ input ++ " ===> "
     cache <- newMVar Map.empty
