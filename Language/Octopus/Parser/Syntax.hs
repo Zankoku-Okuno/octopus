@@ -17,9 +17,10 @@ endFile :: Parser ()
 endFile = P.many blankLine >> whitespace0 >> eof
 
 
-data Statement a = Defn [Syx] a a
-                 | LRec a a
+data Statement a = Defn [a] a a
+                 | LRec a a --FIXME multi-letrec
                  | Open a
+                 | Eprt a
                  | Expr a
                  | DocS String String
     deriving (Show)
@@ -51,12 +52,12 @@ expr = P.choice
 
 ------ Expressions ------
 sq :: Parser Syx
-sq = P.between (openBracket *> whitespace0) (whitespace0 <* closeBracket) $
-    SqSyx <$> bareCombination `P.sepBy` comma
+sq = P.between (openBracket *> whitespace0) (multiWhitespace0 <* closeBracket) $
+    SqSyx <$> (multiWhitespace0 *> bareCombination <* multiWhitespace0) `P.sepBy` comma
 
 xn :: Parser Syx
-xn = P.between (openBrace *> whitespace0) (whitespace0 <* closeBrace) $
-    XnExpr <$> pair `P.sepBy` comma
+xn = P.between (openBrace *> whitespace0) (multiWhitespace0 <* closeBrace) $
+    XnExpr <$> (multiWhitespace0 *> pair <* multiWhitespace0) `P.sepBy` comma
     where
     pair = do
         key <- intern <$> name
@@ -69,18 +70,13 @@ combine :: Parser Syx
 combine = open *> whitespace0 *> bareCombination <* whitespace0 <* close
 
 block :: Parser Syx
-block = P.choice [
-      try (string "do" >> whitespace) >> implicitDo
-    , try (string "do:" >> whitespace) >> explicitDo
-    ]
-    where
-    implicitDo = do
-        startImplicit
-        states <- statement `P.sepBy1` (whitespace0 >> nextLine)
-        whitespace0
-        dedent >>= endImplicit
-        return $ Do states
-    explicitDo = P.parserZero -- FIXME this requires a statement sytnax to swap bareCombination for expr
+block = do
+    try (string "do" >> whitespace)
+    startImplicit
+    stmts <- (statement <* whitespace0) `P.sepBy1` nextLine
+    whitespace0
+    dedent >>= endImplicit
+    return $ Do stmts
 
 quote :: Parser Syx
 quote = do
@@ -133,5 +129,5 @@ openStmt = do
 ------ Helpers ------
 bareCombination :: Parser Syx
 bareCombination = do
-    es <- many2 expr (buffer *> expr)
+    es <- many2 expr (try $ buffer *> expr)
     return $ case es of { [e] -> e; es -> Call es }

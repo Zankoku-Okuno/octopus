@@ -116,14 +116,16 @@ blankLine = try $ do
 multiWhitespace :: Parser ()
 multiWhitespace = P.skipMany1 (whitespace P.<|> newline)
 
+multiWhitespace0 :: Parser ()
+multiWhitespace0 = P.optional multiWhitespace
+
 buffer :: Parser ()
 buffer = whitespace <|> lookAhead newline <|> eof
 
 ------ Indentation ------
 nextLine :: Parser ()
 nextLine = try $ do
-    newline
-    n <- (+1) . length <$> P.many (char ' ')
+    n <- leadingSpaces
     n' <- topIndent >>= return . fromMaybe 0
     if n == n'
         then return ()
@@ -131,20 +133,19 @@ nextLine = try $ do
 
 indent :: Parser ()
 indent = try $ do
-    newline
-    n <- (+1) . length <$> P.many (char ' ')
+    n <- leadingSpaces
     n' <- topIndent >>= return . fromMaybe 0
     if n > n'
         then return ()
-        else fail $ "not indented far enough"
+        else fail $ "not indented far enough (" ++ show n ++ " <= " ++ show n' ++ ")"
 
 dedent :: Parser Int
-dedent = do
+dedent = try $ do
     n <- lookAhead leadingSpaces
     n' <- topIndent >>= return . fromMaybe 0
     if n < n'
         then return n
-        else fail "not dedented far enough"
+        else fail $ "not dedented far enough (" ++ show n ++ " >= " ++ show n' ++ ")"
 
 leadingSpaces :: Parser Int
 leadingSpaces = ((+1) . length <$>) $ 
@@ -153,33 +154,27 @@ leadingSpaces = ((+1) . length <$>) $
 
 ------ Separators ------
 open :: Parser ()
-open =  (char '(' >> startExplicit)
+open =  try (char '(' >> startExplicit)
     <|> try (indent >> startImplicit)
 
 close :: Parser ()
 close =  try (char ')' >> endExplicit)
-     <|> consumeDedent
-    where
-    consumeDedent = do
-        try $ dedent >>= endImplicit
-        isImplicit >>= flip when (void leadingSpaces)
+     <|> try (dedent >>= endImplicit)
 
 openBracket :: Parser ()
-openBracket = char '[' >> startExplicit
+openBracket = try $ char '[' >> startExplicit
 
 closeBracket :: Parser ()
 closeBracket = try $ char ']' >> endExplicit
 
 openBrace :: Parser ()
-openBrace = char '{' >> startExplicit
+openBrace = try $ char '{' >> startExplicit
 
 closeBrace :: Parser ()
 closeBrace = try $ char '}' >> endExplicit
 
 comma :: Parser ()
 comma = do
-    try $ P.optional multiWhitespace >> char ','
-    buffer
+    try $ char ',' >> buffer
     endExplicit
     startExplicit
-    P.optional multiWhitespace

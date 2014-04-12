@@ -56,7 +56,7 @@ endImplicit :: Int -> Parser ()
 endImplicit n = do
     top <- head <$> getState
     case top of
-        Implicit n' -> if n < n' then return () else fail ""
+        Implicit n' -> if n < n' then modifyState tail else fail ""
         Explicit n' -> fail ""
         Bottom -> fail ""
 
@@ -65,6 +65,7 @@ endExplicit = do
     top <- head <$> getState
     case top of
         Explicit _ -> modifyState tail
+        --_ -> fail ""
         -- Close Explicits can match open Explicits before dedents match their Implicits
         Implicit _ -> do
             (upper, lower) <- break isExplicit <$> getState
