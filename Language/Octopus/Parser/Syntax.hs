@@ -12,7 +12,7 @@ parseOctopusExpr :: SourceName -> String -> Either ParseError Syx
 parseOctopusExpr sourceName input = P.runParser (startFile *> bareCombination <* endFile) startState sourceName input
 
 startFile :: Parser ()
-startFile = P.many blankLine >> P.optional (newline >> whitespace0)
+startFile = P.many blankLine >> P.optional newline
 endFile :: Parser ()
 endFile = P.many blankLine >> whitespace0 >> eof
 
@@ -38,13 +38,13 @@ data Syx = Lit Val
 statement = P.choice
     [ openStmt
     , letrec
-    , defn
+    , define
     , Expr <$> bareCombination
     ]
 
 expr :: Parser Syx
 expr = P.choice
-    [ Lit <$> atom, sq, xn
+    [ Lit <$> atom <?> "atom", sq, xn
     , combine, block
     , quote, dottedExpr, accessor, mutator
     ]
@@ -102,9 +102,9 @@ mutator = do
     return . Infix $ Call [Lit $ mkSy "__modify__", Lit $ mkSy key, e]
 
 
------- Definitions ------
-defn :: Parser (Statement Syx)
-defn = do
+------ Statements ------
+define :: Parser (Statement Syx)
+define = do
     --TODO decorators
     var <- try $ expr <* char ':'
     whitespace

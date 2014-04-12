@@ -110,8 +110,11 @@ whitespace0 = P.optional whitespace
 blankLine :: Parser ()
 blankLine = try $ do
     newline
-    whitespace
+    whitespace0
     P.lookAhead (void newline <|> eof)
+
+blankLines :: Parser ()
+blankLines = P.skipMany blankLine
 
 multiWhitespace :: Parser ()
 multiWhitespace = P.skipMany1 (whitespace P.<|> newline)
@@ -141,15 +144,14 @@ indent = try $ do
 
 dedent :: Parser Int
 dedent = try $ do
-    n <- lookAhead leadingSpaces
+    n <- lookAhead leadingSpaces <|> (eof >> return 0)
     n' <- topIndent >>= return . fromMaybe 0
     if n < n'
         then return n
         else fail $ "not dedented far enough (" ++ show n ++ " >= " ++ show n' ++ ")"
 
 leadingSpaces :: Parser Int
-leadingSpaces = ((+1) . length <$>) $ 
-    (eof >> return "") <|> (try $ newline >> P.many (char ' '))
+leadingSpaces = try $ (+1) . length <$> (newline >> P.many (char ' '))
 
 
 ------ Separators ------

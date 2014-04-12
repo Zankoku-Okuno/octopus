@@ -1,16 +1,19 @@
 ### These are the true basis of using the vau calculus. ###
-vau: (#<vau> [[{}, var],
-         #<vau> [[static, body],
-            #<vau> [arg,
-               do arg': (#<match> [var, arg])
-                  env': (#<extends> [arg', static])
-                  (#<eval> [env', body]);
-               ]]])
-λ: (vau [{}, var] (vau [static, body] (vau arg
-      do arg': (#<eval> arg)
-         env': (#<extends> [#<match> [var, arg'], static])
-         (#<eval> [env', body]);
-      )))
+vau: #<vau> [ [{}, var]
+            , #<vau> [ [static, body]
+                     , #<vau> [ arg
+                              , do arg': #<match> [var, arg]
+                                   env': #<extends> [arg', static]
+                                   #<eval> [env', body]
+                              ]
+                     ]
+            ]
+λ: vau [{}, var]
+      vau [static, body]
+         vau arg
+            do arg': #<eval> arg
+               env': #<extends> [#<match> [var, arg'], static]
+               #<eval> [env', body]
 let: __let__
 Y: (λ f (let maker (λ x (f (λ arg (x x arg))))
              (maker maker)))
@@ -27,8 +30,7 @@ __lambda__: λ
 __Y__: Y
 __quote__: (vau [{}, ast] ast)
 __get__: (vau [{}, field] (λ x (#<get> [x, field])))
-__modify__: (vau [{}, field] (λ f (λ x
-                  (x .with (field .match (f (__get__ feild x))))
-            )))
-
-
+__modify__: vau [{}, field]
+               λ f 
+                  λ x
+                     x .with (field .match (f (__get__ feild x)))

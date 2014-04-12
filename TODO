@@ -17,16 +17,13 @@ Parser
 		currently, it exports the whole environment
 		a way to give out a limited set would be very useful
 		export ::= 'export' <pattern>
-	anonymous points
-		then eliminate @-syntax to make it available for decorators (use (_ :x) for a accessor fn)
 	docstrings
 	decorators in do blocks
+	infix index functions :[e] :[e: f]
 	import form objects
 		{x, y, z: foo} === {x: x, y: y, z: foo}
-	indentation sensitivity?
-		each indent, open paren/brack/brace/do gets pushed onto the stack
-		an indent means going further than the last column of the peek
-		a dedent means not going as far as the pop
+	indentation sensitivity
+		cleanup & further testing
 	ellipsis?
 	special syntax for lambda and vau
 		use the primitive ones, allow for stuff like (\l (x y z) body)
