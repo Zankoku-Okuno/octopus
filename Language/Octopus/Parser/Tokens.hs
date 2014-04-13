@@ -129,7 +129,7 @@ buffer = whitespace <|> lookAhead newline <|> eof
 nextLine :: Parser ()
 nextLine = try $ do
     n <- leadingSpaces
-    n' <- topIndent >>= return . fromMaybe 0
+    n' <- topIndent >>= return . fromMaybe 1
     if n == n'
         then return ()
         else fail $ if n > n' then "too much indent" else "too little indent"
@@ -137,7 +137,7 @@ nextLine = try $ do
 indent :: Parser ()
 indent = try $ do
     n <- leadingSpaces
-    n' <- topIndent >>= return . fromMaybe 0
+    n' <- topIndent >>= return . fromMaybe 1
     if n > n'
         then return ()
         else fail $ "not indented far enough (" ++ show n ++ " <= " ++ show n' ++ ")"

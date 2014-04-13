@@ -1,15 +1,13 @@
-open (#<import> "basis.oct")
+open #<import> "basis"
 
 #Curry's doesn't work, apparently; use Turing's.
-curry-fixpoint: (λ f (let maker ((λ x (f (x x))
-                          (maker maker)))))
+curry-fixpoint: λ f (let maker ((λ x (f (x x)) (maker maker))))
 
 #Turing's does, but I can't say I understand it
-turing-fixpoint: ( (λ x (λ y (y (λ z (x x y z))))) (λ x (λ y (y (λ z (x x y z))))) )
+turing-fixpoint: (λ x (λ y (y (λ z (x x y z))))) (λ x (λ y (y (λ z (x x y z)))))
 
 #This looks like an η-expanded version of Curry's
-applicative-fixpoint: (λ f (let maker (λ x (f (λ arg (x x arg))))
-                                (maker maker)))
+applicative-fixpoint: λ f (let maker (λ x (f (λ arg (x x arg)))) (maker maker))
 
 
 
@@ -24,8 +22,8 @@ applicative-fixpoint: (λ f (let maker (λ x (f (λ arg (x x arg))))
 #         ))
 # fac: (Y facRel)
 
-hand_fac: (Y (λ hand_fac (λ n (ifz_then_else_ n 1 (_*_ n (hand_fac (-- n))))) ))
-letrec fac:              (λ n (ifz_then_else_ n 1 (_*_ n (fac      (-- n)))))
+hand_fac: Y (λ hand_fac (λ n (ifz_then_else_ n 1 (_*_ n (hand_fac (-- n))))) )
+letrec fac:              λ n (ifz_then_else_ n 1 (_*_ n (fac      (-- n))))
 
 
 #main: (if_then_else_ 1 "a" "b")

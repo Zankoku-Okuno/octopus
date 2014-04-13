@@ -15,21 +15,23 @@ vau: #<vau> [ [{}, var]
                env': #<extends> [#<match> [var, arg'], static]
                #<eval> [env', body]
 let: __let__
-Y: (λ f (let maker (λ x (f (λ arg (x x arg))))
-             (maker maker)))
+Y: λ f
+      let maker (λ x (f (λ arg (x x arg))))
+         maker maker
 
 
 ### These are just prettier ways of getting at important primitives. ###
-eval: (λ env (λ ast (#<eval> [env, ast])))
-match: (λ var (λ val (#<match> [var, val])))
-with: (λ base (λ new (#<extends> [new, base])))
+eval: λ env (λ ast (#<eval> [env, ast]))
+match: λ var (λ val (#<match> [var, val]))
+with: λ base (λ new (#<extends> [new, base]))
 
 
 ### These are necessary for syntactic sugar. ###
 __lambda__: λ
 __Y__: Y
-__quote__: (vau [{}, ast] ast)
-__get__: (vau [{}, field] (λ x (#<get> [x, field])))
+__quote__: vau [{}, ast] ast
+__get__: vau [{}, field]
+            λ x (#<get> [x, field])
 __modify__: vau [{}, field]
                λ f 
                   λ x

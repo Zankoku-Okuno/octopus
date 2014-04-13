@@ -1,17 +1,18 @@
-open (#<import> "basis.oct")
+open #<import> "/basis"
 
-S: (λ x (λ y (\z (x z (y z)))))
-K: (λ x (λ {} x))
-I: (λ x x)
+S: λ x (λ y (λ z (x z (y z))))
+K: λ x (λ {} x)
+I: λ x x
 
-B: (λ x (λ y (λ z (x (y z)))))
-C: (λ x (λ y (λ z (x z y))))
+B: λ x (λ y (λ z (x (y z))))
+C: λ x (λ y (λ z (x z y)))
 # K already defined
-W: (λ x (λ y (x y y)))
+W: λ x (λ y (x y y))
 
-X: (λ x (x S K))
+X: λ x (x S K)
 
 T: K
-F: (λ {} (λ y y))
+F: λ {} I
 
-Ω: (S I I (S I I))
+# heh, well, this is an infinite loop, since we're using applicative order
+Ω: S I I (S I I)

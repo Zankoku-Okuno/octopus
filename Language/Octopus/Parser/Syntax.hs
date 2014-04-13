@@ -120,7 +120,7 @@ letrec = do
 
 openStmt :: Parser (Statement Syx)
 openStmt = do
-    try $ string "open" *> whitespace
+    try $ string "open" <* whitespace
     Open <$> bareCombination
 
 --TODO export statement
