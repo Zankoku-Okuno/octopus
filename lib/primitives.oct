@@ -1,0 +1,39 @@
+open #<import> "/basis"
+
+#FIXME don't export these
+-mkUn: vau [{}, op]
+   λ x (op x)
+-mkBin: vau [{}, op]
+   λ x (λ y (op [x, y]))
+
+# Basic Data
+eq: -mkBin #<eq>
+neq: -mkBin #<neq>
+lt: -mkBin #<lt>
+lte: -mkBin #<lte>
+gt: -mkBin #<gt>
+gte: -mkBin #<gte>
+
+add: -mkBin #<add>
+sub: -mkBin #<sub>
+mul: -mkBin #<mul>
+div: -mkBin #<div>
+
+numer: -mkUn #<numer>
+denom: -mkUn #<denom>
+numParts: -mkUn #<numParts>
+
+readByte: -mkUn #<readByte>
+writeByte: -mkBin #<writeByte>
+flush: -mkUn #<flush>
+close: -mkUn #<close>
+
+mkTag: -mkUn #<mkTag>
+mkAbstype: -mkUn #<mkAbstype>
+typeof: -mkUn #<typeof>
+
+# Composite Data
+
+
+# Control
+

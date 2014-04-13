@@ -10,12 +10,18 @@ Installation
 
 There's a cabal package, so you can use `cabal install octopus`. Alternately, install from github with `git clone github.com/Zankoku-Okuno/octopus.git && cd octopus && cabal install`.
 
+There's also a package for Sublime Text under the configs directory, in case you use that editor.
+
 Usage
 -----
 
 Installation will give you the `octi` program. So far, there are no fancy features, simply pass it a single file, and the file will be interpreted. If the file exports a binding for `main`, then its value will eval'd in the environment exported by the file.
 
-There are a couple toy programs under the `examples` directory. Import path normalization is not yet implemented, so interpret these files inside the directory.
+There are a few toy programs under the `examples` directory. Hopefully they demonstrate enough to get someone going, though I'd still recommend brushing up on some of J. Shutt's work on vau-calculus for the fun stuff.
+
+Octopus makes the most out of unicode to define nice names, but entering general unicode is difficult. We suggest using [unicoder](https://github.com/Zankoku-Okuno/unicoder), which processes a file, replacing backslash-name sequences with unicode.
+
+At the moment, the syntax is indentation-sensitive, but this is really just experimental support. It hasn't been stress-tested, so there may be lurking bugs. If your files magically aren't parsing right, please send us a copy of the file so we can fix whatever's going on. After that, maybe mucking with the whitespace a bit will trick it inot working?
 
 Features
 ========
@@ -60,5 +66,5 @@ The Story
 
 Far be it from me to be dogmatic. I'm not usually a dynamic typing guy. I prefer the comfort of a type checker when I have to refactor a system of any size. I like knowing I already have 10x more wiggle room just from compiling to native code. But there comes a time in every programmer's life when they just want to mess around, to build something anxiety-free.
 
-For me, Octopus is that that fun little romp. I started on a Thursday, and had the entire core language by the next Monday. Finishing up the basic primitives and providing an import mechanism is all there is left before it becomes a serious language. Well, and standard libraries... and a package manager... and a community,  but you get my point.
+For me, Octopus is that that fun little romp. I started on a Thursday, and had the entire core language by the next Monday. Finishing up the basic primitives and providing an import mechanism is all there is left before it becomes a serious language. Well, and standard libraries... and a package manager... and a community, but you get my point.
 

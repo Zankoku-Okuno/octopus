@@ -8,10 +8,6 @@ import Language.Octopus.Basis
 initialEnv = mkXn [
       (intern "__let__", letDef)
     , (intern "__open__", openDef)
-    --- Exceptions --- TODO give builtin literals
-    , (intern "TypeError",    exnTypeError)
-    , (intern "MatchFailure", exnMatchFail)
-    , (intern "DivZero",      exnDivZero)
     ]
 
 letDef = Cl

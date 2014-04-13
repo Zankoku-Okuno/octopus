@@ -21,7 +21,6 @@ Y: (λ f (let maker (λ x (f (λ arg (x x arg)))) (maker maker)))
 ### These are just prettier ways of getting at important primitives. ###
 eval: λ env (λ ast (#<eval> [env, ast]))
 match: λ var (λ val (#<match> [var, val]))
-with: λ base (λ new (#<extends> [new, base]))
 
 
 ### These are necessary for syntactic sugar. ###
@@ -30,9 +29,9 @@ __Y__: Y
 __quote__: vau [{}, ast] ast
 __get__: vau [{}, field] (λ x (#<get> [x, field]))
 __modify__: vau [{}, field]
-               λ f 
+               λ f
                   λ x
-                     x .with (field .match (f (__get__ feild x)))
+                     #<extends> [field .match (f (__get__ feild x)), x]
 
 ### Pretty data primitives. Probably should be in their own file. ###
 _+_: λ x (λ y (#<add> [x, y]))

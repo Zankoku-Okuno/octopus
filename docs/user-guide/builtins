@@ -1,0 +1,175 @@
+
+Primitive Data Types
+====================
+
+Octopus has a wide variety of builtin data types. Because these are used so often, we've adopted a "periodic table" naming scheme, where each builtin type is written with two letters, the first capitalized. Anyway, here are the descriptions.
+
+  * Number (Nm)
+
+    Octopus focuses on one, general numerical data type rather than have the complexity of a numerical tower with automatic conversions. Where possible, numbers SHOULD be able to represent arbitrary rational numbers.
+  
+  * Floating point number (Fl)
+
+    Floating point numbers are their own special brand of arithmetic. Rather than force the user to implement the complexities of floating point themselves, Octopus implementations MAY offer a builtin floating-point type. There is no literal syntax for floating point numbers
+
+  * Text (Tx)
+
+    Text stores Unicode string data.
+
+  * Bytes (By)
+
+    Bytes store byte string data.
+
+  * IO port (Fp)
+
+    Also called file pointer, socket, or handle, IO ports are the only way to communicate with the outside world. The basic unit of transmission is a Byte.
+
+  * Symbol (Sy)
+
+    This is the type of an unevaluated variable. Each symbol has a Unicode spelling, with some restrictions, and symbols with the same spelling are identical.
+
+  * Function (Fn)
+
+    Functions in Octopus always take one input and produce one output. Underneath the hood, a single implementation may have different kinds of functions, such as those created by `#<vau>`, those created by `#<capture>`, and any builtin operations.
+
+  * Sequence (Sq)
+
+    Also called a List, sequences hold other values in order. Sq is in fact a one-argument type constructor. We decided on the official name "sequence" because "list" evokes the inefficient, singly-linked lists of Lisp, ML and Haskell. In fact, implementations MUST offer `O(log(n))`-time concatenation and split operations.
+
+  * Xons (Xn)
+
+    Also called Objects, xonses are associative maps from symbols to values. The official name "xons" was chosen because that's what Manuel Simoni uses for this concept, and also "Xn" is a cool name, way cooler than "Ob".
+
+  * Reference cell (Ce)
+
+    Reference cells, or cells for short, are store for mutable data, just like a memory location in your average imperative languages. The reference itself is immutable, of course, but its contents may change at any time (due to some code assigning to the cell).
+
+  * Mutable array (Ar)
+
+    A mutable array is simply many reference cells, but stored in contiguous memory for more cache-efficient bulk access. Like C arrays, Octopus arrays cannot be resized after creation.
+
+  * Tag (Tg)
+
+    There is a large supply of unique tags, limited only by hardware. Tags are useful to distinguish abstract types as well as continuation marks.
+
+
+Types and Protocols
+===================
+
+Many derived types and protocols are so common that we describe them here, as if they were builtin. In fact, these concepts are all derived. We will make significant use of type syntax to shorten this description.
+
+Types
+-----
+
+  * Ty
+
+    The type of types. This is really only used to describe type constructors. For example, Sq is a type constructor taking one type argument and producing a type. Thus, `Sq :: Ty → Ty`.
+
+  * `type Env ≡ *`
+
+    Only really used to emphasize the fact that the value is meant to be used as an environment.
+
+  * Pat
+
+    The type of destructuring patterns.
+
+  * `type Bool ≡ { x | x \in [0, 1] }`
+
+  * `type Int ≡ { x :: Nm | #<denom> x = 1 }`
+
+  * `type Nat ≡ { x :: Int | 0 ≤ x }`
+
+  * `type Byte ≡ { x :: Nat | 0 ≤ x ≤ 0xFF }`
+
+  * `type UnicodePoint ≡ { x :: Nat | 0 ≤ x ≤ 0x10FFFF }`
+
+  * `type Char ≡ { x :: Tx | len x = 1 }`
+
+Protocols
+---------
+
+//Truthy
+//Iter (linear traversable)
+//Traversable
+//Mapping
+//Callable
+//Monoid (Container)
+//Applicative
+
+Values
+======
+
+//stdin, stdout, stderr
+//exceptions
+
+Operations
+==========
+//FIXME add the monads these operations inhabit
+
+Interpreter
+-----------
+
+  > #<vau> :: (Pat (Env, a), b) → (a → b)
+  > #<eval> :: (Env, a) → a
+  > #<match> :: (Pat, *) → Env
+  > #<import> :: Tx → Env
+
+Basic Data
+----------
+
+  > #<eq> :: (*, *) → Bool
+  > #<neq> :: (*, *) → Bool
+
+  > #<lt> :: (Nm, Nm) → Bool
+  > #<lte> :: (Nm, Nm) → Bool
+  > #<gt> :: (Nm, Nm) → Bool
+  > #<gte> :: (Nm, Nm) → Bool
+
+  > #<add> :: ∀ a :: Nm | Fl. (a, a) → a
+  > #<mul> :: ∀ a :: Nm | Fl. (a, a) → a
+  > #<sub> :: ∀ a :: Nm | Fl. (a, a) → a
+  > #<div> :: ∀ a :: Nm | Fl. (a, a) → a
+  > #<ifz!> :: (Nm, a, a) \to a
+
+  > #<numer> :: ∀ a :: Nm | Fl. a → a
+  > #<denom> :: ∀ a :: Nm | Fl. a → a
+  > #<numParts> :: ∀ a :: Nm | Fl. a → (a, a)
+
+  > #<readFp> :: Fp -> Byte
+  > #<writeFp> :: (Fp, Byte) -> {}
+  > #<flushFp> :: Fp -> {}
+  > #<closeFp> :: Fp -> {}
+
+  > #<mkTag> :: {} → Tg
+  > #<mkAbstype> :: ∃ a. {} → (Tg, * → a, a → *)
+  > #<typeof> :: * -> Tg
+
+Conversions
+-----------
+
+Composite Data
+--------------
+
+  > #<len> :: ∀ a :: Sq * | Tx | By. a → Nat
+  > #<cat> :: ∀ a :: Sq * | Tx | By. (a, a) → a
+  > #<cut> :: ∀ a :: Sq * | Tx | By. (a, Nat) → (a, a)
+
+  > #<extends> :: Sq Env → Env
+  > #<delete> :: (Xn, Sy) → Xn
+  > #<keys> :: Xn → Sq Sy
+  > #<get> :: (Xn, Sy) → *
+
+  > #<new> :: a -> Ce a
+  > #<deref> :: Ce a -> a
+  > #<assign> :: (Ce a, a) → {}
+
+  > #<newArr> :: (a, Nat) | Sq a → Ar a
+  > #<bounds> :: Ar * → Nat
+  > #<index> :: (Ar a, Nat) → a
+  > #<assignIx> :: (Ar a, Nat, a) → {}
+
+Control
+-------
+
+  > #<handle> :: ∀ r. (Tg, * → r, `r) → r
+  > #<raise> :: (Tg, *) → *
