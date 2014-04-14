@@ -57,13 +57,15 @@ sq = P.between (openBracket *> whitespace0) (multiWhitespace0 <* closeBracket) $
 
 xn :: Parser Syx
 xn = P.between (openBrace *> whitespace0) (multiWhitespace0 <* closeBrace) $
-    XnExpr <$> (multiWhitespace0 *> pair <* multiWhitespace0) `P.sepBy` comma
+    XnExpr <$> (multiWhitespace0 *> (pair <|> single) <* multiWhitespace0) `P.sepBy` comma
     where
     pair = do
-        key <- intern <$> name
-        char ':' <* whitespace
+        key <- try $ (intern <$> name) <* char ':' <* whitespace
         val <- bareCombination
         return (key, val)
+    single = do
+        key <- name
+        return (intern key, Lit $ mkSy key)
 
 
 combine :: Parser Syx

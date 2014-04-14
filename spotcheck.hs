@@ -139,6 +139,10 @@ main = do
          \   , #<bounds> ar2, #<index> [ar2, 0], #<index> [ar2, 9]\n\
          \   ]"
 
+    test "do x: 1\n\
+         \   foo: 3\n\
+         \   {x, y: foo}"
+
 
 
 

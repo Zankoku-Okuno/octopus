@@ -20,8 +20,6 @@ Parser
 	docstrings
 	decorators in do blocks
 	infix index functions :[e] :[e: f]
-	import form objects
-		{x, y, z: foo} === {x: x, y: y, z: foo}
 	indentation sensitivity
 		cleanup & further testing
 		turn it off with a directive

@@ -38,7 +38,7 @@ Octopus has a wide variety of builtin data types. Because these are used so ofte
 
   * Xons (Xn)
 
-    Also called Objects, xonses are associative maps from symbols to values. The official name "xons" was chosen because that's what Manuel Simoni uses for this concept, and also "Xn" is a cool name, way cooler than "Ob".
+    Probably would be called Objects in a "normal" language, xonses are associative maps from symbols to values. We were very much against using the name "object", as the term is already too overloaded: C/assembly object vs. Java object vs. JavaScript object? Xonses are none of those, so they should just get their own name. The official name "xons" was chosen because that's what Manuel Simoni uses for this concept, and also "Xn" is a pretty cool name.
 
   * Reference cell (Ce)
 
