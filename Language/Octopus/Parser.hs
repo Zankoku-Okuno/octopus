@@ -76,11 +76,12 @@ parseOctopusFile sourceName input =
     in (,) directives . desugar <$> P.runParser parser startState sourceName code
     where
     parser = do
-        --TODO parse notation configs
         whitespace0 >> blankLines
         P.optional (newline >> whitespace0 >> startImplicit)
+        --TODO parse notation configs
+        api <- P.option getenv $ export <* nextLine
         stmts <- (statement <* blankLines) `P.sepBy` nextLine
         --endImplicit 1
-        return . Do $ stmts ++ [getenv]
-    getenv = Expr . Lit $ mkCall (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkXn []], mkSy "e"])) (mkXn [])
+        return $ Do (Just api) stmts
+    getenv = Lit $ mkCall (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkXn []], mkSy "e"])) (mkXn [])
 

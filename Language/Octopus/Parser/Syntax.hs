@@ -30,7 +30,7 @@ data Syx = Lit Val
          | Call [Syx]
          | SqSyx [Syx]
          | XnExpr [(Symbol, Syx)]
-         | Do [Statement Syx]
+         | Do (Maybe Syx) [Statement Syx]
          | Infix Syx
     deriving (Show)
 
@@ -75,10 +75,11 @@ block :: Parser Syx
 block = do
     try (string "do" >> whitespace)
     startImplicit
+    api <- P.optionMaybe $ export <* nextLine
     stmts <- (statement <* whitespace0) `P.sepBy1` nextLine
     whitespace0
     dedent >>= endImplicit
-    return $ Do stmts
+    return $ Do api stmts
 
 quote :: Parser Syx
 quote = do
@@ -125,7 +126,10 @@ openStmt = do
     try $ string "open" <* whitespace
     Open <$> bareCombination
 
---TODO export statement
+export :: Parser Syx
+export = do
+    try $ string "export" <* whitespace
+    expr
 
 
 ------ Helpers ------

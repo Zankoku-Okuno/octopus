@@ -13,10 +13,6 @@ Parser
 		interpret config
 		apply
 	literate files
-	export form in file/do
-		currently, it exports the whole environment
-		a way to give out a limited set would be very useful
-		export ::= 'export' <pattern>
 	docstrings
 	decorators in do blocks
 	infix index functions :[e] :[e: f]

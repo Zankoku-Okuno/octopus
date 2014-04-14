@@ -142,6 +142,8 @@ main = do
     test "do x: 1\n\
          \   foo: 3\n\
          \   {x, y: foo}"
+    test "do export {x}\n\
+         \   [x, y]: [1, 2]"
 
 
 

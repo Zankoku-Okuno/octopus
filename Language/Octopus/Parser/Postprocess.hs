@@ -24,10 +24,14 @@ desugar (Call xs) = loop . (desugar <$>) $ revTripBy isInfix (id, rewrite) xs
     isInfix _ = False
 desugar (SqSyx xs) = mkSq $ desugar <$> xs
 desugar (XnExpr xs) = mkXn $ desugarField <$> xs
-desugar (Do xs) = loop xs
+desugar (Do api xs) = loop xs
     where
-    loop [Defn ds x e]      = mkCall (mkDefn $ desugarDefine ds x e) (mkXn [])
-    loop [Expr e]           = desugar e
+    loop [Defn ds x e]      = case api of
+                                Nothing -> mkCall (mkDefn $ desugarDefine ds x e) (mkXn [])
+                                Just api -> mkCall (mkDefn $ desugarDefine ds x e) (desugar api)
+    loop [Expr e]           = case api of
+                                Nothing -> desugar e
+                                Just api -> mkCall (mkExpr $ desugar e) (desugar api)
     loop (Defn ds x e:rest) = mkCall (mkDefn $ desugarDefine ds x e) (loop rest)
     loop (LRec x e:rest)    = mkCall (mkDefn $ desugarLetrec x e) (loop rest)
     loop (Open e:rest)      = mkCall (mkOpen $ desugar e) (loop rest)
