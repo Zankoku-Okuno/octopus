@@ -25,13 +25,11 @@ Parser
 	indentation sensitivity
 		cleanup & further testing
 		turn it off with a directive
-	ellipsis?
 	special syntax for lambda and vau
 		use the primitive ones, allow for stuff like (\l (x y z) body)
 		nah, I can do this in userland
 
 Interpreter
-	separate ImportError (error in interpretring the file) from LibraryError (imported file not available)
 	Data primitives
 		channels
 		conversions
@@ -52,7 +50,7 @@ Interpreter
 		actual C and JS FFIs
 	REPL
 	ffi
-	version specifier in import string
+	version specifier in import string (could be done in userland)
 	re-raise exceptions?
 		perhaps by keeping the last unwond stack around until a handler returns normally
 		on re-raise, we simply cat the stacks

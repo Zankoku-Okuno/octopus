@@ -44,5 +44,5 @@ getBuiltins = do
             , ("TypeError", exnTypeError), ("MatchFail", exnMatchFail)
             , ("ScopeError", exnScopeError), ("AttrError", exnAttrError), ("IndexError", exnIndexError)
             , ("DivZero", exnDivZero), ("IOError", exnIOError)
-            , ("SyntaxError", exnSyntaxError), ("ImportError", exnImportError)
+            , ("LibraryError", exnLibraryError), ("SyntaxError", exnSyntaxError), ("ImportError", exnImportError)
             ]

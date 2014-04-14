@@ -257,7 +257,7 @@ impFile (Tx pathstr) = do
                             raise err
                 Left raw_err -> do
                     --TODO format the IOError the way I want it, not the way Haskell gives it
-                    let err = (getTag exnIOError, mkSq [exnIOError, Tx . pack $ show raw_err])
+                    let err = (getTag exnLibraryError, mkSq [exnIOError, Tx . pack $ show raw_err])
                     liftIO $ loading_var `putMVar` Left err
                     raise err
 impFile x = raise $ mkTypeError (Pr Imp) "Tx" x
