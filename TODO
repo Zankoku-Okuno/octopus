@@ -9,16 +9,16 @@ General
 
 Parser
 	mutual letrec
+	anonymous points
 	distfixes
 		interpret config
 		apply
 	literate files
-	docstrings
 	decorators in do blocks
 	infix index functions :[e] :[e: f]
 	indentation sensitivity
-		cleanup & further testing
 		turn it off with a directive
+		theory, cleanup & further testing
 	special syntax for lambda and vau
 		use the primitive ones, allow for stuff like (\l (x y z) body)
 		nah, I can do this in userland
@@ -38,6 +38,8 @@ Interpreter
 			make the tag generator thread-global
 			attach a threadid to the tag (assuming tids are not reused)
 	directives
+		no-indent, no-unicoder
+		language extensions
 	offer a way to force import despite caching
 	pass arbitrary flags to interpreter (like -D in gcc), look them up at runtime
 	an interpreter maker, configured in a Haskell program `(perfile, repl) = octi someConfig`

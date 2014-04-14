@@ -145,6 +145,14 @@ main = do
     test "do export {x}\n\
          \   [x, y]: [1, 2]"
 
+    test "do x :: a random number (#<readByte> #<stdin>)\n\
+         \   x: 4"
+    test "do x ::<<\n\
+         \sdg\n\
+         \     etc\n\
+         \>>\n\
+         \   x: 4"
+
 
 
 

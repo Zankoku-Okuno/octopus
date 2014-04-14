@@ -39,6 +39,7 @@ statement = P.choice
     [ openStmt
     , letrec
     , define
+    , docstring
     , Expr <$> bareCombination
     ]
 
@@ -130,6 +131,21 @@ export :: Parser Syx
 export = do
     try $ string "export" <* whitespace
     expr
+
+docstring :: Parser (Statement Syx)
+docstring = do
+        for <- try $ name <* whitespace <* string "::"
+        content <- multiline <|> oneline
+        return $ DocS for content
+    where
+    multiline = do
+        string "<<\n"
+        content <- anyChar `manyTill` (string "\n>>" *> (newline <|> eof))
+        string "\n>>"
+        return content
+    oneline = do
+        whitespace
+        anyChar `manyTill` char '\n'
 
 
 ------ Helpers ------

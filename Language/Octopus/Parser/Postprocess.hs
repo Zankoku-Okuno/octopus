@@ -24,7 +24,7 @@ desugar (Call xs) = loop . (desugar <$>) $ revTripBy isInfix (id, rewrite) xs
     isInfix _ = False
 desugar (SqSyx xs) = mkSq $ desugar <$> xs
 desugar (XnExpr xs) = mkXn $ desugarField <$> xs
-desugar (Do api xs) = loop xs
+desugar (Do api xs) = loop (filter (not . isDocstring) xs)
     where
     loop [Defn ds x e]      = case api of
                                 Nothing -> mkCall (mkDefn $ desugarDefine ds x e) (mkXn [])
@@ -36,6 +36,9 @@ desugar (Do api xs) = loop xs
     loop (LRec x e:rest)    = mkCall (mkDefn $ desugarLetrec x e) (loop rest)
     loop (Open e:rest)      = mkCall (mkOpen $ desugar e) (loop rest)
     loop (Expr e:rest)      = mkCall (mkExpr $ desugar e) (loop rest)
+    isDocstring (DocS _ _) = True
+    isDocstring _ = False
+
 desugar x = error $ "INTERNAL ERROR Octopus.Parser.desugar: " ++ show x
 
 desugarField :: (Symbol, Syx) -> (Symbol, Val)
