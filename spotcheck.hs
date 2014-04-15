@@ -31,6 +31,10 @@ main = do
     --testParse "x :y"
     --testParse "x :( y: ++)"
     --testParse "`q"
+    --content <- readFile "lib/foo.oct"
+    --case Syx.parseOctopusFile "" content of
+    --    Right val -> print val
+    --    Left err -> print err >> exitFailure
     --exitSuccess
 
     test "\"hi\""

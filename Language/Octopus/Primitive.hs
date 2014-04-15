@@ -272,8 +272,8 @@ cut xs n = Left $ mkTypeError (Pr Cut) "(Sq * | Tx | By, Nat)" (mkSq [xs, n])
 ------ Xons ------
 {-| @get x f@ retrieves field @f@ from @x@, if the field exists. -}
 get :: Val -> Val -> Fallible Val
-get (Xn xn) (Sy sy) = maybe (Left (getTag exnAttrError, mkSq [exnAttrError, Sy sy, Xn xn])) Right $ Map.lookup sy xn
-get xn sy = Left $ mkTypeError (Pr Get) "(Xn, Sy)" (mkSq [xn, sy])
+get (Xn xn) (Sy sy) = maybe (Left (getTag exnAttrError, mkSq [exnAttrError, mkCall (mkSy "__quote__") (Sy sy), Xn xn])) Right $ Map.lookup sy xn
+get xn sy = Left $ mkTypeError (Pr Get) "(Xn, Sy)" (mkSq [xn, mkCall (mkSy "__quote__") sy])
 
 {-| Get a list of the fields in a value. -}
 keys :: Val -> Fallible Val

@@ -1,0 +1,19 @@
+export { has, get, set, mod, del }
+
+open #<import> "./calculus-bootstrap"
+
+
+has: λ xn
+   vau [{}, field]
+      handle #<AttrError> (vau {} 0)
+         do #<get> [xn, field]
+            1
+get: λ x (vau [{}, field] (#<get> [x, field]))
+set: vau [{}, field]
+   λ xn
+      λ val
+         xn .with (field .match val)
+mod: __modify__
+del: λ xn
+   vau [{}, field]
+      #<delete> [xn, field]
