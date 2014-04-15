@@ -1,4 +1,5 @@
-### These are the true basis of using the vau calculus. ###
+### These are the operators of the vau and lambda calculi. ###
+vau :: One-argument vau.
 vau: #<vau> [ [{}, var]
             , #<vau> [ [static, body]
                      , #<vau> [ arg
@@ -8,6 +9,7 @@ vau: #<vau> [ [{}, var]
                               ]
                      ]
             ]
+λ :: One-argument lambda.
 λ: vau [{}, var]
       vau [static, body]
          vau arg
@@ -20,12 +22,6 @@ Y: λ f
          maker maker
 
 
-### These are just prettier ways of getting at important primitives. ###
-eval: λ env (λ ast (#<eval> [env, ast]))
-match: λ var (λ val (#<match> [var, val]))
-with: λ base (λ new (#<extends> [new, base]))
-
-
 ### These are necessary for syntactic sugar. ###
 __lambda__: λ
 __Y__: Y
@@ -33,6 +29,35 @@ __quote__: vau [{}, ast] ast
 __get__: vau [{}, field]
             λ x (#<get> [x, field])
 __modify__: vau [{}, field]
-               λ f 
+               λ f
                   λ x
                      x .with (field .match (f (__get__ feild x)))
+
+
+### And now the basic control operators ###
+handle :: Tg → (a → r) → r
+handle: λ mark
+   λ handler
+      vau body
+         #<handle> [mark, handler, `(#<eval> body)]
+
+raise :: Tg → a → *
+raise: λ mark
+   λ report
+      #<raise> [mark, report]
+
+
+### These are just prettier ways of getting at important primitives. ###
+eval :: Env → * → *
+eval: λ env (λ ast (#<eval> [env, ast]))
+
+match :: Pat → * → Env
+match: λ var (λ val (#<match> [var, val]))
+
+with :: Env → Env → Env
+with ::<<
+   Extends and overrides the first environment with bindings from the second.
+>>
+with: λ base (λ new (#<extends> [new, base]))
+
+

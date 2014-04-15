@@ -128,6 +128,7 @@ buffer = whitespace <|> lookAhead newline <|> eof
 ------ Indentation ------
 nextLine :: Parser ()
 nextLine = try $ do
+    blankLines
     n <- leadingSpaces
     n' <- topIndent >>= return . fromMaybe 1
     if n == n'

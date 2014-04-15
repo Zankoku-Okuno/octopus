@@ -80,7 +80,7 @@ main = do
     test "do [a, b]: #<cut> [\"hello\", 3]\n   [a, b, #<len> a]"
     test "do y: #<ifz!> [0, `y, `n]\n   n: #<ifz!> [1, `y, `n]\n   [y, n]"
 
-    test "do {\955: \955}: #<import> \"/basis\"\n   \955 x x 6"
+    test "do {\955: \955}: #<import> \"/base/calculus-bootstrap\"\n   \955 x x 6"
     test "do {\955: \955}: #<import> \"examples/basis\"\n   \955 x x 6"
 
     test "do t: #<mkTag> \"phoey\"\n   #<handle> [t, 3, `5]"
@@ -146,12 +146,14 @@ main = do
          \   [x, y]: [1, 2]"
 
     test "do x :: a random number (#<readByte> #<stdin>)\n\
-         \   x: 4"
+         \   x: 4\n\
+         \   x"
     test "do x ::<<\n\
          \sdg\n\
          \     etc\n\
          \>>\n\
-         \   x: 4"
+         \   x: 4\n\
+         \   x"
 
 
 

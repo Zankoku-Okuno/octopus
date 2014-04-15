@@ -1,4 +1,12 @@
-open #<import> "/basis"
+#FIXME actually, use getEnv and delete
+export { eq, neq, lt, lte, gt, gte
+       , add, sub, mul, div
+       , numer, denom, numParts
+       , readByte, writeByte, flush, close
+       , mkTag, mkAbstype, typeof
+       }
+
+open #<import> "./calculus-bootstrap"
 
 #FIXME don't export these
 -mkUn: vau [{}, op]

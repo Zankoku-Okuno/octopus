@@ -80,7 +80,7 @@ parseOctopusFile sourceName input =
         P.optional (newline >> whitespace0 >> startImplicit)
         --TODO parse notation configs
         api <- P.option getenv $ export <* nextLine
-        stmts <- (statement <* blankLines) `P.sepBy` nextLine
+        stmts <- (statement <* whitespace0) `P.sepBy` nextLine
         --endImplicit 1
         return $ Do (Just api) stmts
     getenv = Lit $ mkCall (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkXn []], mkSy "e"])) (mkXn [])
