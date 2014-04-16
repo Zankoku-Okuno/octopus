@@ -1,19 +1,32 @@
+# base/Xn :: Manipulate xonses.
 export { has, get, set, mod, del }
 
 open #<import> "./calculus-bootstrap"
 
 
+has :: Xn → `Sy → Bool
 has: λ xn
    vau [{}, field]
       handle #<AttrError> (vau {} 0)
          do #<get> [xn, field]
             1
+
+get :: Xn → `Sy → *
 get: λ x (vau [{}, field] (#<get> [x, field]))
+
+set :: `Sy \to Xn → * → Xn
 set: vau [{}, field]
    λ xn
       λ val
          xn .with (field .match val)
-mod: __modify__
+
+mod :: `Sy \to Xn → (* → *) → Xn
+mod: vau [{}, field]
+   λ xn
+      λ f
+         xn .with (field .match (f (#<get> [xn, field])))
+
+del :: Xn → `Sy → Xn
 del: λ xn
    vau [{}, field]
-      #<delete> [xn, field]
+      #<del> [xn, field]

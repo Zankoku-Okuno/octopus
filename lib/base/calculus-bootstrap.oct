@@ -26,12 +26,14 @@ Y: λ f
 __lambda__: λ
 __Y__: Y
 __quote__: vau [{}, ast] ast
+
 __get__: vau [{}, field]
             λ x (#<get> [x, field])
+
 __modify__: vau [{}, field]
                λ f
                   λ x
-                     x .with (field .match (f (__get__ feild x)))
+                     #<extends> [#<match> [field, f (#<get> [x, field])], x]
 
 
 ### And now the basic control operators ###
