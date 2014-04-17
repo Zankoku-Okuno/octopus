@@ -1,0 +1,58 @@
+# bootstrap/branch :: If, cond, case, &c.
+export { true, false
+       , if_then_else_, unless_then_else_
+       , _->_, cond, case_of_
+       }
+
+open #<import> "./calculus"
+open #<import> "./primitives"
+open #<import> "./Sq"
+
+
+[true, false]: [1, 0]
+
+if_then_else_: λ p
+   vau c
+      vau a
+         #<ifz!> [p, a, c] .#<eval>
+
+unless_then_else_: λ p
+   vau c
+      vau a
+         #<ifz!> [p, c, a] .#<eval>
+
+
+
+_->_: vau guard
+   vau result
+      { -guard: λ {} guard
+      , -result: λ {} result
+      }
+
+
+# [] xs .loop
+#    λ (acc rem)
+#       ...
+
+
+cond :: [{-guard: Bool, -result: a}] → a
+cond: λ clauses
+   do letrec loop: λ rem
+                     if_then_else_ (rem .len .eq 0) (raise #<MatchFail> "cond")
+                        do [[it], rest]: rem .cut 1
+                           if_then_else_ (it :-guard {} .#<eval>) (it :-result {} .#<eval>)
+                              loop rest
+      loop clauses
+
+
+case_of_ :: [{-guard: Pat a, -result: b}] → a → b
+case_of_: λ val
+   λ clauses
+      do letrec loop: λ rem
+            if_then_else_ (rem .len .eq 0) (raise #<MatchFail> ["case", val])
+               handle #<MatchFail> (vau {} (rem .tl .loop))
+                  do [{}, pat]: rem .hd :-guard {}
+                     e': pat .match val
+                     [e, body]: rem .hd :-result {}
+                     [e .with e', body]
+         loop clauses .#<eval>

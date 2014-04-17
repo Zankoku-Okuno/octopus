@@ -5,7 +5,7 @@ export { len, cat, cut
        , foldl, foldr, map
        }
 # base/Sq :: Manipulate sequences.
-open #<import> "./calculus-bootstrap"
+open #<import> "./calculus"
 {sub}: #<import> "./primitives"
 
 len :: [*] → Nat

@@ -6,7 +6,7 @@ export { eq, neq, lt, lte, gt, gte
        , mkTag, mkAbstype, typeof
        }
 
-open #<import> "./calculus-bootstrap"
+open #<import> "./calculus"
 
 -mkUn: vau [{}, op]
    λ x (op x)
