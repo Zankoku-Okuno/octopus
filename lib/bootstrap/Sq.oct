@@ -65,7 +65,7 @@ snoc: λ xs (λ x (xs .cat [x]))
 ifz: λ p
    vau c
       vau a
-         #<ifz!> [p, c, a] .#<eval>
+         #<ifz> [p, c, a] .#<eval>
 
 map :: (a → b) → [a] → [b]
 map: λ f

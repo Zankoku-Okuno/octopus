@@ -129,7 +129,7 @@ Basic Data
   > #<mul> :: ∀ a :: Nm | Fl. (a, a) → a
   > #<sub> :: ∀ a :: Nm | Fl. (a, a) → a
   > #<div> :: ∀ a :: Nm | Fl. (a, a) → a
-  > #<ifz!> :: (Nm, a, a) \to a
+  > #<ifz> :: (Nm, a, a) \to a
 
   > #<numer> :: ∀ a :: Nm | Fl. a → a
   > #<denom> :: ∀ a :: Nm | Fl. a → a

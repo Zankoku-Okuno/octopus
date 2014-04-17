@@ -23,7 +23,7 @@ getBuiltins = do
                   ]
     return $ table ++ extra
     where
-    table = [ ("vau", Pr Vau), ("eval", Pr Eval), ("match", Pr Match), ("ifz!", Pr Ifz), ("import", Pr Imp)
+    table = [ ("vau", Pr Vau), ("eval", Pr Eval), ("match", Pr Match), ("ifz", Pr Ifz), ("import", Pr Imp)
             , ("eq", Pr Eq), ("neq", Pr Neq), ("lt", Pr Lt), ("lte", Pr Lte), ("gt", Pr Gt), ("gte", Pr Gte)
             , ("add", Pr Add) , ("mul", Pr Mul) , ("sub", Pr Sub) , ("div", Pr Div)
             , ("numer", Pr Numer) , ("denom", Pr Denom) , ("numParts", Pr NumParts)

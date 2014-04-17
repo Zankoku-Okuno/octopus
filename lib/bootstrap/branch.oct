@@ -1,6 +1,7 @@
 # bootstrap/branch :: If, cond, case, &c.
 export { true, false
-       , if_then_else_, unless_then_else_
+       , if_then_else_, if!_then_else_
+       , when, unless
        , _->_, cond, case_of_
        }
 
@@ -11,16 +12,31 @@ open #<import> "./Sq"
 
 [true, false]: [1, 0]
 
+
+if_then_else_ :: Bool → a → a → a
 if_then_else_: λ p
    vau c
       vau a
-         #<ifz!> [p, a, c] .#<eval>
+         #<ifz> [p, a, c] .#<eval>
 
-unless_then_else_: λ p
+
+if!_then_else_: λ p
    vau c
       vau a
-         #<ifz!> [p, c, a] .#<eval>
+         #<ifz> [p, c, a] .#<eval>
 
+
+when :: Bool → * → {}
+when: λ p
+   vau c
+      do #<ifz> [p, {}, c] .#<eval>
+         {}
+
+unless :: Bool → * → {}
+unless: λ p
+   vau c
+      do #<ifz> [p, c, {}] .#<eval>
+         {}
 
 
 _->_: vau guard
@@ -28,12 +44,6 @@ _->_: vau guard
       { -guard: λ {} guard
       , -result: λ {} result
       }
-
-
-# [] xs .loop
-#    λ (acc rem)
-#       ...
-
 
 cond :: [{-guard: Bool, -result: a}] → a
 cond: λ clauses
@@ -43,7 +53,6 @@ cond: λ clauses
                            if_then_else_ (it :-guard {} .#<eval>) (it :-result {} .#<eval>)
                               loop rest
       loop clauses
-
 
 case_of_ :: [{-guard: Pat a, -result: b}] → a → b
 case_of_: λ val
@@ -56,3 +65,7 @@ case_of_: λ val
                      [e, body]: rem .hd :-result {}
                      [e .with e', body]
          loop clauses .#<eval>
+
+# [] xs .loop
+#    λ (acc rem)
+#       ...
