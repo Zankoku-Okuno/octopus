@@ -1,0 +1,96 @@
+export { len, cat, cut
+       , cons, snoc
+       , hd, tl, init, last
+       , ix, slice
+       , foldl, foldr, map
+       }
+# base/Sq :: Manipulate sequences.
+open #<import> "./calculus-bootstrap"
+{sub}: #<import> "./primitives"
+
+len :: [*] → Nat
+len: #<len>
+
+cat :: [a] → [a] → [a]
+cat: λ xs
+   λ ys
+      #<cat> [xs, ys]
+
+cut :: [a] → ([a], [a])
+cut: λ xs
+   λ at
+      #<cut> [xs, at]
+
+
+-destruct: λ val
+   vau [{}, pat]
+      pat .match val :it
+
+hd :: [a] → a
+hd: λ xs
+   xs .cut 1 .-destruct [[it], {}]
+
+tl :: [a] → [a]
+tl: λ xs
+   xs .cut 1 .-destruct [{}, it]
+
+init :: [a] → [a]
+init: λ xs
+   xs .cut (xs .len .sub 1) .-destruct [it, {}]
+
+last :: [a] → a
+last: λ xs
+   xs .cut (xs .len .sub 1) .-destruct [{}, [it]]
+
+
+slice :: [a] → (Nat, Nat) → [a]
+slice: λ xs
+   λ [start, end]
+      do [{}, xs']: xs .cut start
+         [xs'', {}]: xs' .cut end
+         xs''
+
+ix :: [a] → Nat → a
+ix: λ xs
+   λ i
+      xs .slice [i, 1] .hd
+
+
+cons :: a → [a] → [a]
+cons: λ x (λ xs ([x] .cat xs))
+snoc :: [a] → a → [a]
+snoc: λ xs (λ x (xs .cat [x]))
+
+
+ifz: λ p
+   vau c
+      vau a
+         #<ifz!> [p, c, a] .#<eval>
+
+map :: (a → b) → [a] → [b]
+map: λ f
+   do letrec loop: λ acc
+                     λ rem
+                        ifz (rem .len) acc
+                            loop (acc .snoc (rem .hd .f)) (rem .tl)
+      loop []
+
+
+foldl :: (a → b → b) → b → [a] → b
+foldl: λ f
+   λ z
+      do letrec loop: λ acc
+                        λ rem
+                           ifz (rem .len) acc
+                              loop (f (rem .hd) acc) (rem .tl)
+         loop z
+
+foldr :: (a → b → b) → b → [a] → b
+foldr: λ f
+   λ z
+      do letrec loop: λ acc
+                        λ rem
+                           ifz (rem .len) acc
+                              loop (f (rem .last) acc) (rem .init)
+         loop z
+#TODO foldr/foldl, map, filter/exclude

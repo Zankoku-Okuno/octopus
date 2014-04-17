@@ -245,17 +245,17 @@ cut x (Nm q) =
     case x of
         Sq xs -> do
             i <- n
-            when (i >= Seq.length xs) $ ixErr
+            when (i > Seq.length xs) $ ixErr
             let (as, bs) = Seq.splitAt i xs
             Right $ mkSq [Sq as, Sq bs]
         Tx xs -> do
             i <- n
-            when (i >= T.length xs) $ ixErr
+            when (i > T.length xs) $ ixErr
             let (as, bs) = T.splitAt i xs
             Right $ mkSq [Tx as, Tx bs]
         By xs -> do
             i <- n
-            when (i >= BS.length xs) $ ixErr
+            when (i > BS.length xs) $ ixErr
             let (as, bs) = BS.splitAt i xs
             Right $ mkSq [By as, By bs]
         _ -> tyErr

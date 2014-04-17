@@ -8,7 +8,6 @@ export { eq, neq, lt, lte, gt, gte
 
 open #<import> "./calculus-bootstrap"
 
-#FIXME don't export these
 -mkUn: vau [{}, op]
    λ x (op x)
 -mkBin: vau [{}, op]
@@ -39,9 +38,4 @@ close: -mkUn #<close>
 mkTag: -mkUn #<mkTag>
 mkAbstype: -mkUn #<mkAbstype>
 typeof: -mkUn #<typeof>
-
-# Composite Data
-
-
-# Control
 
