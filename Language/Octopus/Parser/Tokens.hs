@@ -5,8 +5,8 @@ import qualified Text.Parsec as P
 import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
 import Language.Octopus.Parser.Import
+import Language.Octopus.Parser.Whitespace
 import Language.Octopus.Parser.Policy
-
 
 
 ------ Atoms ------
@@ -33,8 +33,8 @@ charLit = mkInt . ord <$> between2 (char '\'') (literalChar P.<|> oneOf "\'\"")
 bytesLiteral :: Parser Val
 bytesLiteral = do
         string "b\""
-        whitespace0
-        content <- P.many1 $ byte <* P.optional multiWhitespace
+        P.optional mws
+        content <- P.many1 $ byte <* P.optional mws
         string "\""
         return $ mkBy content
     where
@@ -79,105 +79,26 @@ name = P.choice [ (:) <$> namehead <*> nametail
     nametail = P.many $ blacklistChar (`elem` reservedChar)
 
 
------- Whitespace ------
---FIXME REFAC inlineSpace and newline to Language.Parse
-inlineSpace = void $ oneOf " \t" --FIXME more possibilities
-newline = void $ oneOf "\n" --FIXME any unicode versions
-
-{-| Consume a line comment, but not the newline after. -}
-lineComment :: Parser ()
-lineComment = void $ do
-    try $ char '#' >> P.notFollowedBy (oneOf "<{")
-    anyChar `manyTill` (newline P.<|> eof)
-
-blockComment :: Parser ()
-blockComment = void $ do P.parserZero
-
-whitespace :: Parser ()
-whitespace = do
-    P.skipMany1 $ P.choice [
-          P.skipMany1 inlineSpace
-        , lineComment
-        , blockComment
-        ]
-
-whitespace0 :: Parser ()
-whitespace0 = P.optional whitespace
-
-{-| Consume a blank line
-    (starts with newline then whitespace, with nothing else before the next line).
--}
-blankLine :: Parser ()
-blankLine = try $ do
-    newline
-    whitespace0
-    P.lookAhead (void newline <|> eof)
-
-blankLines :: Parser ()
-blankLines = P.skipMany blankLine
-
-multiWhitespace :: Parser ()
-multiWhitespace = P.skipMany1 (whitespace P.<|> newline)
-
-multiWhitespace0 :: Parser ()
-multiWhitespace0 = P.optional multiWhitespace
-
-buffer :: Parser ()
-buffer = whitespace <|> lookAhead newline <|> eof
-
------- Indentation ------
-nextLine :: Parser ()
-nextLine = try $ do
-    blankLines
-    n <- leadingSpaces
-    n' <- topIndent >>= return . fromMaybe 1
-    if n == n'
-        then return ()
-        else fail $ if n > n' then "too much indent" else "too little indent"
-
-indent :: Parser ()
-indent = try $ do
-    n <- leadingSpaces
-    n' <- topIndent >>= return . fromMaybe 1
-    if n > n'
-        then return ()
-        else fail $ "not indented far enough (" ++ show n ++ " <= " ++ show n' ++ ")"
-
-dedent :: Parser Int
-dedent = try $ do
-    n <- lookAhead leadingSpaces <|> (eof >> return 0)
-    n' <- topIndent >>= return . fromMaybe 0
-    if n < n'
-        then return n
-        else fail $ "not dedented far enough (" ++ show n ++ " >= " ++ show n' ++ ")"
-
-leadingSpaces :: Parser Int
-leadingSpaces = try $ (+1) . length <$> (newline >> P.many (char ' '))
-
-
 ------ Separators ------
-open :: Parser ()
-open =  try (char '(' >> startExplicit)
-    <|> try (indent >> startImplicit)
-
-close :: Parser ()
-close =  try (char ')' >> endExplicit)
-     <|> try (dedent >>= endImplicit)
+openParen :: Parser ()
+openParen =  char '(' >> whenLayout (indentFromPos >>= pushExplicit)
 
 openBracket :: Parser ()
-openBracket = try $ char '[' >> startExplicit
-
-closeBracket :: Parser ()
-closeBracket = try $ char ']' >> endExplicit
+openBracket = char '[' >> whenLayout (indentFromPos >>= pushExplicit)
 
 openBrace :: Parser ()
-openBrace = try $ char '{' >> startExplicit
+openBrace = char '{' >> whenLayout (indentFromPos >>= pushExplicit)
+
+closeParen :: Parser ()
+closeParen =  char ')' >> whenLayout popExplicit
+
+closeBracket :: Parser ()
+closeBracket = char ']' >> whenLayout popExplicit
 
 closeBrace :: Parser ()
-closeBrace = try $ char '}' >> endExplicit
+closeBrace = char '}' >> whenLayout popExplicit
 
 comma :: Parser ()
 comma = do
-    try $ char ',' >> buffer
-    endExplicit
-    startExplicit
+    try $ char ',' >> mws
+    whenLayout $ popExplicit >> indentFromPos >>= pushExplicit

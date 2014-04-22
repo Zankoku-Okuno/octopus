@@ -5,16 +5,9 @@ import qualified Text.Parsec as P
 import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
 import Language.Octopus.Parser.Import
+import Language.Octopus.Parser.Whitespace
 import Language.Octopus.Parser.Tokens
 
---FIXME DELME
-parseOctopusExpr :: SourceName -> String -> Either ParseError Syx
-parseOctopusExpr sourceName input = P.runParser (startFile *> bareCombination <* endFile) startState sourceName input
-
-startFile :: Parser ()
-startFile = P.many blankLine >> P.optional newline
-endFile :: Parser ()
-endFile = P.many blankLine >> whitespace0 >> eof
 
 
 data Statement a = Defn [a] a a
@@ -35,51 +28,73 @@ data Syx = Lit Val
     deriving (Show)
 
 
+
+startFile :: Parser ()
+startFile = flip onLayout ws0 $ do
+    P.many blankline
+    P.optional newline
+    c <- (\p -> if p then '\t' else ' ') <$> asks _isTabbed
+    initIndent =<< length <$> P.many (char c)
+
+endFile :: Parser ()
+endFile = ws0 >> P.many blankline >> eof
+
 statement = P.choice
     [ openStmt
     , letrec
     , define
     , docstring
-    , Expr <$> bareCombination
+    , Expr <$> bare
     ]
 
 expr :: Parser Syx
 expr = P.choice
     [ Lit <$> atom <?> "atom", sq, xn
-    , combine, block
+    , combine, doExpr
     , quote, dottedExpr, accessor, mutator
     ]
+
+block :: Parser (Maybe Syx, [Statement Syx])
+block = do
+    api <- P.optionMaybe $ export <* blockSep
+    stmts <- (statement <* ws0) `P.sepBy1` blockSep
+    return (api, stmts)
+
+blockSep :: Parser ()
+blockSep = onLayout nextline (void $ char ';')
 
 
 ------ Expressions ------
 sq :: Parser Syx
-sq = P.between (openBracket *> whitespace0) (multiWhitespace0 <* closeBracket) $
-    SqSyx <$> (multiWhitespace0 *> bareCombination <* multiWhitespace0) `P.sepBy` comma
+sq = P.between (openBracket *> ws0) (mws0 <* closeBracket) $
+    SqSyx <$> (bare <* mws0) `P.sepBy` comma
 
 xn :: Parser Syx
-xn = P.between (openBrace *> whitespace0) (multiWhitespace0 <* closeBrace) $
-    XnExpr <$> (multiWhitespace0 *> (pair <|> single) <* multiWhitespace0) `P.sepBy` comma
+xn = P.between (openBrace *> ws0) (mws0 <* closeBrace) $
+    XnExpr <$> ((pair <|> single) <* mws0) `P.sepBy` comma
     where
     pair = do
-        key <- try $ (intern <$> name) <* char ':' <* whitespace
-        val <- bareCombination
+        key <- try $ (intern <$> name) <* char ':' <* ws
+        val <- bare
         return (key, val)
     single = do
-        key <- name
-        return (intern key, Lit $ mkSy key)
+        key <- intern <$> name
+        return (key, Lit $ Sy key)
 
 
 combine :: Parser Syx
-combine = open *> whitespace0 *> bareCombination <* whitespace0 <* close
+combine = onLayout (byIndent <|> byParen) byParen
+    where
+    byParen = openParen *> ws0 *> bare <* ws0 <* closeParen
+    byIndent = indent *> bare <* ws0 <* dedent
+    
 
-block :: Parser Syx
-block = do
-    try (string "do" >> whitespace)
-    startImplicit
-    api <- P.optionMaybe $ export <* nextLine
-    stmts <- (statement <* whitespace0) `P.sepBy1` nextLine
-    whitespace0
-    dedent >>= endImplicit
+doExpr :: Parser Syx
+doExpr = do
+    try (string "do" >> ws)
+    whenLayout $ indentFromPos >>= pushImplicit
+    (api, stmts) <- block
+    onLayout dedent (void $ char ';')
     return $ Do api stmts
 
 quote :: Parser Syx
@@ -97,45 +112,29 @@ accessor = do
 
 mutator :: Parser Syx
 mutator = do
-    string ":(" >> startExplicit
-    whitespace0
+    string ":(" >> whenLayout (indentFromPos >>= pushExplicit) >> ws0
     key <- name <* char ':'
-    whitespace
-    e <- bareCombination 
-    char ')' >> endExplicit
+    ws
+    e <- bare
+    ws0 >> char ')' >> whenLayout popExplicit
     return . Infix $ Call [Lit $ mkSy "__modify__", Lit $ mkSy key, e]
 
 
------- Statements ------
-define :: Parser (Statement Syx)
-define = do
-    --TODO decorators
-    var <- try $ expr <* char ':'
-    whitespace
-    val <- bareCombination
-    return $ Defn [] var val
-
-letrec :: Parser (Statement Syx)
-letrec = do
-    try $ string "letrec" <* whitespace
-    var <- expr <* char ':' <* whitespace
-    body <- bareCombination
-    return $ LRec var body
-
-openStmt :: Parser (Statement Syx)
-openStmt = do
-    try $ string "open" <* whitespace
-    Open <$> bareCombination
+------ Pseudo-statements ------
+bare :: Parser Syx
+bare = do
+    es <- many2 expr (try $ ws *> expr)
+    return $ case es of { [e] -> e; es -> Call es }
 
 export :: Parser Syx
 export = do
-    try $ string "export" <* whitespace
-    expr
+    try $ string "export" <* ws
+    bare
 
 docstring :: Parser (Statement Syx)
 docstring = do
-        for <- try $ name <* whitespace <* string "::"
-        content <- multiline <|> oneline
+        for <- try $ name <* ws <* string "::"
+        content <- multiline <|> ws *> oneline
         return $ DocS for content
     where
     multiline = do
@@ -143,13 +142,28 @@ docstring = do
         content <- anyChar `manyTill` (string "\n>>" *> (newline <|> eof))
         string "\n>>"
         return content
-    oneline = do
-        whitespace
-        anyChar `manyTill` char '\n'
+    oneline = anyChar `manyTill` char '\n'
 
 
------- Helpers ------
-bareCombination :: Parser Syx
-bareCombination = do
-    es <- many2 expr (try $ buffer *> expr)
-    return $ case es of { [e] -> e; es -> Call es }
+------ Statements ------
+define :: Parser (Statement Syx)
+define = do
+    --TODO decorators
+    var <- try $ expr <* char ':'
+    ws
+    val <- bare
+    return $ Defn [] var val
+
+letrec :: Parser (Statement Syx)
+letrec = do
+    try $ string "letrec" <* ws
+    --TODO mutual letrec
+    var <- expr <* char ':' <* ws
+    body <- bare
+    return $ LRec var body
+
+openStmt :: Parser (Statement Syx)
+openStmt = do
+    try $ string "open" <* ws
+    Open <$> bare
+

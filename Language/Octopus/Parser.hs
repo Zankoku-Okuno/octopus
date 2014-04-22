@@ -58,6 +58,7 @@ import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
 import Language.Octopus.Basis
 import Language.Octopus.Parser.Preprocess
+import Language.Octopus.Parser.Whitespace
 import Language.Octopus.Parser.Tokens
 import Language.Octopus.Parser.Syntax
 import Language.Octopus.Parser.Postprocess
@@ -65,23 +66,26 @@ import Language.Octopus.Parser.Postprocess
 
 type Directive = String
 
+
+
 parseOctopusExpr :: SourceName -> String -> Either ParseError Val
-parseOctopusExpr sourceName input = desugar <$> P.runParser parser startState sourceName input
+parseOctopusExpr sourceName input = desugar <$> runReader (P.runPT parser startState sourceName input) defaultConfig
     where
-        parser = startFile *> bareCombination <* endFile
+        parser = startFile *> bare <* endFile
 
 parseOctopusFile :: SourceName -> String -> Either ParseError ([Directive], Val)
 parseOctopusFile sourceName input =
     let (directives, code) = partitionCode input
-    in (,) directives . desugar <$> P.runParser parser startState sourceName code
+        ast = runReader (P.runPT parser startState sourceName code) defaultConfig
+    in (,) directives . desugar <$> ast
     where
     parser = do
-        whitespace0 >> blankLines
-        P.optional (newline >> whitespace0 >> startImplicit)
+        startFile
+        leadingDocs <- docstring *> ws0 `P.sepBy` blockSep
         --TODO parse notation configs
-        api <- P.option getenv $ export <* nextLine
-        stmts <- (statement <* whitespace0) `P.sepBy` nextLine
-        --endImplicit 1
-        return $ Do (Just api) stmts
+        (api, stmts) <- block
+        let api' = fromMaybe getenv api
+        endFile
+        return $ Do (Just api') stmts
     getenv = Lit $ mkCall (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkXn []], mkSy "e"])) (mkXn [])
 

@@ -11,31 +11,31 @@ import Language.Octopus.Data
 import Language.Octopus.Data.Shortcut
 import Language.Octopus.Basis
 
-import qualified Language.Octopus.Parser.Syntax as Syx
 import qualified Language.Octopus.Parser.Postprocess as Syx
 
 import qualified Data.Map as Map
 
 main :: IO ()
 main = do
-    --testParse "\n  #qega\n b\"af \n 3637\""
-    --testParse "(a b\n   c d\n)"
-    --testParse "do a b\n      c d"
-    --testParse "do a b\n      c d\n   e f"
-    --testParse "[1, 2 + 3\n,\n  f x]"
-    --testParse "{a: 1, b: 2,\n c: (3\n      4)\n}"
-    --testParse "do 3\n   f: lambda\n      4"
-    --testParse "do open #<import> module\n   letrec f: f 3"
-    ----testParse "do: 3 4;"
-    --testParse "3 .+ 4"
-    --testParse "x :y"
-    --testParse "x :( y: ++)"
-    --testParse "`q"
-    --content <- readFile "lib/foo.oct"
-    --case Syx.parseOctopusFile "" content of
-    --    Right val -> print val
-    --    Left err -> print err >> exitFailure
-    --exitSuccess
+    testParse "a"
+    testParse "\n  #qega\n b\"af \n 3637\""
+    testParse "(a b\n   c d\n)"
+    testParse "do a b\n      c d"
+    testParse "do a b\n      c d\n   e f"
+    testParse "[1, 2 + 3\n,\n  f x]"
+    testParse "{a: 1, b: 2,\n c: (3\n      4)\n}"
+    testParse "do 3\n   f: lambda\n      4"
+    testParse "do open #<import> module\n   letrec f: f 3"
+    --testParse "do: 3 4;"
+    testParse "3 .+ 4"
+    testParse "x :y"
+    testParse "x :( y: ++)"
+    testParse "`q"
+    content <- readFile "lib/foo.oct"
+    case parseOctopusFile "" content of
+        Right val -> print val
+        Left err -> print err >> exitFailure
+    exitSuccess
 
     test "\"hi\""
     test "r\"b\"\"\\foo\\n\""
@@ -168,16 +168,15 @@ main = do
 
 testParse input = do
     putStrLn input
-    case Syx.parseOctopusExpr "" input of
+    case parseOctopusFile "" input of
         Right val -> print val
         Left err -> print err >> exitFailure
 test input = do
     putStr $ input ++ " ===> "
     cache <- newMVar Map.empty
-    case Syx.parseOctopusExpr "repl" input of
-        Right syx -> do
-            let val = Syx.desugar syx
-                startConfig = MConfig { libdir = "lib/", importsCache = cache, thisFile = Nothing }
+    case parseOctopusExpr "repl" input of
+        Right val -> do
+            let startConfig = MConfig { libdir = "lib/", importsCache = cache, thisFile = Nothing }
             res <- eval startConfig startData val
             print res
         Left err -> print err >> exitFailure
