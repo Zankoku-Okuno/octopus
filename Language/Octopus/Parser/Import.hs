@@ -32,7 +32,7 @@ getNumber (Explicit n) = n
 getNumber (Bottom n) = n
 
 defaultConfig :: Config
-defaultConfig = PC { _isLayout = True, _isTabbed = False }
+defaultConfig = PC { _isLayout = False, _isTabbed = False }
 
 startState :: Stack
 startState = []

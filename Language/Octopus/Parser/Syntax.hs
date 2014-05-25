@@ -43,9 +43,9 @@ statement = P.choice
     [ openStmt
     , letrec
     , define
-    , docstring
     , Expr <$> bare
     ]
+stmtLine = docstring <|> (statement <* ws0 <* blockSep)
 
 expr :: Parser Syx
 expr = P.choice
@@ -57,7 +57,7 @@ expr = P.choice
 block :: Parser (Maybe Syx, [Statement Syx])
 block = do
     api <- P.optionMaybe $ export <* blockSep
-    stmts <- (statement <* ws0) `P.sepBy1` blockSep
+    stmts <- P.many . try $ ws0 *> stmtLine
     return (api, stmts)
 
 blockSep :: Parser ()
@@ -94,7 +94,7 @@ doExpr = do
     try (string "do" >> ws)
     whenLayout $ indentFromPos >>= pushImplicit
     (api, stmts) <- block
-    onLayout dedent (void $ char ';')
+    onLayout dedent (return ())
     return $ Do api stmts
 
 quote :: Parser Syx
@@ -141,8 +141,9 @@ docstring = do
         string "<<\n"
         content <- anyChar `manyTill` (string "\n>>" *> (newline <|> eof))
         string "\n>>"
+        void (char '\n') <|> eof
         return content
-    oneline = anyChar `manyTill` char '\n'
+    oneline = anyChar `manyTill` char '\n' <* (void (char '\n') <|> eof)
 
 
 ------ Statements ------

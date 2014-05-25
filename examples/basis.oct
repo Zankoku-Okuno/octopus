@@ -2,49 +2,45 @@
 vau: #<vau> [ [{}, var]
             , #<vau> [ [static, body]
                      , #<vau> [ arg
-                              , do arg': #<match> [var, arg]
-                                   env': #<extends> [arg', static]
-                                   #<eval> [env', body]
+                              , do arg': #<match> [var, arg];
+                                   env': #<extends> [arg', static];
+                                   #<eval> [env', body];
                               ]
                      ]
-            ]
+            ];
 λ: vau [{}, var]
-      vau [static, body]
-         vau arg
-            do arg': #<eval> arg
-               env': #<extends> [#<match> [var, arg'], static]
-               #<eval> [env', body]
-let: __let__
-Y: (λ f (let maker (λ x (f (λ arg (x x arg)))) (maker maker)))
+      (vau [static, body]
+         (vau arg
+            do arg': #<eval> arg;
+               env': #<extends> [#<match> [var, arg'], static];
+               #<eval> [env', body];));
+let: __let__;
+Y: (λ f (let maker (λ x (f (λ arg (x x arg)))) (maker maker)));
 
 
 ### These are just prettier ways of getting at important primitives. ###
-eval: λ env (λ ast (#<eval> [env, ast]))
-match: λ var (λ val (#<match> [var, val]))
+eval: λ env (λ ast (#<eval> [env, ast]));
+match: λ var (λ val (#<match> [var, val]));
 
 
 ### These are necessary for syntactic sugar. ###
-__lambda__: λ
-__Y__: Y
-__quote__: vau [{}, ast] ast
-__get__: vau [{}, field] (λ x (#<get> [x, field]))
-__modify__: vau [{}, field]
-               λ f
-                  λ x
-                     #<extends> [field .match (f (__get__ feild x)), x]
+__lambda__: λ;
+__Y__: Y;
+__quote__: vau [{}, ast] ast;
+__get__: vau [{}, field] (λ x (#<get> [x, field]));
+__modify__: vau [{}, field] (λ f (λ x
+               #<extends> [field .match (f (__get__ feild x)), x]));
 
 ### Pretty data primitives. Probably should be in their own file. ###
-_+_: λ x (λ y (#<add> [x, y]))
-_-_: λ x (λ y (#<sub> [x, y]))
-_*_: λ x (λ y (#<mul> [x, y]))
-_/_: λ x (λ y (#<div> [x, y]))
+_+_: λ x (λ y (#<add> [x, y]));
+_-_: λ x (λ y (#<sub> [x, y]));
+_*_: λ x (λ y (#<mul> [x, y]));
+_/_: λ x (λ y (#<div> [x, y]));
 
 
 ### Now, really common operations. Probably should be in their own file. ###
-ifz_then_else_: λ p
-                 vau c
-                    vau a
-                       #<eval> (#<ifz> [p, c, a])
---: λ x (#<sub> [x, 1])
-swap: λ [a, b] [b, a]
+ifz_then_else_: (λ p (vau c (vau a
+                  #<eval> (#<ifz> [p, c, a]))));
+--: λ x (#<sub> [x, 1]);
+swap: λ [a, b] [b, a];
 

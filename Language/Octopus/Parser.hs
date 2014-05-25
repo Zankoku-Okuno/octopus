@@ -81,11 +81,12 @@ parseOctopusFile sourceName input =
     where
     parser = do
         startFile
-        leadingDocs <- docstring *> ws0 `P.sepBy` blockSep
+        leadingDocs <- P.many docstring
         --TODO parse notation configs
         (api, stmts) <- block
         let api' = fromMaybe getenv api
         endFile
         return $ Do (Just api') stmts
+
     getenv = Lit $ mkCall (mkCall (Pr Vau) (mkSq [mkSq [mkSy "e", mkXn []], mkSy "e"])) (mkXn [])
 

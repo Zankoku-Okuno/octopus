@@ -26,6 +26,7 @@ desugar (SqSyx xs) = mkSq $ desugar <$> xs
 desugar (XnExpr xs) = mkXn $ desugarField <$> xs
 desugar (Do api xs) = loop (filter (not . isDocstring) xs)
     where
+    loop [] = mkXn []
     loop [Defn ds x e]      = case api of
                                 Nothing -> mkCall (mkDefn $ desugarDefine ds x e) (mkXn [])
                                 Just api -> mkCall (mkDefn $ desugarDefine ds x e) (desugar api)
