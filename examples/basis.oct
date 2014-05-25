@@ -40,7 +40,7 @@ _/_: λ x (λ y (#<div> [x, y]));
 
 ### Now, really common operations. Probably should be in their own file. ###
 ifz_then_else_: (λ p (vau c (vau a
-                  #<eval> (#<ifz> [p, c, a]))));
+                  (#<eval> (#<ifz> [p, c, a])) )));
 --: λ x (#<sub> [x, 1]);
 swap: λ [a, b] [b, a];
 
