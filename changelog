@@ -32,4 +32,6 @@ v0.0.3.0-alpha (TBA)
  + Reference cells and arrays
  + Character literals
  + Raw text literals
+ + Bootstrap library: some primitives, Xn and Sq manipulation, branching, laziness
+ - Indent-sensitivity disabled
  - Identifiers can no longer begin with apostrophe

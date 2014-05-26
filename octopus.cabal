@@ -34,7 +34,7 @@ extra-source-files:  changelog, examples/*.oct
 library
   exposed-modules:     Language.Octopus,
                        Language.Octopus.Data,
-                       Language.Octopus.Data.Shortcut
+                       Language.Octopus.Data.Shortcut,
                        Language.Octopus.Parser,
                        Language.Octopus.Parser.Preprocess,
                        Language.Octopus.Basis,

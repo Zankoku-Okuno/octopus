@@ -17,7 +17,7 @@ Parser
 	decorators in do blocks
 	infix index functions :[e] :[e: f]
 	indentation sensitivity
-		turn it off with a directive
+		turn it on with a directive
 		theory, cleanup & further testing
 	special syntax for lambda and vau
 		use the primitive ones, allow for stuff like (\l (x y z) body)
@@ -48,7 +48,7 @@ Interpreter
 	ffi
 	version specifier in import string (could be done in userland)
 	re-raise exceptions?
-		perhaps by keeping the last unwond stack around until a handler returns normally
+		perhaps by keeping the last unwound stack around until a handler returns normally
 		on re-raise, we simply cat the stacks
 		alternately, do it as a library
 

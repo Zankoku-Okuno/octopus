@@ -1,0 +1,26 @@
+export {force, delay, delay'};
+
+open #<import> "./calculus";
+
+
+Lazy :: Ty → Ty = ∀ a. {} → a
+
+
+force :: Lazy a → a
+force: λ x (x {});
+
+delay :: a → Lazy a
+delay ::<<
+   Prevent an expression from being immediately evaluated.
+   Use force to cause evaluation.
+   Multiple forces will induce multiple evaluations.
+>>
+delay: vau thunk
+   (λ {} (#<eval> thunk));
+
+delay' :: a \to Lazy a
+delay' ::<<
+   As delay, but argument is evaluated. Useful when thunks are being passed around.
+>>
+delay': λ thunk
+   (λ {} (#<eval> thunk));

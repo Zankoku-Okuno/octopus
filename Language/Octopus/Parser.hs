@@ -1,5 +1,6 @@
 {-| Parse Octopus source code. The Octopus grammar is:
 
+FIXME this grammar is out-of-date
 
 > file ::= ('export' <expr>)? <stmt>*
 > stmt ::= <expr> | _field_ <expr> | 'open' <expr>

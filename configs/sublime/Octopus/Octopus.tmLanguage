@@ -93,6 +93,25 @@
         </dict>
 
         <dict>
+            <key>comment</key>
+            <string>Block docstring</string>
+            <key>begin</key>
+            <string>^.*::&lt;&lt;</string>
+            <key>end</key>
+            <string>^&gt;&gt;$</string>
+            <key>name</key>
+            <string>comment.block.colon.octopus</string>
+        </dict>
+        <dict>
+            <key>comment</key>
+            <string>Line docstring</string>
+            <key>match</key>
+            <string>^.*::.*$</string>
+            <key>name</key>
+            <string>comment.line.colon.octopus</string>
+        </dict>
+
+        <dict>
             <key>match</key>
             <string>,(?!\s)</string>
             <key>name</key>
