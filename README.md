@@ -1,3 +1,13 @@
+OCTOPUS IS DEAD! LONG LIVE OCTOPUS!
+===================================
+
+The fact is, this implementation is too complex.
+I need a better overall architecture and more thorough design work.
+Have no fear, though, the core concepts remain and are being worked on (well, when I'm not working on my thesis).
+
+Also, Octopus is meant to fit in an ecosystem of powerful languages, so the concepts I've developed here will likely be re-implemented under a new name.
+As I get closer to having a decent reference implementation, I'll begin directing people to the new repository/package/etc.
+
 Octopus
 =======
 
