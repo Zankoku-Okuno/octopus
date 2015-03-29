@@ -1,27 +1,23 @@
+OCTOPUS IS DEAD! LONG LIVE AMMONITE!
+====================================
+
+The fact is, this implementation is too complex.
+Octopus has been plagued by multiple syntax re-designs, huge parser bugs, and even a bit too much purity.
+I need a better overall architecture and more thorough design work.
+Have no fear, though, the core concepts remain and are being worked on and expanded (well, when I'm not working on my thesis).
+
+UPDATE:
+Progress in the replacement language has been coming along smoothly.
+So smoothly, in fact, that I am ready to point people to it.
+[Ammonite](https://github.com/Zankoku-Okuno/ammonite) is what Octopus should have been from the start.
+At the time of this writing, Ammonite has just become Turing-complete, but that's not saying much.
+
+In case you've landed here and don't know what I'm trying to do with Ammonite (formerly Octopus), I've kept some of the old readme below.
+
 Octopus
 =======
 
 Octopus is a hacking language. Dynamism and expressivity are the watchwords of Octopus; bonus points for parsimony of definition. These will continue to trump such trivial concerns as reliability or performance. For reliability, exercise taste and discretion; for performance, upgrade your hardware.
-
-So why the name octopus? Octopuses are well known for their curiosity, intelligence, and dexterity, so it seems perfectly apt to associate such a dynamic like this after such a creature. Not to mention they are one of my favorite animals; I would probably keep one as a pet if it weren't so high-maintenance, or had less debatable ethics.
-
-Installation
-------------
-
-There's a cabal package, so you can use `cabal install octopus`. Alternately, install from github with `git clone github.com/Zankoku-Okuno/octopus.git && cd octopus && cabal install`.
-
-There's also a package for Sublime Text under the configs directory, in case you use that editor.
-
-Usage
------
-
-Installation will give you the `octi` program. So far, there are no fancy features, simply pass it a single file, and the file will be interpreted. If the file exports a binding for `main`, then its value will eval'd in the environment exported by the file.
-
-There are a few toy programs under the `examples` directory. Hopefully they demonstrate enough to get someone going, though I'd still recommend brushing up on some of J. Shutt's work on vau-calculus for the fun stuff.
-
-Octopus makes the most out of unicode to define nice names, but entering general unicode is difficult. We suggest using [unicoder](https://github.com/Zankoku-Okuno/unicoder), which processes a file, replacing backslash-name sequences with unicode.
-
-At the moment, the syntax is indentation-sensitive, but this is really just experimental support. It hasn't been stress-tested, so there may be lurking bugs. If your files magically aren't parsing right, please send us a copy of the file so we can fix whatever's going on. After that, maybe mucking with the whitespace a bit will trick it inot working?
 
 Features
 ========
@@ -60,11 +56,12 @@ Status
 * 2014-03-31: With bugfixes, achieved Turing-complete. The next step is usable.
 * 2014-04-06: Multiple files, interpreter program, I/O primitives, exception handling.
               Still on the way to tasty.
-
+* 2014-03-29: Work on Octopus officially halted in favor of [Ammonite](https://github.com/Zankoku-Okuno/ammonite).
+ 
 The Story
 =========
 
-Far be it from me to be dogmatic. I'm not usually a dynamic typing guy. I prefer the comfort of a type checker when I have to refactor a system of any size. I like knowing I already have 10x more wiggle room just from compiling to native code. But there comes a time in every programmer's life when they just want to mess around, to build something anxiety-free.
+Far be it from me to be dogmatic. I'm not usually a dynamic typing guy. I prefer the comfort of a type checker when I have to refactor a system of any size. I like knowing I already have 10x more wiggle room for inefficiency just from compiling to native code. But there comes a time in every programmer's life when they just want to mess around, to build something anxiety-free.
 
 For me, Octopus is that that fun little romp. I started on a Thursday, and had the entire core language by the next Monday. Finishing up the basic primitives and providing an import mechanism is all there is left before it becomes a serious language. Well, and standard libraries... and a package manager... and a community, but you get my point.
 
